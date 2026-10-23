@@ -100,7 +100,7 @@ class EnsureDatabaseExists extends Command
             return self::SUCCESS;
         } catch (Throwable $e) {
             $this->components->error("No se pudo conectar al servidor MySQL para verificar la base de datos: {$e->getMessage()}");
-            $this->components->warn('Asegúrate de que el servicio de MySQL esté iniciado y que las credenciales en .env sean correctas.');
+            $this->components->warn('Asegúrate de que el servicio de MySQL esté iniciado y de que las credenciales en .env sean correctas (especialmente DB_PASSWORD si tu MySQL tiene contraseña).');
 
             return self::FAILURE;
         }

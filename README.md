@@ -202,21 +202,26 @@ npm audit
 
 ### Método Rápido Automatizado (Recomendado)
 
-El proyecto incluye un script de configuración integral que instala dependencias, crea el archivo `.env`, genera la clave de cifrado, crea la base de datos `finoradb` en MySQL si no existe, ejecuta las migraciones con todos los datos demo iniciales, vincula el almacenamiento de imágenes y compila los assets frontend:
+> [!IMPORTANT]
+> **Contraseña de MySQL:** La gran mayoría de instalaciones de MySQL (como MySQL Server, Workbench o entornos locales) tienen una contraseña configurada para el usuario `root`. Antes de ejecutar el setup, copia el archivo `.env` y escribe tu contraseña en `DB_PASSWORD=tu_contraseña`.
 
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/chacaejosue/finora.git
 cd finora
 
-# 2. Configurar entorno y base de datos (copia .env.example)
-# Nota: Si tu MySQL requiere contraseña de root, crea o edita tu .env antes de continuar:
+# 2. Crear el archivo de entorno local
+copy .env.example .env    # En Windows (PowerShell / CMD)
+# cp .env.example .env    # En Linux / macOS / Git Bash
+
+# 3. Configurar tu contraseña de MySQL en .env:
+# Abre el archivo .env y asigna tu contraseña en la línea:
 # DB_PASSWORD=tu_contraseña
 
-# 3. Ejecutar la puesta en marcha completa automatizada
+# 4. Ejecutar la puesta en marcha completa automatizada
 composer run setup
 
-# 4. Iniciar el entorno de desarrollo
+# 5. Iniciar el entorno de desarrollo
 composer run dev
 ```
 
