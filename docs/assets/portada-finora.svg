@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 520" width="1600" height="520" role="img" aria-labelledby="title description">
+  <title id="title">Finora — Sistema web para la gestión comercial y financiera</title>
+  <desc id="description">Portada oficial de Finora con isotipo vectorial de alta precisión geométrica y degradados enriquecidos.</desc>
+
+  <defs>
+    <!-- Recorte de esquinas redondeadas -->
+    <clipPath id="card-clip">
+      <rect width="1600" height="520" rx="30" />
+    </clipPath>
+
+    <!-- Fondo principal en degradado luminoso -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eaf4fd" />
+      <stop offset="35%" stop-color="#f5faff" />
+      <stop offset="70%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#ebf3fe" />
+    </linearGradient>
+
+    <!-- Resplandor central sutil detrás del isotipo -->
+    <radialGradient id="glow-center" cx="50%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.28" />
+      <stop offset="50%" stop-color="#60a5fa" stop-opacity="0.10" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Resplandores ambientales laterales -->
+    <radialGradient id="glow-left" cx="15%" cy="35%" r="45%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.22" />
+      <stop offset="50%" stop-color="#60a5fa" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="glow-right" cx="88%" cy="50%" r="52%">
+      <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.25" />
+      <stop offset="45%" stop-color="#38bdf8" stop-opacity="0.12" />
+      <stop offset="85%" stop-color="#3b82f6" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Degradados calibrados al isotipo original de Finora -->
+    <!-- Ala superior: Turquesa menta luminoso (#00f8e7) a teal profundo (#05a9af) -->
+    <linearGradient id="finora-top" x1="0%" y1="90%" x2="100%" y2="10%">
+      <stop offset="0%" stop-color="#00f8e7" />
+      <stop offset="35%" stop-color="#00e4da" />
+      <stop offset="70%" stop-color="#00c2c3" />
+      <stop offset="100%" stop-color="#05a9af" />
+    </linearGradient>
+
+    <!-- Tallo vertical: Degradado de alto contraste, desde azul cobalto profundo (#0238b8) en la curva superior fluyendo suavemente hacia azul eléctrico vibrante (#008fff) en la base -->
+    <linearGradient id="finora-stem" x1="30%" y1="0%" x2="45%" y2="100%">
+      <stop offset="0%" stop-color="#0238b8" />
+      <stop offset="20%" stop-color="#0146cb" />
+      <stop offset="45%" stop-color="#015ede" />
+      <stop offset="75%" stop-color="#0076f7" />
+      <stop offset="100%" stop-color="#008fff" />
+    </linearGradient>
+
+    <!-- Brazo horizontal: Azul cielo brillante (#0096fa) en la unión con el tallo hasta cian neón luminoso (#05eef8) en el extremo -->
+    <linearGradient id="finora-arm" x1="0%" y1="20%" x2="100%" y2="75%">
+      <stop offset="0%" stop-color="#0096fa" />
+      <stop offset="30%" stop-color="#00beff" />
+      <stop offset="70%" stop-color="#00deff" />
+      <stop offset="100%" stop-color="#05eef8" />
+    </linearGradient>
+
+    <!-- Marca de agua lateral translúcida enriquecida -->
+    <linearGradient id="watermark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00c8ff" stop-opacity="0.24" />
+      <stop offset="50%" stop-color="#0072ff" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="#0044cc" stop-opacity="0.08" />
+    </linearGradient>
+
+    <!-- Ondas de luz suaves -->
+    <linearGradient id="wave-stroke" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#bae6fd" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1" />
+    </linearGradient>
+  </defs>
+
+  <g clip-path="url(#card-clip)">
+    <!-- 1. Fondo base degradado -->
+    <rect width="1600" height="520" rx="30" fill="url(#bg-grad)" />
+
+    <!-- 2. Resplandores ambientales -->
+    <rect width="1600" height="520" fill="url(#glow-left)" />
+    <rect width="1600" height="520" fill="url(#glow-right)" />
+
+    <!-- Halo sutil detrás del isotipo central -->
+    <circle cx="800" cy="210" r="180" fill="url(#glow-center)" />
+
+    <!-- 3. Ondas y curvas orgánicas de luz -->
+    <path d="M -100 520 C 250 490, 480 340, 800 390 C 1120 440, 1340 300, 1720 340 L 1720 520 Z" fill="#ffffff" fill-opacity="0.30" />
+    <path d="M -80 390 C 220 350, 420 200, 750 260 C 1080 320, 1360 160, 1680 200" fill="none" stroke="url(#wave-stroke)" stroke-width="2.5" />
+    <path d="M -100 240 C 300 190, 620 60, 960 130 C 1300 200, 1460 70, 1720 90" fill="none" stroke="#bae6fd" stroke-width="1.8" stroke-opacity="0.4" />
+    <path d="M 100 520 C 350 420, 700 460, 1050 360 C 1350 280, 1500 340, 1700 260" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.6" />
+
+    <!-- 4. Destellos sutiles de luz / bokeh -->
+    <circle cx="270" cy="130" r="3" fill="#38bdf8" opacity="0.65" />
+    <circle cx="270" cy="130" r="8" fill="#bae6fd" opacity="0.25" />
+    <circle cx="160" cy="350" r="2.5" fill="#38bdf8" opacity="0.55" />
+    <circle cx="160" cy="350" r="6" fill="#bae6fd" opacity="0.2" />
+    <circle cx="1040" cy="100" r="3" fill="#0ea5e9" opacity="0.5" />
+    <circle cx="1040" cy="100" r="7" fill="#bae6fd" opacity="0.2" />
+    <circle cx="1470" cy="310" r="3.5" fill="#38bdf8" opacity="0.6" />
+    <circle cx="1470" cy="310" r="9" fill="#bae6fd" opacity="0.2" />
+
+    <!-- 5. Marca de agua lateral (Isotipo gigante con curvas limpias) -->
+    <g transform="translate(1120, -50) scale(0.53)" fill="url(#watermark-grad)">
+      <path d="M 488 0 L 1056 0 C 1088 0, 1098 27, 1081 87 C 1046 177, 916 316, 798 316 L 350 316 C 216 316, 66 407, 0 543 C -4 297, 216 0, 488 0 Z" />
+      <path d="M 7 747 C 7 517, 186 439, 358 439 L 358 862 C 358 977, 276 1073, 149 1073 L 7 1073 Z" />
+      <path d="M 358 439 L 801 439 C 836 439, 851 462, 851 497 C 851 597, 746 723, 626 723 L 358 723 Z" />
+    </g>
+
+    <!-- 6. Isotipo de Finora con degradados enriquecidos y de alto contraste -->
+    <g transform="translate(740.7, 154.0) scale(0.108)">
+      <path d="M 488 0 L 1056 0 C 1088 0, 1098 27, 1081 87 C 1046 177, 916 316, 798 316 L 350 316 C 216 316, 66 407, 0 543 C -4 297, 216 0, 488 0 Z" fill="url(#finora-top)" />
+      <path d="M 7 747 C 7 517, 186 439, 358 439 L 358 862 C 358 977, 276 1073, 149 1073 L 7 1073 Z" fill="url(#finora-stem)" />
+      <path d="M 358 439 L 801 439 C 836 439, 851 462, 851 497 C 851 597, 746 723, 626 723 L 358 723 Z" fill="url(#finora-arm)" />
+    </g>
+
+    <!-- 7. Subtítulo oficial centrado debajo del isotipo -->
+    <text x="800" y="325" fill="#475569" font-family="'Plus Jakarta Sans', 'Inter', 'Outfit', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="28" font-weight="500" text-anchor="middle" letter-spacing="0.2">Sistema web para la gestión comercial y financiera</text>
+
+    <!-- Borde exterior sutil para tarjeta premium -->
+    <rect width="1600" height="520" rx="30" fill="none" stroke="#dbeafe" stroke-width="2" stroke-opacity="0.85" />
+  </g>
+</svg>
