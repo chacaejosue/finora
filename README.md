@@ -1,301 +1,288 @@
 <p align="center">
-  <img src="docs/assets/portada-finora.png"
-       alt="Finora — Sistema web para la gestión comercial y financiera"
+  <img src="docs/assets/portada-finora.svg"
+       alt="Finora"
        width="100%">
 </p>
+
+<h1 align="center">Finora</h1>
 
 <p align="center">
   <strong>Gestión comercial y financiera para emprendimientos de venta por catálogo</strong>
 </p>
 
 <p align="center">
-  Sistema web orientado a centralizar productos, inventario, compras, ventas, créditos y reportes en una sola plataforma.
+  Plataforma web centralizada para productos, inventario, compras, pedidos, ventas al contado y crédito, cobranzas, reportes y catálogo público.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Laravel-13-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 13">
-  <img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/PHP-8.5.12%2B-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.5.12+">
   <img src="https://img.shields.io/badge/MySQL-8.0%2B-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL 8.0+">
-  <img src="https://img.shields.io/badge/Metodolog%C3%ADa-Scrum-6DB33F?style=for-the-badge" alt="Scrum">
-  <img src="https://img.shields.io/badge/Estado-En%20desarrollo-F59E0B?style=for-the-badge" alt="En desarrollo">
+  <img src="https://img.shields.io/badge/TailwindCSS-4.0-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
+  <img src="https://img.shields.io/badge/Metodología-Scrum-6DB33F?style=for-the-badge" alt="Scrum">
+  <img src="https://img.shields.io/badge/Estado-Operativo%20%2F%20En%20evoluci%C3%B3n-10B981?style=for-the-badge" alt="Operativo">
 </p>
 
 ---
 
 ## Sobre el proyecto
 
-**Finora** es un sistema de información web desarrollado para apoyar la gestión comercial y financiera de emprendimientos de venta por catálogo.
+**Finora** es un sistema de información web concebido y desarrollado para optimizar la gestión comercial, operativa y financiera de emprendimientos de venta por catálogo.
 
-El caso de estudio corresponde a una asesora independiente que actualmente trabaja con **Natura**. Sin embargo, la solución se plantea con una estructura adaptable a otros emprendimientos de características similares y a distintas marcas de venta por catálogo.
+El caso de estudio principal toma como referencia el modelo operativo de una consultora independiente de **Natura**, estructurado de forma flexible para adaptarse a cualquier modelo de venta directa, distribución por catálogo y comercialización minorista.
 
-El proyecto busca reemplazar la gestión dispersa entre **WhatsApp, agendas, cuadernos y hojas de cálculo** por una plataforma centralizada, organizada y accesible desde la web.
+El sistema resuelve la dispersión operativa reemplazando anotaciones en papel, chats de WhatsApp desorganizados y hojas de cálculo manuales por una solución integral que conecta el catálogo de cara al cliente con un panel de control administrativo y financiero.
 
-> **Título académico:** *Sistema de Información Web para la Gestión Comercial y Financiera de un Emprendimiento de Venta por Catálogo.*
+> **Título académico:** *Sistema de Información Web para la Gestión Comercial y Financiera de un Emprendimiento de Venta por Catálogo.*  
+> **Nota:** Finora es un proyecto académico e independiente. No mantiene afiliación oficial con Natura ni con otras marcas comerciales utilizadas como caso de estudio.
 
-> **Nota:** Finora es un proyecto académico e independiente. No mantiene afiliación oficial con Natura ni con otras marcas mencionadas como posibles casos de uso.
+---
 
-## Funcionalidades previstas
+## Actores del sistema y Roles de acceso
 
-| Área | Alcance |
-| --- | --- |
-| **Usuarios y roles** | Administración de usuarios y control de acceso según el rol asignado. |
-| **Productos y catálogo** | Registro, organización y consulta de productos disponibles. |
-| **Líneas de productos** | Clasificación de productos por líneas o categorías. |
-| **Proveedores** | Gestión de proveedores relacionados con las compras. |
-| **Compras** | Registro y consulta de compras realizadas. |
-| **Lotes** | Control de lotes asociados al ingreso de productos. |
-| **Inventario** | Control de existencias y disponibilidad de stock. |
-| **Ventas** | Registro de ventas al contado y a crédito. |
-| **Créditos y cuotas** | Seguimiento de saldos pendientes, cuotas y pagos. |
-| **Consultas** | Consulta histórica de compras, ventas y créditos. |
-| **Reportes** | Información comercial y financiera para apoyar la toma de decisiones. |
-| **Catálogo para clientes** | Consulta de productos disponibles por parte del cliente. |
+El sistema implementa un control de acceso basado en roles con middlewares dedicados (`rol.consultor`, `rol.operativo`, `rol.cliente`):
 
-## Actores del sistema
+| Rol | Middleware | Responsabilidad y alcance en el sistema |
+| :--- | :--- | :--- |
+| **Consultor (`CONSULTOR`)** | `rol.consultor` | **Propietario / Asesor principal del emprendimiento.** Posee acceso global: panel de control ejecutivo, reportes financieros y comerciales con exportación, configuración del tipo de cambio (Bs / USD con integración al BCB), auditoría del sistema y administración exclusiva de usuarios. |
+| **Colaborador (`COLABORADOR`)** | `rol.operativo` | **Asistente operativo.** Acceso al panel operativo para la gestión diaria: catálogo de productos, categorías, líneas, proveedores, clientes, recepción de compras/abastecimiento, control de inventario (kardex y ajustes), pedidos (reserva y entrega), ventas y registro de pagos. No accede a reportes financieros confidenciales ni a la administración de usuarios. |
+| **Cliente (`CLIENTE`)** | `rol.cliente` | **Comprador final.** Acceso a la landing page pública, catálogo interactivo con conversión de moneda, carrito para solicitar pedidos y portal privado (*Mi Cuenta*) para consultar su historial de compras y el saldo de sus créditos. |
 
-| Actor | Responsabilidad principal |
-| --- | --- |
-| **Administrador** | Gestiona usuarios, roles, configuraciones y funciones administrativas. |
-| **Asesor** | Gestiona productos, compras, inventario, ventas, créditos y consultas. |
-| **Cliente** | Consulta el catálogo y accede a las funcionalidades habilitadas para su rol. |
+---
 
-## Tecnologías
+## Módulos y Funcionalidades del Sistema
 
-| Tecnología | Uso |
-| --- | --- |
-| **Laravel 13** | Framework principal de la aplicación web. |
-| **PHP 8.3+** | Lenguaje de programación del backend. |
-| **MySQL 8.0+** | Sistema gestor de base de datos relacional. |
-| **Blade** | Renderizado de vistas del lado del servidor. |
-| **Vite** | Gestión y compilación de recursos frontend. |
-| **Composer** | Gestión de dependencias PHP. |
-| **Node.js / npm** | Gestión de dependencias y recursos frontend. |
-| **Git + GitHub** | Control de versiones y colaboración. |
-| **Jira** | Gestión del Product Backlog, historias de usuario, tareas y sprints. |
-| **Scrum** | Metodología utilizada para organizar el desarrollo. |
+### 1. Catálogo Público y Pedidos de Clientes
+* **Landing informativa y Catálogo:** Exploración de productos organizados por líneas y categorías con filtros dinámicos.
+* **Carrito de pedidos:** Selección de artículos con cálculo de totales en Bolivianos (Bs) y Dólares (USD).
+* **Solicitud de pedido:** Envío de órdenes públicas con datos de entrega y enlace directo para confirmación vía WhatsApp.
+* **Portal de Cliente (`/mi-cuenta`):** Consulta histórica de pedidos realizados, estado de despacho y seguimiento de deudas/créditos pendientes.
 
-## Arquitectura base
+### 2. Comercialización y Ventas
+* **Flujo integral de pedidos:** Recepción, reserva automática de existencias, entrega de mercadería y cambio de estado.
+* **Ventas al contado y a crédito:** Registro detallado con emisión de comprobantes, selección de forma de pago y cálculo de saldo.
+* **Gestión de créditos y cuotas:** Seguimiento de créditos otorgados a clientes, planes de pago en cuotas y registro de amortizaciones/pagos.
+* **Anulación y confirmación:** Control transaccional con reversión de inventario y saldos ante anulaciones.
 
-El proyecto sigue la estructura y las convenciones de Laravel, utilizando una separación de responsabilidades basada en su enfoque MVC y en los componentes propios del framework.
+### 3. Abastecimiento e Inventario
+* **Gestión de proveedores y compras:** Registro de compras con detalle por producto, precio de costo y cálculo de márgenes.
+* **Inventario en tiempo real:** Control de existencias físicas disponibles vs. reservadas para pedidos.
+* **Kardex de movimientos:** Trazabilidad completa de ingresos (compras), salidas (ventas) y ajustes.
+* **Ajustes manuales de inventario:** Regularización justificada por pérdidas, mermas o inventario físico.
+
+### 4. Finanzas y Tipo de Cambio
+* **Tipo de cambio dinámico:** Consulta automatizada del tipo de cambio oficial ante el Banco Central de Bolivia (BCB) con tasa de contingencia (*fallback*) y posibilidad de ajuste manual por parte del Consultor.
+* **Gestión de cobranzas:** Registro de pagos aplicados directamente a cuotas específicas o al saldo general de créditos.
+
+### 5. Administración, Auditoría y Reportes
+* **Reportes gerenciales:** Análisis de ventas por período, productos más vendidos, compras realizadas, estado de créditos por cobrar y márgenes de ganancia.
+* **Exportación de datos:** Descarga de reportes en formatos estándar para análisis externo.
+* **Gestión de usuarios:** Registro, edición y activación/desactivación de cuentas con roles diferenciados.
+* **Auditoría de operaciones:** Registro de actividad clave para trazabilidad de transacciones críticas.
+
+---
+
+## Mapa de Rutas Principales
 
 ```text
-sistema-informacion-web/
-├── app/            # Lógica principal de la aplicación
-├── bootstrap/      # Inicialización de Laravel
-├── config/         # Configuración del sistema
-├── database/       # Migraciones, seeders y factories
-├── public/         # Punto de entrada y recursos públicos
-├── resources/      # Vistas, estilos y JavaScript
-├── routes/         # Definición de rutas
-├── storage/        # Archivos generados por la aplicación
-└── tests/          # Pruebas automatizadas
+├── Públicas
+│   ├── GET  /                    -> Landing page pública
+│   ├── GET  /categorias          -> Catálogo de productos interactivo
+│   ├── GET  /carrito             -> Carrito y formulario de pedido público
+│   ├── POST /carrito/pedido      -> Envío de pedido público
+│   ├── GET  /tipo-cambio         -> Consulta pública del tipo de cambio
+│   ├── GET  /login               -> Formulario de inicio de sesión
+│   └── POST /logout              -> Cierre de sesión seguro
+│
+├── Cliente (rol.cliente)
+│   └── GET  /mi-cuenta           -> Portal de autoservicio del cliente
+│
+├── Panel Operativo (rol.operativo: CONSULTOR y COLABORADOR)
+│   ├── GET   /panel/colaborador  -> Dashboard operativo
+│   ├── CRUD  /panel/productos    -> Catálogo, edición y toggle de estado
+│   ├── CRUD  /panel/categorias   -> Categorías de productos
+│   ├── CRUD  /panel/lineas       -> Líneas de marca
+│   ├── CRUD  /panel/proveedores  -> Directorio de proveedores
+│   ├── CRUD  /panel/clientes     -> Clientes, historial y habilitación de accesos
+│   ├── CRUD  /panel/compras      -> Abastecimiento y detalle de compras
+│   ├── GET   /panel/inventario   -> Monitor de stock
+│   │   ├── GET  /movimientos     -> Kardex histórico
+│   │   └── POST /ajuste          -> Ajustes de stock
+│   ├── CRUD  /panel/pedidos      -> Gestión, reserva y entrega de pedidos
+│   ├── CRUD  /panel/ventas       -> Ventas al contado y crédito
+│   └── CRUD  /panel/pagos        -> Registro de cobranzas y cuotas
+│
+└── Panel Exclusivo Consultor (rol.consultor)
+    ├── GET   /panel              -> Dashboard ejecutivo y analítica
+    ├── GET   /panel/reportes     -> Reportes comerciales y financieros
+    │   └── GET  /exportar        -> Exportación de datos
+    ├── PATCH /panel/tipo-cambio  -> Actualización del tipo de cambio
+    └── CRUD  /panel/usuarios     -> Administración de accesos del sistema
 ```
 
-## Requisitos
+---
 
-Antes de ejecutar el proyecto localmente se necesita:
+## Cuentas de Demostración
 
-- **PHP 8.3 o superior**
-- **Composer**
-- **MySQL Server 8.0 o superior**
-- **Node.js y npm**
-- **Git**
+El seeder inicial genera usuarios listos para pruebas en cada uno de los roles:
 
-## Instalación local
+| Rol | Correo electrónico | Contraseña predeterminada | Panel al que accede |
+| :--- | :--- | :--- | :--- |
+| **Consultor** | `consultora.demo@finora.test` | `FinoraDemo2026!` | `/panel` (Acceso total) |
+| **Colaborador** | `colaborador.demo@finora.test` | `FinoraDemo2026!` | `/panel/colaborador` (Operativo) |
+| **Cliente** | `ana.cliente@finora.test` | `FinoraDemo2026!` | `/mi-cuenta` (Portal Cliente) |
 
-### 1. Clonar el repositorio
+---
+
+## Tecnologías Utilizadas
+
+| Componente | Tecnología | Propósito |
+| :--- | :--- | :--- |
+| **Backend** | **Laravel 13** / **PHP 8.5.12+** | Framework robusto bajo arquitectura MVC, routing, middlewares y Eloquent ORM. |
+| **Base de datos** | **MySQL 8.0+** | Almacenamiento relacional, integridad referencial y transacciones ACID. |
+| **Frontend** | **Blade Templates** | Renderizado del lado del servidor rápido y modular. |
+| **Estilos** | **Tailwind CSS v4** | Diseño responsivo moderno con `@tailwindcss/vite`. |
+| **Build Tool** | **Vite** | Empaquetado optimizado de assets en caliente (HMR). |
+| **Integraciones** | **API BCB** | Consulta automatizada del tipo de cambio oficial de Bolivia. |
+| **Metodología** | **Scrum** | Sprints, gestión de historias de usuario y desarrollo iterativo. |
+| **Control de versiones** | **Git & GitHub** | Control de código fuente y flujo colaborativo de ramas. |
+
+---
+
+## Arquitectura del Proyecto
+
+```text
+finora/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Admin/          # Controladores operativos y administrativos
+│   │   │   ├── Auth/           # Login y autenticación
+│   │   │   ├── CatalogoController.php
+│   │   │   ├── PanelController.php
+│   │   │   └── ReporteController.php
+│   │   ├── Middleware/         # Control por roles (Consultor, Operativo, Cliente)
+│   │   └── Requests/           # Validaciones de formularios (FormRequests)
+│   └── Models/                 # Modelos Eloquent y relaciones relacionales
+├── config/
+│   └── finora.php              # Configuración de moneda, BCB y cuentas demo
+├── database/
+│   ├── migrations/             # Esquema completo de la base de datos (29 migraciones)
+│   └── seeders/                # Datos de prueba para catálogo y usuarios
+├── resources/
+│   ├── views/                  # Vistas Blade (landing, catálogo, cliente y panel)
+│   └── css/                    # Estilos con Tailwind CSS v4
+├── routes/
+│   └── web.php                 # Definición de rutas y protecciones de acceso
+└── tests/                      # Suite de pruebas automatizadas
+```
+
+---
+
+## Requisitos del Entorno y Seguridad (Hardening)
+
+Para garantizar la integridad del sistema en entornos de desarrollo y producción, se requiere:
+
+* **PHP >= 8.5.12** *(Requisito estricto de seguridad: mitiga las vulnerabilidades críticas de corrupción de memoria y RCE **CVE-2026-109618** y **CVE-2026-109619** / PHP2Shell presentes en versiones `<= 8.5.11`)*.
+* **Composer 2.x** y **Node.js (LTS)**.
+* **MySQL 8.0** o superior.
+* **Git**.
+
+### Auditoría continua de dependencias (SCA)
+El árbol de dependencias (`composer.lock` y `package-lock.json`) se encuentra auditado y libre de vulnerabilidades conocidas (incluyendo **CVE-2026-108082** en `symfony/http-foundation`). Para verificar el estado de seguridad antes de desplegar, ejecute:
 
 ```bash
-git clone https://github.com/TU-USUARIO/sistema-informacion-web.git
-cd sistema-informacion-web
+composer audit
+npm audit
+```
+
+---
+
+## Puesta en Marcha Local
+
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/chacaejosue/finora.git
+cd finora
 ```
 
 ### 2. Instalar dependencias
-
 ```bash
 composer install
 npm install
 ```
 
-### 3. Crear el archivo de entorno
-
-En Linux, macOS o Git Bash:
-
+### 3. Configurar variables de entorno
 ```bash
+# En Windows (PowerShell / CMD):
+copy .env.example .env
+
+# En Linux / macOS / Git Bash:
 cp .env.example .env
 ```
 
-En Windows CMD:
-
-```cmd
-copy .env.example .env
-```
-
-Generar la clave de la aplicación:
-
+Generar la clave de aplicación:
 ```bash
 php artisan key:generate
 ```
 
-### 4. Configurar MySQL
-
-Crear una base de datos local:
-
+### 4. Configurar la Base de Datos
+Crear la base de datos en MySQL:
 ```sql
-CREATE DATABASE sistema_informacion_web
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE finoradb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Configurar la conexión en `.env`:
-
+Asegurar los parámetros en tu archivo `.env`:
 ```env
+APP_NAME=Finora
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=sistema_informacion_web
+DB_DATABASE=finoradb
 DB_USERNAME=root
-DB_PASSWORD=
+DB_PASSWORD=tu_contraseña
 ```
 
-Limpiar la configuración cargada por Laravel:
-
+### 5. Ejecutar migraciones y datos de prueba
 ```bash
-php artisan config:clear
+php artisan migrate --seed
 ```
+*(Esto creará las 48 tablas relacionales e insertará los roles, productos y usuarios de demostración).*
 
-> Las credenciales reales se mantienen únicamente en `.env`. Este archivo no debe versionarse ni publicarse en el repositorio.
-
-### 5. Ejecutar migraciones
-
-El esquema de la base de datos se construirá progresivamente durante el desarrollo. Cuando las migraciones correspondientes estén disponibles:
-
-```bash
-php artisan migrate
-```
-
-### 6. Ejecutar el proyecto
-
+### 6. Iniciar el entorno de desarrollo
 ```bash
 composer run dev
 ```
+*(O de forma independiente: `php artisan serve` y en otra terminal `npm run dev`).*
 
-La aplicación estará disponible normalmente en:
-
+La aplicación estará disponible en:
 ```text
 http://localhost:8000
 ```
 
-## Pruebas
+---
 
-Las pruebas automatizadas pueden ejecutarse con:
+## Flujo de Trabajo
 
-```bash
-php artisan test
-```
-
-## Flujo de trabajo
-
-La rama estable del proyecto es:
-
-```text
-main
-```
-
-Las funcionalidades, correcciones y tareas de mantenimiento se desarrollan en ramas independientes.
-
-Ejemplos:
-
-```text
-feature/hu01-inicio-sesion
-feature/hu02-gestion-usuarios
-fix/inventario-calculo-stock
-chore/repository-setup
-```
-
-Antes de comenzar una nueva rama de trabajo:
+El desarrollo se organiza mediante **Scrum** y ramas de trabajo independientes creadas a partir de `main`:
 
 ```bash
 git checkout main
-git pull
-git checkout -b feature/huXX-descripcion
+git pull origin main
+git switch -c feature/huXX-descripcion
 ```
-
-### Commits, issues y pull requests
-
-El proyecto utiliza **Conventional Commits** con `scope` obligatorio:
-
-```text
-type(scope): descripción
-```
-
-Ejemplos:
-
-```text
-feat(auth): implementar inicio de sesión
-fix(inventory): corregir cálculo de stock
-chore(project): actualizar configuración del proyecto
-docs(readme): actualizar documentación principal
-refactor(sales): simplificar registro de ventas
-test(credits): agregar pruebas de cuotas pendientes
-```
-
-| Tipo | Uso |
-| --- | --- |
-| `feat` | Nueva funcionalidad. |
-| `fix` | Corrección de errores. |
-| `docs` | Cambios de documentación. |
-| `chore` | Configuración y mantenimiento. |
-| `refactor` | Reestructuración sin alterar el comportamiento esperado. |
-| `test` | Creación o modificación de pruebas. |
-| `style` | Cambios de formato o presentación sin alterar la lógica. |
-| `perf` | Mejoras de rendimiento. |
-| `build` | Cambios relacionados con dependencias o compilación. |
-| `ci` | Cambios relacionados con integración continua. |
-
-Los títulos de **issues** y **pull requests** siguen la misma convención.
-
-## Gestión del proyecto
-
-El desarrollo se organiza mediante **Scrum** y se administra en Jira utilizando:
-
-- Product Backlog
-- Épicas
-- Historias de usuario
-- Puntos de historia
-- Prioridades
-- Sprints
-- Tareas y subtareas
-- Tablero de seguimiento
-- Límites de trabajo en progreso (**WIP**)
-
-## Estado del proyecto
-
-> **En desarrollo**
-
-Actualmente el proyecto cuenta con la base técnica inicial en Laravel, control de versiones con Git y GitHub, y conexión con MySQL.
-
-Las funcionalidades se incorporarán progresivamente de acuerdo con las historias de usuario y los sprints definidos.
-
-## Seguridad y buenas prácticas
-
-- No versionar archivos `.env` ni credenciales.
-- Mantener claves y contraseñas fuera del código fuente.
-- Utilizar migraciones para versionar la estructura de la base de datos.
-- Aplicar validaciones en la aplicación y, cuando corresponda, restricciones en la base de datos.
-- Mantener `main` como rama estable.
-- Desarrollar cambios mediante ramas y pull requests.
-- Mantener commits pequeños, claros y consistentes.
-- Revisar los cambios antes de integrarlos a `main`.
-
-## Licencia
-
-La licencia del proyecto se encuentra **pendiente de definición por el equipo**.
 
 ---
 
+## Licencia y Créditos
+
+Proyecto desarrollado con fines académicos y de apoyo a emprendimientos comerciales independientes.
+
 <p align="center">
-  <strong>Finora</strong><br>
-  Proyecto académico de Sistema de Información Web<br>
-  Desarrollado con Laravel, PHP y MySQL.
+  <strong>Finora</strong> &mdash; Sistema de Información Web para la Gestión Comercial y Financiera<br>
+  Desarrollado con Laravel 13, PHP 8.5.12+, MySQL y Tailwind CSS.
 </p>
