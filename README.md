@@ -200,68 +200,68 @@ npm audit
 
 ## Puesta en Marcha Local
 
-### 1. Clonar el repositorio
+### Método Rápido Automatizado (Recomendado)
+
+El proyecto incluye un script de configuración integral que instala dependencias, crea el archivo `.env`, genera la clave de cifrado, crea la base de datos `finoradb` en MySQL si no existe, ejecuta las migraciones con todos los datos demo iniciales, vincula el almacenamiento de imágenes y compila los assets frontend:
+
 ```bash
+# 1. Clonar el repositorio
 git clone https://github.com/chacaejosue/finora.git
 cd finora
-```
 
-### 2. Instalar dependencias
-```bash
-composer install
-npm install
-```
+# 2. Configurar entorno y base de datos (copia .env.example)
+# Nota: Si tu MySQL requiere contraseña de root, crea o edita tu .env antes de continuar:
+# DB_PASSWORD=tu_contraseña
 
-### 3. Configurar variables de entorno
-```bash
-# En Windows (PowerShell / CMD):
-copy .env.example .env
+# 3. Ejecutar la puesta en marcha completa automatizada
+composer run setup
 
-# En Linux / macOS / Git Bash:
-cp .env.example .env
-```
-
-Generar la clave de aplicación:
-```bash
-php artisan key:generate
-```
-
-### 4. Configurar la Base de Datos
-Crear la base de datos en MySQL:
-```sql
-CREATE DATABASE finoradb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-Asegurar los parámetros en tu archivo `.env`:
-```env
-APP_NAME=Finora
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost:8000
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=finoradb
-DB_USERNAME=root
-DB_PASSWORD=tu_contraseña
-```
-
-### 5. Ejecutar migraciones y datos de prueba
-```bash
-php artisan migrate --seed
-```
-*(Esto creará las 48 tablas relacionales e insertará los roles, productos y usuarios de demostración).*
-
-### 6. Iniciar el entorno de desarrollo
-```bash
+# 4. Iniciar el entorno de desarrollo
 composer run dev
 ```
-*(O de forma independiente: `php artisan serve` y en otra terminal `npm run dev`).*
 
-La aplicación estará disponible en:
+La aplicación estará lista y disponible en:
 ```text
 http://localhost:8000
+```
+
+---
+
+### Método Manual Paso a Paso
+
+Si prefieres ejecutar cada comando de forma individual:
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/chacaejosue/finora.git
+cd finora
+
+# 2. Instalar dependencias del backend
+composer install
+
+# 3. Configurar variables de entorno
+copy .env.example .env    # En Windows
+# cp .env.example .env    # En Linux / macOS
+
+# 4. Generar la clave de aplicación
+php artisan key:generate
+
+# 5. Crear la base de datos MySQL (opcional: el comando lo hace por ti)
+php artisan db:create
+# O manualmente en MySQL: CREATE DATABASE finoradb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+# 6. Ejecutar migraciones con datos demostrativos
+php artisan migrate:fresh --seed
+
+# 7. Crear el enlace simbólico para imágenes de productos
+php artisan storage:link
+
+# 8. Instalar dependencias de frontend y compilar
+npm install
+npm run build
+
+# 9. Iniciar servidores de desarrollo
+composer run dev
 ```
 
 ---
