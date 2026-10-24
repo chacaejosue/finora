@@ -29,6 +29,15 @@ class DemoDataSeeder extends Seeder
 {
     public function run(): void
     {
+        $consultorEmail = (string) config('finora.demo_consultor_email', 'consultora.demo@finora.test');
+
+        if (Persona::where('email', $consultorEmail)->exists()) {
+            $this->command?->warn('Los datos de demostración ya existen en la base de datos.');
+            $this->command?->line('Para reiniciar todos los datos desde cero, ejecuta: <comment>php artisan migrate:fresh --seed</comment>');
+
+            return;
+        }
+
         DB::transaction(function (): void {
             $consultor = $this->crearUsuario('CONSULTOR', config('finora.demo_consultor_email'), 'Maricel Demo');
             $colaborador = $this->crearUsuario('COLABORADOR', config('finora.demo_colaborador_email'), 'Alex Operaciones');
