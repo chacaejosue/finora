@@ -332,6 +332,27 @@
                     </div>
                  </a>
 
+                <!-- 8. Contabilidad (Normativa Bolivia - Ley 843) -->
+                <a href="{{ route('contabilidad.index') }}" class="finora-card-interactive animate-fade-in-up delay-400 bg-white p-6 rounded-2xl border-2 border-blue-200/80 shadow-sm hover:shadow-xl hover:border-finora-blue transition-all flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute top-3 right-3">
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-blue-100 text-finora-blue tracking-wider">
+                            Ley 843
+                        </span>
+                    </div>
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-finora-blue group-hover:bg-finora-blue group-hover:text-white transition-colors flex items-center justify-center mb-4 shadow-xs">
+                            <span class="material-symbols-outlined text-2xl">monitoring</span>
+                        </div>
+                        <h3 class="font-heading text-lg font-bold text-finora-navy group-hover:text-finora-blue transition-colors flex items-center justify-between">
+                            <span>Contabilidad</span>
+                            <span class="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </h3>
+                        <p class="text-xs text-finora-subtle mt-1.5 leading-relaxed">
+                            Libro Diario, Mayores, Balance de Apertura, Sumas y Saldos, y Estados Financieros.
+                        </p>
+                    </div>
+                </a>
+
                  @if ($usuario->rol === 'CONSULTOR')
                      <a href="{{ route('panel.reportes.index') }}" class="finora-card-interactive animate-fade-in-up delay-400 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-teal-600 transition-all flex flex-col justify-between group">
                          <div>

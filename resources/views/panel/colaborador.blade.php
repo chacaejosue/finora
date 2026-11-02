@@ -86,6 +86,7 @@
                     ['route' => 'panel.inventario.index', 'icon' => 'inventory_2', 'title' => 'Inventario', 'description' => 'Consulta existencias y registra ajustes autorizados.', 'color' => 'amber'],
                     ['route' => 'panel.compras.index', 'icon' => 'shopping_bag', 'title' => 'Compras', 'description' => 'Registra abastecimiento y recepción de productos.', 'color' => 'cyan'],
                     ['route' => 'panel.pagos.index', 'icon' => 'account_balance', 'title' => 'Pagos', 'description' => 'Registra abonos y consulta cuentas pendientes.', 'color' => 'indigo'],
+                    ['route' => 'contabilidad.index', 'icon' => 'monitoring', 'title' => 'Contabilidad', 'description' => 'Libro Diario, Mayores, Balance de Apertura y Estados Financieros.', 'color' => 'blue'],
                 ] as $operation)
                     <a href="{{ route($operation['route']) }}" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-lg hover:border-finora-blue transition-all group">
                         <div class="flex items-start gap-4">

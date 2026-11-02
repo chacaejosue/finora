@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\CompraController;
+use App\Http\Controllers\Admin\ContabilidadController;
 use App\Http\Controllers\Admin\InventarioController;
 use App\Http\Controllers\Admin\LineaController;
 use App\Http\Controllers\Admin\PagoController;
@@ -112,4 +113,25 @@ Route::middleware('auth')->prefix('panel')->group(function () {
         // Pagos
         Route::resource('pagos', PagoController::class)->only(['index', 'create', 'store']);
     });
+
+    // Alias amigable dentro de panel si el usuario navega a /panel/contabilidad
+    Route::middleware('rol.operativo')->prefix('contabilidad')->group(function () {
+        Route::get('/', fn () => redirect()->route('contabilidad.index'));
+    });
+});
+
+// Módulo Contable (Normativa Bolivia - Ciclo Contable Completo)
+Route::middleware(['auth', 'rol.operativo'])->prefix('contabilidad')->name('contabilidad.')->group(function () {
+    Route::get('/', [ContabilidadController::class, 'index'])->name('index');
+    Route::get('/balance-apertura', [ContabilidadController::class, 'balanceApertura'])->name('balance-apertura');
+    Route::post('/balance-apertura', [ContabilidadController::class, 'storeBalanceApertura'])->name('balance-apertura.store');
+    Route::get('/libro-diario', [ContabilidadController::class, 'libroDiario'])->name('libro-diario');
+    Route::get('/asientos/crear', [ContabilidadController::class, 'createAsiento'])->name('asientos.crear');
+    Route::post('/asientos', [ContabilidadController::class, 'storeAsiento'])->name('asientos.store');
+    Route::post('/asientos/{asiento}/anular', [ContabilidadController::class, 'anularAsiento'])->name('asientos.anular');
+    Route::get('/libro-mayor', [ContabilidadController::class, 'libroMayor'])->name('libro-mayor');
+    Route::get('/sumas-saldos', [ContabilidadController::class, 'sumasSaldos'])->name('sumas-saldos');
+    Route::get('/estados-financieros', [ContabilidadController::class, 'estadosFinancieros'])->name('estados-financieros');
+    Route::get('/kardex-valorado', [ContabilidadController::class, 'kardexValorado'])->name('kardex-valorado');
+    Route::get('/plan-cuentas', [ContabilidadController::class, 'planCuentas'])->name('plan-cuentas');
 });
