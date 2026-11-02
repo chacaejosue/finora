@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Venta extends Model
 {
@@ -60,6 +61,11 @@ class Venta extends Model
     public function credito(): HasOne
     {
         return $this->hasOne(Credito::class, 'venta_id');
+    }
+
+    public function asientos(): MorphMany
+    {
+        return $this->morphMany(Asiento::class, 'contabilizable');
     }
 
     public function getSubtotalAttribute(): float

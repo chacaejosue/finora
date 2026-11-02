@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Compra extends Model
 {
@@ -15,6 +16,7 @@ class Compra extends Model
         'registrado_por_usuario_id',
         'fecha_solicitud',
         'fecha_recepcion',
+        'forma_pago',
         'estado',
         'observaciones',
     ];
@@ -40,6 +42,11 @@ class Compra extends Model
     public function detalles(): HasMany
     {
         return $this->hasMany(DetalleCompra::class, 'compra_id');
+    }
+
+    public function asientos(): MorphMany
+    {
+        return $this->morphMany(Asiento::class, 'contabilizable');
     }
 
     public function getTotalAttribute(): float
