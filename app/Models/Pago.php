@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Pago extends Model
 {
@@ -41,5 +42,10 @@ class Pago extends Model
     public function aplicaciones(): HasMany
     {
         return $this->hasMany(AplicacionPago::class, 'pago_id');
+    }
+
+    public function asientos(): MorphMany
+    {
+        return $this->morphMany(Asiento::class, 'contabilizable');
     }
 }

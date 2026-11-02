@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class MovimientoInventario extends Model
 {
@@ -16,6 +17,8 @@ class MovimientoInventario extends Model
         'detalle_venta_id',
         'tipo',
         'cantidad',
+        'costo_unitario',
+        'costo_total',
         'fecha',
         'observacion',
     ];
@@ -24,6 +27,8 @@ class MovimientoInventario extends Model
     {
         return [
             'cantidad' => 'integer',
+            'costo_unitario' => 'decimal:2',
+            'costo_total' => 'decimal:2',
             'fecha' => 'datetime',
         ];
     }
@@ -46,5 +51,10 @@ class MovimientoInventario extends Model
     public function detalleVenta(): BelongsTo
     {
         return $this->belongsTo(DetalleVenta::class, 'detalle_venta_id');
+    }
+
+    public function asientos(): MorphMany
+    {
+        return $this->morphMany(Asiento::class, 'contabilizable');
     }
 }

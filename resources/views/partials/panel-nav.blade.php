@@ -72,6 +72,50 @@
         @endif
 
         <div class="pt-3 pb-1.5 px-3.5">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Contabilidad (Bolivia)</span>
+        </div>
+
+        <a href="{{ route('contabilidad.index') }}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('contabilidad.index') ? 'bg-blue-50 text-finora-blue font-extrabold' : 'text-slate-700 hover:bg-slate-50' }}">
+            <span class="material-symbols-outlined text-lg text-blue-600">monitoring</span>
+            <span>Panel Contable</span>
+        </a>
+
+        <a href="{{ route('contabilidad.balance-apertura') }}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('contabilidad.balance-apertura*') ? 'bg-emerald-50 text-emerald-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50' }}">
+            <span class="material-symbols-outlined text-lg text-emerald-600">flag</span>
+            <span>Balance de Apertura</span>
+        </a>
+
+        <a href="{{ route('contabilidad.libro-diario') }}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('contabilidad.libro-diario*') || request()->routeIs('contabilidad.asientos*') ? 'bg-indigo-50 text-indigo-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50' }}">
+            <span class="material-symbols-outlined text-lg text-indigo-600">menu_book</span>
+            <span>Libro Diario</span>
+        </a>
+
+        <a href="{{ route('contabilidad.libro-mayor') }}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('contabilidad.libro-mayor*') ? 'bg-purple-50 text-purple-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50' }}">
+            <span class="material-symbols-outlined text-lg text-purple-600">import_contacts</span>
+            <span>Libro Mayor</span>
+        </a>
+
+        <a href="{{ route('contabilidad.sumas-saldos') }}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('contabilidad.sumas-saldos*') ? 'bg-amber-50 text-amber-800 font-extrabold' : 'text-slate-700 hover:bg-slate-50' }}">
+            <span class="material-symbols-outlined text-lg text-amber-600">balance</span>
+            <span>Sumas y Saldos</span>
+        </a>
+
+        <a href="{{ route('contabilidad.estados-financieros') }}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('contabilidad.estados-financieros*') ? 'bg-rose-50 text-rose-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50' }}">
+            <span class="material-symbols-outlined text-lg text-rose-600">query_stats</span>
+            <span>Estados Financieros</span>
+        </a>
+
+        <a href="{{ route('contabilidad.kardex-valorado') }}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('contabilidad.kardex-valorado*') ? 'bg-cyan-50 text-cyan-800 font-extrabold' : 'text-slate-700 hover:bg-slate-50' }}">
+            <span class="material-symbols-outlined text-lg text-cyan-600">receipt_long</span>
+            <span>Kardex Valorado (CPP)</span>
+        </a>
+
+        <a href="{{ route('contabilidad.plan-cuentas') }}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('contabilidad.plan-cuentas*') ? 'bg-teal-50 text-teal-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50' }}">
+            <span class="material-symbols-outlined text-lg text-teal-600">account_tree</span>
+            <span>Plan de Cuentas y Modelos</span>
+        </a>
+
+        <div class="pt-3 pb-1.5 px-3.5">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Configuración</span>
         </div>
 

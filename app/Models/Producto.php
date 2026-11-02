@@ -18,6 +18,7 @@ class Producto extends Model
         'nombre',
         'descripcion',
         'precio_venta_actual',
+        'costo_promedio',
         'imagen_principal',
         'publicado',
         'activo',
@@ -27,6 +28,7 @@ class Producto extends Model
     {
         return [
             'precio_venta_actual' => 'decimal:2',
+            'costo_promedio' => 'decimal:2',
             'publicado' => 'boolean',
             'activo' => 'boolean',
         ];
