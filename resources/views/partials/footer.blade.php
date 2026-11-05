@@ -1,52 +1,70 @@
-<!-- Pie de página principal de Finora -->
-<footer class="relative z-10 w-full bg-surface-container-low mt-space-2xl">
-    <div class="max-w-7xl mx-auto px-space-md lg:px-margin pt-space-2xl pb-space-xl">
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-space-xl">
-            <!-- Columna 1: Logotipo y descripción corta de Finora -->
-            <div class="lg:col-span-5 flex flex-col gap-space-md">
-                <div class="flex items-center gap-space-sm">
+<!-- Pie de página principal de Finora — Rediseño Moderno Luxury -->
+<footer class="relative z-10 w-full bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200/70 dark:border-slate-800 pt-16 pb-12 mt-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-12 pb-12 border-b border-slate-200 dark:border-slate-800">
+
+            <!-- Columna 1: Marca Finora -->
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-2.5">
                     <img src="{{ asset('images/branding/finora-isotipo.png') }}" alt="Finora" class="h-8 w-auto object-contain"/>
-                    <span class="font-headline-sm text-headline-sm text-primary-container">Finora</span>
+                    <span class="font-heading font-extrabold text-2xl text-slate-900 dark:text-white tracking-tight">Finora</span>
                 </div>
-                <p class="font-body-md text-body-md text-on-surface-variant max-w-sm">
-                    Plataforma de gestión comercial y catálogo digital para consultor independiente Natura.
+                <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
+                    Plataforma comercial y catálogo exclusivo para consultores independientes. Fragancias, cuidado de la piel y bienestar con atención y asesoramiento directo.
                 </p>
+                <div class="flex items-center gap-2 pt-2">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Consultor en línea
+                    </span>
+                </div>
             </div>
 
-            <!-- Columna 2: Accesos directos a categorías del catálogo -->
-            <div class="lg:col-span-3 flex flex-col gap-space-sm">
-                <h3 class="font-title-md text-title-md text-on-surface">Categorías</h3>
-                {{-- 1.3: Cada enlace lleva a la categoría específica, no a /categorias genérico --}}
-                <ul class="flex flex-col gap-space-xs font-body-md text-body-md text-on-surface-variant">
-                    @foreach (($categorias ?? collect())->take(6) as $categoria)
-                        <li><a class="hover:text-secondary transition-colors" href="{{ route('categorias', ['categoria' => \Illuminate\Support\Str::slug($categoria->nombre)]) }}">{{ $categoria->nombre }}</a></li>
-                    @endforeach
+            <!-- Columna 2: Enlaces rápidos -->
+            <div class="flex flex-col gap-3 md:justify-self-center">
+                <h3 class="font-heading font-bold text-sm text-slate-900 dark:text-white tracking-wide">Enlaces</h3>
+                <ul class="flex flex-col gap-2.5 text-sm text-slate-600 dark:text-slate-400">
+                    <li><a href="{{ route('landing') }}" class="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Inicio</a></li>
+                    <li><a href="{{ route('categorias') }}" class="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Categorías</a></li>
+                    <li><a href="{{ request()->routeIs('landing') ? '#ofertas' : route('landing') . '#ofertas' }}" class="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Ofertas</a></li>
+                    <li><a href="{{ request()->routeIs('landing') ? '#contacto' : route('landing') . '#contacto' }}" class="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Contacto</a></li>
                 </ul>
             </div>
 
-            <!-- Columna 3: Asistencia directa y contacto por WhatsApp -->
-            <div class="lg:col-span-4 flex flex-col gap-space-sm">
-                <h3 class="font-title-md text-title-md text-on-surface">Asistencia Directa</h3>
-                <p class="font-body-md text-body-md text-on-surface-variant">¿Tienes dudas sobre algún producto o pedido? Chatea directamente con tu consultor de confianza.</p>
-                {{-- Botón WhatsApp con icono SVG y efecto interactivo --}}
-                <a class="inline-flex items-center justify-center gap-2 px-space-md py-2.5 rounded-xl bg-surface-container-lowest text-primary-container hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200 border border-surface-container-high/60 font-title-md text-title-md shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group" href="https://wa.me/{{ preg_replace('/\D+/', '', config('services.whatsapp.phone')) }}?text=Hola%20deseo%20consultar%20el%20cat%C3%A1logo%20Finora" target="_blank" rel="noopener noreferrer">
-                    <svg class="w-5 h-5 text-emerald-600 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.995.545 1.761.791 2.796.791 3.182 0 5.768-2.587 5.768-5.766.001-3.182-2.585-5.778-5.768-5.778zm0-2c4.28 0 7.768 3.488 7.768 7.778 0 4.281-3.487 7.766-7.768 7.766-1.328 0-2.597-.336-3.716-.941l-4.315 1.131 1.152-4.212c-.7-1.189-1.089-2.56-1.089-3.744 0-4.29 3.488-7.778 7.768-7.778z"/>
-                    </svg>
-                    <span>WhatsApp Consultor</span>
-                    <span class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
-                </a>
+            <!-- Columna 3: Ayuda y Políticas -->
+            <div class="flex flex-col gap-3 md:justify-self-end">
+                <h3 class="font-heading font-bold text-sm text-slate-900 dark:text-white tracking-wide">Ayuda</h3>
+                <ul class="flex flex-col gap-2.5 text-sm text-slate-600 dark:text-slate-400">
+                    <li>
+                        <button type="button" onclick="window.finoraOpenPolicy?.('faq')" class="hover:text-sky-600 dark:hover:text-sky-400 transition-colors text-left cursor-pointer">
+                            Preguntas frecuentes
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" onclick="window.finoraOpenPolicy?.('envios')" class="hover:text-sky-600 dark:hover:text-sky-400 transition-colors text-left cursor-pointer">
+                            Envíos y devoluciones
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" onclick="window.finoraOpenPolicy?.('terminos')" class="hover:text-sky-600 dark:hover:text-sky-400 transition-colors text-left cursor-pointer">
+                            Términos y condiciones
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" onclick="window.finoraOpenPolicy?.('privacidad')" class="hover:text-sky-600 dark:hover:text-sky-400 transition-colors text-left cursor-pointer">
+                            Política de privacidad
+                        </button>
+                    </li>
+                </ul>
             </div>
         </div>
 
-        <!-- Barra inferior: Derechos reservados y enlaces legales -->
-        <div class="mt-space-2xl pt-space-md flex flex-col sm:flex-row items-center justify-between gap-space-md border-t border-surface-container-highest/60">
-            <p class="font-body-sm text-body-sm text-on-surface-variant text-center sm:text-left">Finora © {{ date('Y') }} &bull; Catálogo digital para consultor independiente Natura. Todos los derechos reservados.</p>
-            <div class="flex items-center gap-space-lg font-body-sm text-body-sm text-on-surface-variant">
-                <span class="inline-flex items-center gap-1.5 text-xs text-secondary font-medium">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Atención activa
-                </span>
+        <!-- Barra inferior de copyright -->
+        <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <p>© {{ date('Y') }} Finora. Todos los derechos reservados.</p>
+            <div class="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-medium">
+                <span>&rarr;</span>
+                <span>Belleza y bienestar que inspiran</span>
             </div>
         </div>
     </div>
