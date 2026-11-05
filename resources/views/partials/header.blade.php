@@ -1,190 +1,143 @@
-<!-- Encabezado principal de Finora — Sitio público -->
-<header class="public-header-bar fixed top-0 w-full z-50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-    <div class="public-header-inner h-20 max-w-7xl mx-auto px-space-md lg:px-margin flex items-center justify-between">
+<!-- BEGIN: MainHeader Finora (Componente Reutilizable Unificado) -->
+<header class="w-full bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-sky-100/60 transition-all" id="mainHeader">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+        <!-- Brand Logo Finora (Uso del isotipo oficial de Finora) -->
+        <a aria-label="Finora Inicio" class="flex items-center gap-2.5 shrink-0 group cursor-pointer" href="{{ route('landing') }}" id="nav-inicio">
+            <img src="{{ asset('images/branding/finora-isotipo.png') }}" class="w-9 h-9 object-contain group-hover:scale-105 transition-transform" alt="Finora">
+            <span class="text-2xl font-bold tracking-tight text-[#0e1b2e]">Finora</span>
+        </a>
 
-        <!-- Logotipo e identidad de marca -->
-        <div class="flex items-center gap-space-lg">
-            <a class="flex items-center gap-space-sm group" href="{{ route('landing') }}" id="nav-inicio">
-                <img src="{{ asset('images/branding/finora-isotipo.png') }}" alt="Finora"
-                    class="public-header-logo h-10 w-auto object-contain group-hover:scale-105 transition-transform"/>
-                <div class="public-header-brand flex flex-col leading-none">
-                    <span class="font-headline-md text-headline-md text-primary-container tracking-tight">Finora</span>
-                    <span class="public-header-subtitle text-[10px] font-medium text-on-surface-variant tracking-wide mt-0.5">Catálogo Online</span>
+        <!-- Primary Navigation Links (Desktop) -->
+        <nav class="hidden md:flex items-center gap-8 text-[15px] font-medium text-slate-600">
+            @if(request()->routeIs('landing'))
+                <span class="text-finora-cyan font-semibold relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-finora-cyan after:rounded-full cursor-default select-none pointer-events-none" aria-current="page">Inicio</span>
+            @else
+                <a class="hover:text-finora-cyan transition-colors" href="{{ route('landing') }}" id="nav-inicio-link">Inicio</a>
+            @endif
+
+            @if(request()->routeIs('categorias'))
+                <!-- Pestaña categorías desactivada / fija porque ya estamos aquí -->
+                <span class="text-finora-cyan font-semibold relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-finora-cyan after:rounded-full cursor-default select-none pointer-events-none" aria-current="page">Categorías</span>
+            @else
+                <div class="relative group cursor-pointer flex items-center gap-1 hover:text-finora-cyan transition-colors" id="nav-categorias-dropdown">
+                    <a href="{{ route('categorias') }}" class="flex items-center gap-1">
+                        <span>Categorías</span>
+                        <svg class="w-4 h-4 text-slate-400 group-hover:text-finora-cyan transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                    </a>
+                    <div class="absolute left-0 top-full pt-2 w-56 hidden group-hover:block transition-all z-50">
+                        <div class="rounded-2xl bg-white shadow-card border border-slate-100 p-2.5 flex flex-col gap-1">
+                            <a href="{{ route('categorias') }}" class="px-3 py-2 rounded-xl text-xs font-bold text-finora-cyan hover:bg-cyan-50 flex items-center justify-between">
+                                <span>Ver todo el catálogo</span>
+                                <span>→</span>
+                            </a>
+                            <div class="h-px bg-slate-100 my-1"></div>
+                            @php
+                                $headerCategorias = $categorias ?? \App\Models\Categoria::where('activo', true)->orderBy('nombre')->get();
+                            @endphp
+                            @foreach($headerCategorias as $cat)
+                                <a href="{{ route('categorias', ['categoria' => \Illuminate\Support\Str::slug($cat->nombre)]) }}" class="px-3 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-finora-cyan hover:bg-slate-50 flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                                    <span class="truncate">{{ $cat->nombre }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
+            @endif
+
+            <a class="hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#ofertas' : route('landing') . '#ofertas' }}">Ofertas</a>
+            <a class="hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#nosotros' : route('landing') . '#nosotros' }}">Nosotros</a>
+            <a class="hover:text-finora-cyan transition-colors" href="https://wa.me/{{ preg_replace('/\D+/', '', config('services.whatsapp.phone')) }}" target="_blank" rel="noopener noreferrer">Contacto</a>
+        </nav>
+
+        <!-- Search and Header User Actions -->
+        <div class="flex items-center gap-3 sm:gap-5">
+            <!-- Search Bar with centered icon -->
+            <form action="{{ route('categorias') }}" method="GET" class="relative hidden sm:flex items-center w-48 lg:w-64 m-0 p-0" id="headerSearchForm">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                </span>
+                <input name="buscar" id="headerSearchInput" value="{{ request('buscar') }}" class="w-full pl-10 pr-4 py-2 text-xs lg:text-sm leading-normal bg-slate-50 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-finora-cyan focus:border-transparent text-slate-700 placeholder-slate-400" placeholder="Buscar productos..." type="search">
+            </form>
+
+            <span class="theme-toggle-slot hidden" aria-hidden="true"></span>
+
+            <!-- Account Profile Link -->
+            @auth
+                <a href="{{ auth()->user()->rol === 'CLIENTE' ? route('mi-cuenta') : route('panel') }}" aria-label="Perfil de usuario" class="text-slate-700 hover:text-finora-cyan transition-colors p-1.5 rounded-full hover:bg-slate-100 cursor-pointer" title="{{ auth()->user()->persona?->nombre ?? 'Mi cuenta' }}">
+                    <svg class="w-6 h-6 stroke-[1.8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </a>
+            @else
+                <a href="{{ route('login') }}" aria-label="Iniciar sesión" class="text-slate-700 hover:text-finora-cyan transition-colors p-1.5 rounded-full hover:bg-slate-100 cursor-pointer" title="Iniciar sesión">
+                    <svg class="w-6 h-6 stroke-[1.8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </a>
+            @endauth
+
+            <!-- Cart Link with Badge -->
+            <a id="cartLink" href="{{ route('carrito') }}" aria-label="Ver carrito" class="relative text-slate-700 hover:text-finora-cyan transition-colors p-1.5 rounded-full hover:bg-slate-100 cursor-pointer" title="Ver carrito">
+                <svg class="w-6 h-6 stroke-[1.8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                <span id="publicCartBadge" class="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-finora-cyan text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-xs">
+                    0
+                </span>
             </a>
 
-            <!-- Navegación principal (desktop) -->
-            <nav class="hidden lg:flex items-center gap-space-lg pl-space-md">
-                <a id="nav-inicio-link"
-                    class="font-title-md text-title-md transition-colors {{ request()->routeIs('landing') ? 'text-secondary font-bold' : 'text-on-surface-variant hover:text-secondary' }}"
-                    href="{{ route('landing') }}">Inicio</a>
-                <a id="nav-destacados"
-                    class="font-title-md text-title-md transition-colors text-on-surface-variant hover:text-secondary"
-                    href="{{ route('landing') }}#catalogo-destacados">Destacados</a>
-                <a id="nav-categorias"
-                    class="font-title-md text-title-md transition-colors {{ request()->routeIs('categorias') ? 'text-secondary font-bold' : 'text-on-surface-variant hover:text-secondary' }}"
-                    href="{{ route('categorias') }}">Categorías</a>
-            </nav>
-        </div>
-
-        <!-- Acciones del header -->
-        <div class="flex items-center gap-space-sm">
-            <a href="{{ route('carrito') }}" class="relative inline-flex items-center justify-center rounded-xl p-2.5 text-on-surface-variant hover:bg-surface-container hover:text-secondary" aria-label="Ver carrito" title="Ver carrito">
-                <span class="material-symbols-outlined text-[22px]">shopping_cart</span>
-                <span id="publicCartBadge" class="absolute -right-1 -top-1 hidden min-w-5 rounded-full bg-emerald-600 px-1 text-center text-[10px] font-bold leading-5 text-white">0</span>
-             </a>
-            <span class="theme-toggle-slot"></span>
-            <!-- Botón iniciar sesión -->
-            <a class="public-header-login inline-flex items-center justify-center px-3 py-2 sm:px-space-lg sm:py-space-sm rounded-xl bg-gradient-to-r from-secondary-container to-secondary text-on-secondary font-title-md text-xs sm:text-title-md whitespace-nowrap shadow-[0_4px_14px_rgba(2,102,255,0.28)] hover:shadow-[0_6px_20px_rgba(2,102,255,0.38)] hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
-                href="{{ route('login') }}">
-                <span class="material-symbols-outlined public-header-login-icon text-[18px] mr-1">login</span>
-                <span class="public-header-login-label sm:hidden">Ingresar</span>
-                <span class="hidden sm:inline">Iniciar sesión</span>
-            </a>
-
-            <!-- Hamburguesa (mobile) -->
-            <button id="mobile-menu-toggle"
-                class="lg:hidden p-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container active:scale-95 transition-all cursor-pointer"
-                aria-label="Abrir menú" aria-controls="mobile-menu" aria-expanded="false">
-                <span class="material-symbols-outlined text-[24px]" id="mobile-menu-icon">menu</span>
+            <!-- Mobile menu toggle button -->
+            <button type="button" id="mobileMenuToggle" class="md:hidden p-1.5 text-slate-700 hover:text-finora-cyan focus:outline-none cursor-pointer" aria-label="Abrir menú de navegación">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path id="mobileMenuIcon" d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
             </button>
         </div>
     </div>
 
-    <!-- Menú móvil desplegable con animación -->
-    <div id="mobile-menu"
-        class="hidden lg:hidden border-t border-surface-container-high/40 bg-surface-container-lowest/98 backdrop-blur-xl px-space-md pb-5 shadow-xl transition-all"
-        aria-label="Navegación móvil" aria-hidden="true">
-        <nav class="flex flex-col gap-1.5 pt-3">
-            <a id="mobile-nav-inicio" href="{{ route('landing') }}"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl font-title-md text-title-md transition-colors {{ request()->routeIs('landing') ? 'bg-secondary/10 text-secondary font-bold' : 'text-on-surface-variant hover:bg-surface-container hover:text-secondary' }}">
-                <span class="material-symbols-outlined text-[20px]">home</span>
-                Inicio
-            </a>
-            <a id="mobile-nav-destacados" href="{{ route('landing') }}#catalogo-destacados"
-                class="mobile-nav-link flex items-center gap-3 px-4 py-3 rounded-xl font-title-md text-title-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors">
-                <span class="material-symbols-outlined text-[20px]">star</span>
-                Destacados
-            </a>
-            <a id="mobile-nav-categorias" href="{{ route('categorias') }}"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl font-title-md text-title-md transition-colors {{ request()->routeIs('categorias') ? 'bg-secondary/10 text-secondary font-bold' : 'text-on-surface-variant hover:bg-surface-container hover:text-secondary' }}">
-                <span class="material-symbols-outlined text-[20px]">category</span>
-                Categorías
-            </a>
-            <div class="border-t border-surface-container-high/40 mt-2 pt-3">
-                <a href="{{ route('login') }}"
-                    class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-title-md text-title-md bg-secondary text-on-secondary shadow-md hover:bg-secondary-container transition-all">
-                    <span class="material-symbols-outlined text-[18px]">login</span>
-                    Iniciar sesión
-                </a>
+    <!-- Mobile Menu Drawer (Responsive) -->
+    <div id="mobileMenuDrawer" class="hidden md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-md px-4 py-4 space-y-3 shadow-lg">
+        <form action="{{ route('categorias') }}" method="GET" class="relative w-full flex items-center">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+            </span>
+            <input name="buscar" value="{{ request('buscar') }}" class="w-full pl-10 pr-4 py-2 text-xs leading-normal bg-slate-50 border border-slate-200 rounded-full text-slate-700 placeholder-slate-400" placeholder="Buscar productos..." type="search">
+        </form>
+        <nav class="flex flex-col gap-2 text-sm font-medium text-slate-700">
+            @if(request()->routeIs('landing'))
+                <span class="py-2 px-3 rounded-lg text-finora-cyan font-semibold bg-cyan-50/50 cursor-default select-none pointer-events-none">Inicio</span>
+            @else
+                <a class="py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors" href="{{ route('landing') }}">Inicio</a>
+            @endif
+
+            @if(request()->routeIs('categorias'))
+                <span class="py-2 px-3 rounded-lg text-finora-cyan font-semibold bg-cyan-50/50 cursor-default select-none pointer-events-none">Categorías</span>
+            @else
+                <a class="py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors" href="{{ route('categorias') }}">Categorías</a>
+            @endif
+
+            <a class="py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors" href="{{ request()->routeIs('landing') ? '#ofertas' : route('landing') . '#ofertas' }}">Ofertas</a>
+            <a class="py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors" href="{{ request()->routeIs('landing') ? '#nosotros' : route('landing') . '#nosotros' }}">Nosotros</a>
+            <a class="py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors" href="https://wa.me/{{ preg_replace('/\D+/', '', config('services.whatsapp.phone')) }}" target="_blank" rel="noopener noreferrer">Contacto</a>
+            <div class="border-t border-slate-100 pt-2 mt-1">
+                @auth
+                    <a href="{{ auth()->user()->rol === 'CLIENTE' ? route('mi-cuenta') : route('panel') }}" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-finora-cyan text-white text-xs font-bold shadow-sm">
+                        Mi Cuenta / Panel
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-[#0e1b2e] text-white text-xs font-bold shadow-sm">
+                        Iniciar Sesión
+                    </a>
+                @endauth
             </div>
         </nav>
     </div>
 </header>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const header = document.querySelector('.public-header-bar');
-        const mobileToggle = document.getElementById('mobile-menu-toggle');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const mobileIcon = document.getElementById('mobile-menu-icon');
-
-        // Scroll dinámico en header para efecto de elevación
-        if (header) {
-            const handleScroll = () => {
-                if (window.scrollY > 20) {
-                    header.classList.add('shadow-md', 'border-b', 'border-surface-container-high/50');
-                } else {
-                    header.classList.remove('shadow-md', 'border-b', 'border-surface-container-high/50');
-                }
-            };
-            window.addEventListener('scroll', handleScroll, { passive: true });
-            handleScroll();
-        }
-
-        const cartBadge = document.getElementById('publicCartBadge');
-        if (cartBadge) {
-            const cart = JSON.parse(window.localStorage.getItem('finora-carrito') || '[]');
-            const count = cart.reduce((total, item) => total + Number(item.qty || 0), 0);
-            cartBadge.textContent = count;
-            cartBadge.classList.toggle('hidden', count === 0);
-        }
-
-        // Toggle del menú móvil
-        if (mobileToggle && mobileMenu) {
-            mobileToggle.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const isExpanded = mobileToggle.getAttribute('aria-expanded') === 'true';
-                mobileToggle.setAttribute('aria-expanded', String(!isExpanded));
-                mobileMenu.setAttribute('aria-hidden', String(isExpanded));
-                mobileMenu.classList.toggle('hidden', isExpanded);
-                if (mobileIcon) {
-                    mobileIcon.textContent = isExpanded ? 'menu' : 'close';
-                }
-            });
-
-            // Cerrar menú al hacer clic en enlaces internos o fuera
-            document.querySelectorAll('.mobile-nav-link, #mobile-menu a').forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileMenu.classList.add('hidden');
-                    mobileToggle.setAttribute('aria-expanded', 'false');
-                    mobileMenu.setAttribute('aria-hidden', 'true');
-                    if (mobileIcon) mobileIcon.textContent = 'menu';
-                });
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!mobileMenu.contains(e.target) && !mobileToggle.contains(e.target)) {
-                    mobileMenu.classList.add('hidden');
-                    mobileToggle.setAttribute('aria-expanded', 'false');
-                    mobileMenu.setAttribute('aria-hidden', 'true');
-                    if (mobileIcon) mobileIcon.textContent = 'menu';
-                }
-            });
-        }
-
-        // Scroll suave al top en "Inicio" si ya estamos en la landing
-        const navInicio = document.getElementById('nav-inicio');
-        const navInicioLink = document.getElementById('nav-inicio-link');
-        const mobileNavInicio = document.getElementById('mobile-nav-inicio');
-        [navInicio, navInicioLink, mobileNavInicio].forEach(el => {
-            if (!el) return;
-            el.addEventListener('click', (e) => {
-                if (window.location.pathname === '/' || window.location.pathname === '') {
-                    e.preventDefault();
-                    if (window.location.hash) {
-                        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-                    }
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    updateDestacadosState();
-                }
-            });
-        });
-
-        // Iluminar "Destacados" cuando el hash es #catalogo-destacados
-        const navDestacados = document.getElementById('nav-destacados');
-        const mobileNavDestacados = document.getElementById('mobile-nav-destacados');
-
-        function setActiveState(element, active, activeClasses, inactiveClasses) {
-            if (!element) return;
-            element.classList.toggle('text-secondary', active);
-            element.classList.toggle('font-bold', active);
-            activeClasses.forEach(className => element.classList.toggle(className, active));
-            inactiveClasses.forEach(className => element.classList.toggle(className, !active));
-        }
-
-        function updateDestacadosState() {
-            if (window.location.pathname !== '/' && window.location.pathname !== '') return;
-
-            const isAtTop = window.scrollY <= 120;
-            const isDestacadosActive = !isAtTop && window.location.hash === '#catalogo-destacados';
-            setActiveState(navDestacados, isDestacadosActive, [], ['text-on-surface-variant', 'hover:text-secondary']);
-            setActiveState(mobileNavDestacados, isDestacadosActive, ['bg-secondary/10'], ['text-on-surface-variant', 'hover:bg-surface-container', 'hover:text-on-surface']);
-            setActiveState(navInicioLink, !isDestacadosActive, [], ['text-on-surface-variant', 'hover:text-on-surface']);
-            setActiveState(mobileNavInicio, !isDestacadosActive, ['bg-secondary/10'], ['text-on-surface-variant', 'hover:bg-surface-container', 'hover:text-on-surface']);
-        }
-        updateDestacadosState();
-        window.addEventListener('hashchange', updateDestacadosState);
-        window.addEventListener('scroll', updateDestacadosState, { passive: true });
-    });
-</script>
+<!-- END: MainHeader Finora -->
