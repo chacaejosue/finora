@@ -40,6 +40,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'rol.operativo' => EnsureOperativoRole::class,
             'rol.cliente' => EnsureClienteRole::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'productos/*/like',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

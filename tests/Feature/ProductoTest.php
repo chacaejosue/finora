@@ -306,6 +306,43 @@ class ProductoTest extends TestCase
         $response->assertSee('Categoría seleccionada: Cuidado Facial');
     }
 
+    public function test_catalogo_publico_filtra_por_ofertas(): void
+    {
+        $proveedor = Proveedor::create(['nombre' => 'Natura Test Ofertas', 'activo' => true]);
+        $categoria = Categoria::create(['nombre' => 'Perfumería Ofertas', 'activo' => true]);
+
+        Producto::create([
+            'proveedor_id' => $proveedor->id,
+            'categoria_id' => $categoria->id,
+            'codigo' => 'OFERTA-001',
+            'nombre' => 'Perfume en descuento',
+            'precio_venta_actual' => 50,
+            'precio_oferta' => 35,
+            'en_oferta' => true,
+            'publicado' => true,
+            'activo' => true,
+        ]);
+
+        Producto::create([
+            'proveedor_id' => $proveedor->id,
+            'categoria_id' => $categoria->id,
+            'codigo' => 'NORMAL-001',
+            'nombre' => 'Perfume precio regular',
+            'precio_venta_actual' => 50,
+            'en_oferta' => false,
+            'publicado' => true,
+            'activo' => true,
+        ]);
+
+        $response = $this->get(route('ofertas'));
+
+        $response->assertOk();
+        $response->assertSee('Perfume en descuento');
+        $response->assertDontSee('NORMAL-001');
+        $response->assertSee('Filtro activo: Productos en Oferta');
+        $response->assertSee('-30% OFF');
+    }
+
     /**
      * REGRESIÓN: La búsqueda por código exacto debe devolver el producto correcto.
      */
@@ -652,5 +689,71 @@ class ProductoTest extends TestCase
             'categoria_id' => $categoria->id, 'precio_venta_actual' => 10,
         ]);
         $this->assertNull($sinImagen->imagen_url);
+    }
+
+    /**
+     * Un visitante o usuario puede dar like (corazón) a un producto y alternarlo.
+     */
+    public function test_un_visitante_puede_dar_like_a_un_producto(): void
+    {
+        [$proveedor, $categoria] = $this->crearProveedorYCategoria();
+
+        $producto = Producto::create([
+            'codigo' => 'LIKE-001',
+            'nombre' => 'Producto Favorito',
+            'proveedor_id' => $proveedor->id,
+            'categoria_id' => $categoria->id,
+            'precio_venta_actual' => 50,
+            'likes' => 5,
+            'publicado' => true,
+            'activo' => true,
+        ]);
+
+        // 1. Dar like
+        $response = $this->postJson(route('productos.like', $producto), ['action' => 'like']);
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'likes' => 6,
+                'liked' => true,
+            ]);
+
+        $this->assertSame(6, $producto->fresh()->likes);
+
+        // 2. Quitar like
+        $responseUnlike = $this->postJson(route('productos.like', $producto), ['action' => 'unlike']);
+        $responseUnlike->assertOk()
+            ->assertJson([
+                'success' => true,
+                'likes' => 5,
+                'liked' => false,
+            ]);
+
+        $this->assertSame(5, $producto->fresh()->likes);
+    }
+
+    /**
+     * La portada prioriza los productos con más likes (corazones).
+     */
+    public function test_portada_prioriza_productos_con_mas_likes(): void
+    {
+        [$proveedor, $categoria] = $this->crearProveedorYCategoria();
+
+        $prodTop = Producto::create([
+            'codigo' => 'TOP-001',
+            'nombre' => 'Súper Estrella con Likes',
+            'proveedor_id' => $proveedor->id,
+            'categoria_id' => $categoria->id,
+            'precio_venta_actual' => 50,
+            'likes' => 99,
+            'publicado' => true,
+            'activo' => true,
+        ]);
+
+        $response = $this->get(route('landing'));
+        $response->assertOk();
+        $response->assertSee('Súper Estrella con Likes');
+        $response->assertSee('99');
+        $response->assertSee('me gusta');
     }
 }
