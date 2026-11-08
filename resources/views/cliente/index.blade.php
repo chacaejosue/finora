@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Finora - Mi Cuenta | Portal de Cliente</title>
+    <title>Mi Cuenta | Portal de Cliente - Finora</title>
 
     <!-- Favicon de Finora -->
     <link rel="icon" type="image/png" href="{{ asset('images/branding/finora-icono.png') }}"/>
@@ -28,8 +28,8 @@
                     <img src="{{ asset('images/branding/finora-isotipo.png') }}" alt="Finora" class="h-9 w-auto object-contain group-hover:scale-105 transition-transform"/>
                 </div>
                 <div class="flex flex-col">
-                    <span class="font-heading text-xl font-extrabold tracking-tight text-finora-navy">Finora</span>
-                    <span class="text-[10px] font-medium text-finora-subtle -mt-1 tracking-wide">Mi Cuenta &bull; Portal de Cliente</span>
+                    <span class="font-heading text-xl font-extrabold tracking-tight text-finora-navy">Portal de Cliente</span>
+                    <span class="text-[10px] font-medium text-finora-subtle -mt-1 tracking-wide">Consultoría Natura &bull; Sistema Finora</span>
                 </div>
             </a>
 
@@ -78,7 +78,7 @@
                 </h1>
 
                 <p class="mt-3 text-slate-300 text-sm sm:text-base leading-relaxed font-normal">
-                    Gracias por confiar en Finora. Este es tu panel de cliente donde próximamente podrás realizar el seguimiento de tus pedidos, consultar estados de cuenta y gestionar tus preferencias.
+                    Gracias por confiar en nuestra consultoría de belleza. Este es tu panel de cliente donde podrás consultar tus pedidos registrados y estado de cuenta.
                 </p>
             </div>
         </section>

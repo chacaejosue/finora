@@ -154,7 +154,7 @@ class PedidoPublicoController extends Controller
         ))->implode("\n");
 
         $mensaje = sprintf(
-            "Hola, quiero consultar el pedido #%d de Finora.\n\n%s\n\n• Total estimado: Bs %s\n• Preferencia de pago: %s",
+            "¡Hola! Deseo coordinar mi pedido #%d del Catálogo Natura:\n\n%s\n\n• Total estimado: Bs %s\n• Preferencia de pago: %s\n\n¿Me podrías confirmar la disponibilidad y entrega, por favor?",
             $pedido->id,
             $detalle,
             number_format($pedido->total, 2, ',', '.'),
