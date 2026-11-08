@@ -10,8 +10,14 @@ return new class extends Migration
     {
         Schema::create('usuarios', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('persona_id')->unique()->constrained('personas')->restrictOnDelete();
-            $table->string('password');
+            $table->string('nombre', 100);
+            $table->string('apellido', 100)->nullable();
+            $table->string('telefono', 30)->nullable()->index();
+            $table->string('email', 255)->nullable()->unique();
+            $table->string('genero', 20)->nullable();
+            $table->string('direccion', 255)->nullable();
+            $table->text('observaciones')->nullable();
+            $table->string('password')->nullable();
             // Valores iniciales: CONSULTOR, COLABORADOR, CLIENTE.
             $table->string('rol', 30)->index();
             $table->boolean('activo')->default(true)->index();
@@ -19,6 +25,8 @@ return new class extends Migration
             $table->timestamp('ultimo_acceso')->nullable();
             $table->rememberToken();
             $table->timestamps();
+
+            $table->index(['nombre', 'apellido']);
         });
     }
 
