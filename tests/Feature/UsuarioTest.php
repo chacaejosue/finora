@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Persona;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -18,17 +17,17 @@ class UsuarioTest extends TestCase
     {
         parent::setUp();
 
-        $p1 = Persona::create(['nombre' => 'Consultor', 'email' => 'admin@finora.test']);
         $this->consultor = Usuario::create([
-            'persona_id' => $p1->id,
+            'nombre' => 'Consultor',
+            'email' => 'admin@finora.test',
             'password' => bcrypt('password'),
             'rol' => 'CONSULTOR',
             'activo' => true,
         ]);
 
-        $p2 = Persona::create(['nombre' => 'Colaborador', 'email' => 'colab@finora.test']);
         $this->colaborador = Usuario::create([
-            'persona_id' => $p2->id,
+            'nombre' => 'Colaborador',
+            'email' => 'colab@finora.test',
             'password' => bcrypt('password'),
             'rol' => 'COLABORADOR',
             'activo' => true,
@@ -46,8 +45,7 @@ class UsuarioTest extends TestCase
         ]);
 
         $response->assertRedirect(route('panel.usuarios.index'));
-        $this->assertDatabaseHas('personas', ['email' => 'nuevo@finora.test']);
-        $this->assertDatabaseHas('usuarios', ['rol' => 'COLABORADOR']);
+        $this->assertDatabaseHas('usuarios', ['email' => 'nuevo@finora.test', 'rol' => 'COLABORADOR']);
     }
 
     public function test_colaborador_no_puede_administrar_usuarios(): void

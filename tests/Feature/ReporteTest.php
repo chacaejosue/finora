@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Persona;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -19,9 +18,9 @@ class ReporteTest extends TestCase
 
     public function test_el_consultor_puede_ver_reportes_sin_datos(): void
     {
-        $persona = Persona::create(['nombre' => 'Consultor', 'email' => 'reportes@test.com']);
         $consultor = Usuario::create([
-            'persona_id' => $persona->id,
+            'nombre' => 'Consultor',
+            'email' => 'reportes@test.com',
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CONSULTOR',
             'activo' => true,

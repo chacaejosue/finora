@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Categoria;
-use App\Models\Cliente;
 use App\Models\Producto;
 use App\Models\Proveedor;
+use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -56,7 +56,7 @@ class PedidoPublicoTest extends TestCase
         ]);
 
         $response->assertOk()->assertSee('Solicitud registrada')->assertSee('Pedido #1');
-        $this->assertDatabaseHas('pedidos', ['estado' => 'PENDIENTE', 'cliente_id' => Cliente::first()->id]);
+        $this->assertDatabaseHas('pedidos', ['estado' => 'PENDIENTE', 'cliente_id' => Usuario::clientes()->first()->id]);
         $this->assertDatabaseCount('detalle_pedidos', 2);
         $this->assertDatabaseHas('detalle_pedidos', ['producto_id' => $productoA->id, 'cantidad' => 2, 'precio_acordado' => 25]);
         $this->assertDatabaseCount('movimientos_inventario', 0);

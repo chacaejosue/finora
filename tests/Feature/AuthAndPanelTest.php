@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Persona;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -35,14 +34,10 @@ class AuthAndPanelTest extends TestCase
      */
     public function test_consultor_autenticado_puede_acceder_al_panel(): void
     {
-        $persona = Persona::create([
+        $usuario = Usuario::create([
             'nombre' => 'Josué',
             'apellido' => 'Chacae',
             'email' => 'consultor@finora.test',
-        ]);
-
-        $usuario = Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CONSULTOR',
             'activo' => true,
@@ -60,13 +55,9 @@ class AuthAndPanelTest extends TestCase
      */
     public function test_credenciales_incorrectas_son_rechazadas(): void
     {
-        $persona = Persona::create([
+        Usuario::create([
             'nombre' => 'Test',
             'email' => 'prueba@finora.test',
-        ]);
-
-        Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('ClaveCorrecta123!'),
             'rol' => 'CONSULTOR',
             'activo' => true,
@@ -86,13 +77,9 @@ class AuthAndPanelTest extends TestCase
      */
     public function test_usuario_inactivo_no_puede_iniciar_sesion(): void
     {
-        $persona = Persona::create([
+        Usuario::create([
             'nombre' => 'Inactivo',
             'email' => 'inactivo@finora.test',
-        ]);
-
-        Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CONSULTOR',
             'activo' => false,
@@ -112,13 +99,9 @@ class AuthAndPanelTest extends TestCase
      */
     public function test_cierre_de_sesion_funciona_correctamente(): void
     {
-        $persona = Persona::create([
+        $usuario = Usuario::create([
             'nombre' => 'Consultor',
             'email' => 'logout@finora.test',
-        ]);
-
-        $usuario = Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CONSULTOR',
             'activo' => true,
@@ -135,25 +118,17 @@ class AuthAndPanelTest extends TestCase
      */
     public function test_otros_roles_no_pueden_acceder_al_panel_del_consultor(): void
     {
-        $personaColaborador = Persona::create([
+        $usuarioColaborador = Usuario::create([
             'nombre' => 'Colaborador',
             'email' => 'colaborador@finora.test',
-        ]);
-
-        $usuarioColaborador = Usuario::create([
-            'persona_id' => $personaColaborador->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'COLABORADOR',
             'activo' => true,
         ]);
 
-        $personaCliente = Persona::create([
+        $usuarioCliente = Usuario::create([
             'nombre' => 'Cliente',
             'email' => 'cliente@finora.test',
-        ]);
-
-        $usuarioCliente = Usuario::create([
-            'persona_id' => $personaCliente->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CLIENTE',
             'activo' => true,
@@ -173,13 +148,9 @@ class AuthAndPanelTest extends TestCase
      */
     public function test_consultor_autenticado_visitando_login_es_redirigido_al_panel(): void
     {
-        $persona = Persona::create([
+        $usuario = Usuario::create([
             'nombre' => 'Consultor',
             'email' => 'redirect@finora.test',
-        ]);
-
-        $usuario = Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CONSULTOR',
             'activo' => true,
@@ -195,13 +166,9 @@ class AuthAndPanelTest extends TestCase
      */
     public function test_cliente_visitando_login_es_redirigido_a_mi_cuenta(): void
     {
-        $persona = Persona::create([
+        $usuario = Usuario::create([
             'nombre' => 'Cliente',
             'email' => 'cliente_redirect@finora.test',
-        ]);
-
-        $usuario = Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CLIENTE',
             'activo' => true,
@@ -217,14 +184,10 @@ class AuthAndPanelTest extends TestCase
      */
     public function test_cliente_puede_acceder_a_su_portal_mi_cuenta(): void
     {
-        $persona = Persona::create([
+        $usuario = Usuario::create([
             'nombre' => 'Ana',
             'apellido' => 'Ríos',
             'email' => 'ana_portal@finora.test',
-        ]);
-
-        $usuario = Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CLIENTE',
             'activo' => true,
@@ -239,17 +202,13 @@ class AuthAndPanelTest extends TestCase
     }
 
     /**
-     * Un colaborador autenticado que accede a /login es redirigido a las operaciones de catálogo /panel/productos.
+     * Un colaborador autenticado que accede a /login es redirigido al panel del colaborador.
      */
     public function test_colaborador_visitando_login_es_redirigido_a_panel_productos(): void
     {
-        $persona = Persona::create([
+        $usuario = Usuario::create([
             'nombre' => 'Colaborador',
             'email' => 'colab_redirect@finora.test',
-        ]);
-
-        $usuario = Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'COLABORADOR',
             'activo' => true,

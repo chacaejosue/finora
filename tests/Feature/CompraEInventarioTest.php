@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Categoria;
 use App\Models\Compra;
-use App\Models\Persona;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Usuario;
@@ -31,9 +30,9 @@ class CompraEInventarioTest extends TestCase
             config('finora.exchange_rate_url') => Http::response('ESTADOS UNIDOS DÓLAR USD 12.00'),
         ]);
 
-        $persona = Persona::create(['nombre' => 'Admin', 'email' => 'admin@finora.test']);
         $this->consultor = Usuario::create([
-            'persona_id' => $persona->id,
+            'nombre' => 'Admin',
+            'email' => 'admin@finora.test',
             'password' => bcrypt('password'),
             'rol' => 'CONSULTOR',
             'activo' => true,
