@@ -108,29 +108,30 @@
                     </select>
                 </div>
 
-                <!-- Línea -->
+                <!-- Marca / Línea -->
                 <div>
-                    <label for="linea_id" class="block text-xs font-bold text-finora-navy mb-1.5">Línea (Opcional)</label>
-                    <select id="linea_id" name="linea_id" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
-                        <option value="">Ninguna</option>
-                        @foreach ($lineas as $lin)
-                            <option value="{{ $lin->id }}" {{ old('linea_id') == $lin->id ? 'selected' : '' }}>{{ $lin->nombre }}</option>
-                        @endforeach
-                    </select>
+                    <label for="marca_linea" class="block text-xs font-bold text-finora-navy mb-1.5">Marca / Línea (Opcional)</label>
+                    <input type="text" id="marca_linea" name="marca_linea" value="{{ old('marca_linea') }}" placeholder="Ej. Ekos, Tododia, Samsung..." class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <!-- Precio de venta actual -->
                 <div>
-                    <label for="precio_venta_actual" class="block text-xs font-bold text-finora-navy mb-1.5">Precio de Venta Actual *</label>
-                    <input type="number" step="0.01" min="0" id="precio_venta_actual" name="precio_venta_actual" value="{{ old('precio_venta_actual') }}" required placeholder="19990.00" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
+                    <label for="precio_venta_actual" class="block text-xs font-bold text-finora-navy mb-1.5">Precio de Venta Actual (Bs) *</label>
+                    <input type="number" step="0.01" min="0" id="precio_venta_actual" name="precio_venta_actual" value="{{ old('precio_venta_actual') }}" required placeholder="120.00" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
                 </div>
 
                 <!-- Stock Inicial (Opcional) -->
                 <div>
-                    <label for="stock_inicial" class="block text-xs font-bold text-finora-navy mb-1.5">Stock Inicial (Unidades en Almacén)</label>
+                    <label for="stock_inicial" class="block text-xs font-bold text-finora-navy mb-1.5">Stock Inicial (Unidades que ya tienes)</label>
                     <input type="number" min="0" id="stock_inicial" name="stock_inicial" value="{{ old('stock_inicial', 0) }}" placeholder="0" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
+                </div>
+
+                <!-- Costo Unitario Inicial (Opcional) -->
+                <div>
+                    <label for="costo_inicial" class="block text-xs font-bold text-finora-navy mb-1.5">Costo Unitario Inicial (Bs, Opcional)</label>
+                    <input type="number" step="0.01" min="0" id="costo_inicial" name="costo_inicial" value="{{ old('costo_inicial', 0) }}" placeholder="0.00" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
                 </div>
             </div>
 

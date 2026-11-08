@@ -97,7 +97,7 @@
                     </form>
                 @endif
 
-                @if ($venta->estado === 'CONFIRMADA')
+                @if ($venta->estado === 'CONFIRMADA' && auth()->user()?->rol === 'CONSULTOR')
                     <form action="{{ route('panel.ventas.anular', $venta) }}" method="POST" onsubmit="return confirm('¿Confirmas la anulación de esta venta? Se revertirá la salida de inventario.');">
                         @csrf
                         @method('PATCH')

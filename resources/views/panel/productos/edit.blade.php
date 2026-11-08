@@ -104,15 +104,10 @@
                     </select>
                 </div>
 
-                <!-- Línea -->
+                <!-- Marca / Línea -->
                 <div>
-                    <label for="linea_id" class="block text-xs font-bold text-finora-navy mb-1.5">Línea (Opcional)</label>
-                    <select id="linea_id" name="linea_id" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
-                        <option value="">Ninguna</option>
-                        @foreach ($lineas as $lin)
-                            <option value="{{ $lin->id }}" {{ old('linea_id', $producto->linea_id) == $lin->id ? 'selected' : '' }}>{{ $lin->nombre }}</option>
-                        @endforeach
-                    </select>
+                    <label for="marca_linea" class="block text-xs font-bold text-finora-navy mb-1.5">Marca / Línea (Opcional)</label>
+                    <input type="text" id="marca_linea" name="marca_linea" value="{{ old('marca_linea', $producto->marca_linea) }}" placeholder="Ej. Ekos, Tododia, Samsung..." class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
                 </div>
             </div>
 

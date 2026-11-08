@@ -69,21 +69,20 @@
                 </p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ route('panel.proveedores.index') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 hover:border-finora-blue text-finora-navy transition-colors">
-                    Proveedores
-                </a>
-                <a href="{{ route('panel.categorias.index') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 hover:border-finora-blue text-finora-navy transition-colors">
-                    Categorías
-                </a>
-                <a href="{{ route('panel.lineas.index') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 hover:border-finora-blue text-finora-navy transition-colors">
-                    Líneas
-                </a>
-                <a href="{{ route('panel.productos.create') }}" class="finora-gradient-btn px-4 py-2 rounded-xl text-white font-heading font-semibold text-xs shadow-finora-btn inline-flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-sm">add</span>
-                    Nuevo Producto
-                </a>
-            </div>
+            @if(auth()->user()?->rol === 'CONSULTOR')
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ route('panel.proveedores.index') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 hover:border-finora-blue text-finora-navy transition-colors">
+                        Proveedores
+                    </a>
+                    <a href="{{ route('panel.categorias.index') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 hover:border-finora-blue text-finora-navy transition-colors">
+                        Categorías
+                    </a>
+                    <a href="{{ route('panel.productos.create') }}" class="finora-gradient-btn px-4 py-2 rounded-xl text-white font-heading font-semibold text-xs shadow-finora-btn inline-flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                        Nuevo Producto
+                    </a>
+                </div>
+            @endif
         </div>
 
         <!-- Filtros y Búsqueda -->
