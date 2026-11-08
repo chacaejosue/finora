@@ -27,14 +27,16 @@
 
 ## Sobre el proyecto
 
-**Finora** es un sistema de información web concebido y desarrollado para optimizar la gestión comercial, operativa y financiera de emprendimientos de venta por catálogo.
+**Finora** es una solución web integral y ligera de gestión comercial, operativa y contable (ERP especializado) orientada a consultores independientes y emprendimientos de venta por catálogo y comercio directo.
 
-El caso de estudio principal toma como referencia el modelo operativo de una consultora independiente de **Natura**, estructurado de forma flexible para adaptarse a cualquier modelo de venta directa, distribución por catálogo y comercialización minorista.
+El caso de estudio principal toma como referencia el modelo operativo de una consultora independiente de **Natura Cosméticos** en Bolivia, estructurado con una arquitectura modular y flexible para adaptarse a cualquier modelo de venta directa, distribución minorista y comercialización por comisiones.
 
-El sistema resuelve la dispersión operativa reemplazando anotaciones en papel, chats de WhatsApp desorganizados y hojas de cálculo manuales por una solución integral que conecta el catálogo de cara al cliente con un panel de control administrativo y financiero.
+El sistema resuelve integralmente la dispersión operativa reemplazando anotaciones en papel, chats desorganizados de WhatsApp y hojas de cálculo manuales por una plataforma moderna y unificada:
+1. **Hacia el cliente:** Ofrece un catálogo digital interactivo, un sistema comunitario de recomendaciones (*likes* con corazones), promociones de ciclo y una bolsa de compras moderna tipo *luxury checkout* con formulario minimalista y confirmación directa por WhatsApp o en línea.
+2. **Hacia la consultora (Trastienda):** Administra el inventario en tiempo real con kardex físico, el abastecimiento de compras, ventas al contado y planes de crédito en cuotas, cobranzas con cálculo del tipo de cambio oficial del BCB y contabilidad formal por partida doble.
 
 > **Título académico:** *Sistema de Información Web para la Gestión Comercial y Financiera de un Emprendimiento de Venta por Catálogo.*  
-> **Nota:** Finora es un proyecto académico e independiente. No mantiene afiliación oficial con Natura ni con otras marcas comerciales utilizadas como caso de estudio.
+> **Nota:** Finora es un proyecto académico e independiente. No mantiene afiliación oficial con Natura Cosméticos ni con otras marcas comerciales utilizadas como caso de estudio.
 
 ---
 
@@ -44,41 +46,63 @@ El sistema implementa un control de acceso basado en roles con middlewares dedic
 
 | Rol | Middleware | Responsabilidad y alcance en el sistema |
 | :--- | :--- | :--- |
-| **Consultor (`CONSULTOR`)** | `rol.consultor` | **Propietario / Asesor principal del emprendimiento.** Posee acceso global: panel de control ejecutivo, reportes financieros y comerciales con exportación, configuración del tipo de cambio (Bs / USD con integración al BCB), auditoría del sistema y administración exclusiva de usuarios. |
-| **Colaborador (`COLABORADOR`)** | `rol.operativo` | **Asistente operativo.** Acceso al panel operativo para la gestión diaria: catálogo de productos, categorías, líneas, proveedores, clientes, recepción de compras/abastecimiento, control de inventario (kardex y ajustes), pedidos (reserva y entrega), ventas y registro de pagos. No accede a reportes financieros confidenciales ni a la administración de usuarios. |
-| **Cliente (`CLIENTE`)** | `rol.cliente` | **Comprador final.** Acceso a la landing page pública, catálogo interactivo con conversión de moneda, carrito para solicitar pedidos y portal privado (*Mi Cuenta*) para consultar su historial de compras y el saldo de sus créditos. |
+| **Consultor (`CONSULTOR`)** | `rol.consultor` | **Propietario / Asesor principal del emprendimiento.** Posee acceso global: panel de control ejecutivo, reportes financieros y comerciales con exportación, configuración del tipo de cambio (Bs / USD con integración al BCB), módulo contable de partida doble, auditoría del sistema y administración exclusiva de usuarios. |
+| **Colaborador (`COLABORADOR`)** | `rol.operativo` | **Asistente operativo.** Acceso al panel operativo para la gestión diaria: catálogo de productos, categorías, proveedores, clientes, recepción de compras/abastecimiento, control de inventario (kardex y ajustes), pedidos (reserva y entrega), ventas y registro de pagos. No accede a reportes financieros confidenciales ni a la administración de usuarios. |
+| **Cliente (`CLIENTE`)** | `rol.cliente` | **Comprador final.** Acceso a la landing page pública, catálogo interactivo con conversión de moneda, sistema de me gusta (corazones), bolsa de compras para solicitar pedidos y portal privado (*Mi Cuenta*) para consultar su historial de pedidos y saldo de créditos. |
 
 ---
 
 ## Módulos y Funcionalidades del Sistema
 
-### 1. Catálogo Público y Pedidos de Clientes
-* **Landing informativa y Catálogo:** Exploración de productos organizados por líneas y categorías con filtros dinámicos.
-* **Carrito de pedidos:** Selección de artículos con cálculo de totales en Bolivianos (Bs) y Dólares (USD).
-* **Solicitud de pedido:** Envío de órdenes públicas con datos de entrega y enlace directo para confirmación vía WhatsApp.
-* **Portal de Cliente (`/mi-cuenta`):** Consulta histórica de pedidos realizados, estado de despacho y seguimiento de deudas/créditos pendientes.
+### 1. Catálogo Público, Comunidad y Experiencia de Compra (UX/UI)
+* **Landing Interactiva y Catálogo Moderno:** Navegación por categorías con pastillas de filtro simétricas (`h-9`), buscador dinámico reactivo en tiempo real y acceso directo a ofertas de ciclo.
+* **Sistema Comunitario de Me Gusta (Corazones):** Interacción reactiva donde los clientes votan sus productos favoritos con persistencia en base de datos y localStorage. Los productos más votados se destacan automáticamente en la portada (*Lo más gustado de Natura*), complementados al azar con el catálogo disponible.
+* **Experiencia Mobile-First Optimizada:** Carrusel táctil deslizante (*swipeable*) en celular para artículos destacados, jerarquía visual directa (texto hero, CTAs, fotografía y franja de confianza), sección sintética de suscripción a la revista Natura y pie de página ultracompacto para evitar deslizamientos largos.
+* **Bolsa de Compras Rediseñada (`/carrito`):** Interfaz luxury de 2 columnas con formulario de entrega directo y minimalista, cálculo multimoneda (Bs y USD), eliminación total de emojis y sustitución por iconos SVG limpios.
+* **Acceso Ergonómico en Móviles:** Navbar superior libre de redundancias y barra flotante táctil inferior con acceso directo a *Inicio*, *Catálogo*, *Mi Pedido* (con contador interactivo) y *WhatsApp*.
+* **Portal de Autoservicio (`/mi-cuenta`):** Consulta histórica de pedidos, comprobantes, estado de despacho y seguimiento de cuotas/créditos pendientes.
 
-### 2. Comercialización y Ventas
-* **Flujo integral de pedidos:** Recepción, reserva automática de existencias, entrega de mercadería y cambio de estado.
-* **Ventas al contado y a crédito:** Registro detallado con emisión de comprobantes, selección de forma de pago y cálculo de saldo.
-* **Gestión de créditos y cuotas:** Seguimiento de créditos otorgados a clientes, planes de pago en cuotas y registro de amortizaciones/pagos.
-* **Anulación y confirmación:** Control transaccional con reversión de inventario y saldos ante anulaciones.
+### 2. Comercialización, Pedidos y Ventas
+* **Flujo integral de pedidos:** Recepción, reserva automática de existencias físicas, entrega de mercadería y cambio de estado.
+* **Ventas al contado y a crédito:** Registro con emisión de comprobantes, selección de forma de pago y cálculo automático de saldos.
+* **Gestión de créditos y cuotas:** Seguimiento de créditos otorgados a clientes, cálculo de planes de pago en cuotas y registro de amortizaciones/pagos.
+* **Integridad transaccional:** Control de anulaciones con reversión automática de inventario y saldos.
 
-### 3. Abastecimiento e Inventario
-* **Gestión de proveedores y compras:** Registro de compras con detalle por producto, precio de costo y cálculo de márgenes.
+### 3. Abastecimiento y Control de Inventario
+* **Gestión de proveedores y compras:** Registro de compras con detalle por producto, precio de costo y cálculo de márgenes comerciales.
 * **Inventario en tiempo real:** Control de existencias físicas disponibles vs. reservadas para pedidos.
-* **Kardex de movimientos:** Trazabilidad completa de ingresos (compras), salidas (ventas) y ajustes.
-* **Ajustes manuales de inventario:** Regularización justificada por pérdidas, mermas o inventario físico.
+* **Kardex de movimientos:** Trazabilidad completa de ingresos (compras), salidas (ventas) y ajustes de stock.
+* **Ajustes justificados de inventario:** Regularización documentada por mermas, pérdidas o inventario físico.
 
-### 4. Finanzas y Tipo de Cambio
+### 4. Finanzas, Cobranzas y Tipo de Cambio
 * **Tipo de cambio dinámico:** Consulta automatizada del tipo de cambio oficial ante el Banco Central de Bolivia (BCB) con tasa de contingencia (*fallback*) y posibilidad de ajuste manual por parte del Consultor.
 * **Gestión de cobranzas:** Registro de pagos aplicados directamente a cuotas específicas o al saldo general de créditos.
 
-### 5. Administración, Auditoría y Reportes
+### 5. Contabilidad General por Partida Doble
+* **Plan de Cuentas (`cuentas_contables`):** Estructura jerárquica de cuentas contables categorizadas en Activo, Pasivo, Patrimonio, Ingresos y Egresos.
+* **Libro Diario y Asientos Contables (`asientos`, `detalles_asiento`):** Registro de transacciones con validación estricta de balance de partida doble (total Debe = total Haber) y glosas explicativas.
+* **Integración Operativa:** Generación de asientos automáticos a partir de compras, ventas y recaudaciones de caja.
+
+### 6. Administración, Auditoría y Reportes
 * **Reportes gerenciales:** Análisis de ventas por período, productos más vendidos, compras realizadas, estado de créditos por cobrar y márgenes de ganancia.
 * **Exportación de datos:** Descarga de reportes en formatos estándar para análisis externo.
 * **Gestión de usuarios:** Registro, edición y activación/desactivación de cuentas con roles diferenciados.
-* **Auditoría de operaciones:** Registro de actividad clave para trazabilidad de transacciones críticas.
+* **Auditoría de operaciones:** Trazabilidad de operaciones críticas del sistema.
+
+---
+
+## Modelo de Base de Datos y Entidades Consolidadas
+
+El esquema de base de datos se encuentra completamente consolidado en sus migraciones maestras, organizando 16 entidades relacionales clave:
+
+| Módulo | Tablas | Descripción y Propósito |
+| :--- | :--- | :--- |
+| **Catálogo & Productos** | `categorias`, `productos` | Categorías de productos, catálogo general con precios de venta, costos, ofertas de ciclo y contador comunitario de `likes`. |
+| **Ventas & Pedidos** | `pedidos`, `detalle_pedidos`, `ventas`, `detalle_ventas` | Pedidos públicos con datos de entrega/delivery, emisión de ventas al contado y crédito, detalle de ítems y métodos de pago. |
+| **Créditos & Cobranzas** | `cuotas`, `pagos` | Fechas de vencimiento y saldos de créditos otorgados, con registro de cobros y pagos parciales. |
+| **Abastecimiento & Stock** | `proveedores`, `compras`, `detalle_compras`, `movimientos_inventario` | Proveedores registrados, compras de mercadería y kardex histórico de movimientos de inventario (entradas, salidas y ajustes). |
+| **Contabilidad General** | `cuentas_contables`, `asientos`, `detalles_asiento` | Plan contable estructurado y asientos del libro diario con débitos y créditos bajo el principio de partida doble. |
+| **Seguridad & Acceso** | `usuarios`, `cache`, `sessions` | Cuentas de usuario con roles (`CONSULTOR`, `COLABORADOR`, `CLIENTE`), gestión de sesiones seguras y caché del sistema. |
 
 ---
 
@@ -88,7 +112,9 @@ El sistema implementa un control de acceso basado en roles con middlewares dedic
 ├── Públicas
 │   ├── GET  /                    -> Landing page pública
 │   ├── GET  /categorias          -> Catálogo de productos interactivo
-│   ├── GET  /carrito             -> Carrito y formulario de pedido público
+│   ├── GET  /ofertas             -> Catálogo filtrado por promociones de ciclo
+│   ├── POST /productos/{id}/like -> Votación reactiva comunitaria de 'Me Gusta'
+│   ├── GET  /carrito             -> Bolsa de compras y checkout directo
 │   ├── POST /carrito/pedido      -> Envío de pedido público
 │   ├── GET  /tipo-cambio         -> Consulta pública del tipo de cambio
 │   ├── GET  /login               -> Formulario de inicio de sesión
@@ -167,7 +193,7 @@ finora/
 ├── config/
 │   └── finora.php              # Configuración de moneda, BCB y cuentas demo
 ├── database/
-│   ├── migrations/             # Esquema completo de la base de datos (29 migraciones)
+│   ├── migrations/             # Esquema consolidado de la base de datos (18 migraciones)
 │   └── seeders/                # Datos de prueba para catálogo y usuarios
 ├── resources/
 │   ├── views/                  # Vistas Blade (landing, catálogo, cliente y panel)
