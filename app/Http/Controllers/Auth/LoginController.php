@@ -23,15 +23,13 @@ class LoginController extends Controller
             'remember' => ['sometimes', 'boolean'],
         ]);
 
-        // Buscar al usuario mediante el correo de su persona.
-        $usuario = Usuario::whereHas('persona', function ($query) use ($datos) {
-            $query->where('email', $datos['identity']);
-        })
+        // Buscar al usuario activo por correo electrónico.
+        $usuario = Usuario::where('email', $datos['identity'])
             ->where('activo', true)
             ->first();
 
-        // Comprobar que existe y que la contraseña es correcta.
-        if (! $usuario || ! Hash::check($datos['password'], $usuario->password)) {
+        // Comprobar que existe, que tiene contraseña de acceso y que es correcta.
+        if (! $usuario || empty($usuario->password) || ! Hash::check($datos['password'], $usuario->password)) {
             throw ValidationException::withMessages([
                 'identity' => 'Las credenciales proporcionadas son incorrectas.',
             ]);

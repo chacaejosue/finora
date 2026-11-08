@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PedidoPublicoRequest;
-use App\Models\Cliente;
 use App\Models\DetallePedido;
 use App\Models\Pedido;
-use App\Models\Persona;
 use App\Models\Producto;
+use App\Models\Usuario;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -75,7 +74,7 @@ class PedidoPublicoController extends Controller
             return $pedido;
         });
 
-        $pedido->load(['cliente.persona', 'detalles.producto']);
+        $pedido->load(['cliente', 'detalles.producto']);
 
         return view('pedidos.publico.confirmacion', [
             'pedido' => $pedido,
@@ -83,54 +82,60 @@ class PedidoPublicoController extends Controller
         ]);
     }
 
-    private function resolverCliente(array $validated, PedidoPublicoRequest $request): Cliente
+    private function resolverCliente(array $validated, PedidoPublicoRequest $request): Usuario
     {
-        $cliente = $request->user()?->persona?->cliente;
+        $usuarioAutenticado = $request->user();
 
-        if ($cliente) {
-            return $cliente;
+        if ($usuarioAutenticado && $usuarioAutenticado->rol === 'CLIENTE') {
+            return $usuarioAutenticado;
         }
 
-        $persona = null;
+        $cliente = null;
 
         if (filled($validated['email'] ?? null)) {
-            $persona = Persona::whereHas('cliente')
+            $cliente = Usuario::clientes()
                 ->where('email', $validated['email'])
                 ->first();
         }
 
-        if (! $persona && filled($validated['telefono'] ?? null)) {
-            $persona = Persona::whereHas('cliente')
+        if (! $cliente && filled($validated['telefono'] ?? null)) {
+            $cliente = Usuario::clientes()
                 ->where('telefono', $validated['telefono'])
                 ->first();
         }
 
-        if (! $persona) {
+        if (! $cliente) {
             $email = $validated['email'] ?? null;
 
-            if ($email && Persona::where('email', $email)->exists()) {
+            if ($email && Usuario::where('email', $email)->exists()) {
                 $email = null;
             }
 
-            $persona = Persona::create([
+            $cliente = Usuario::create([
                 'nombre' => mb_strtoupper(trim($validated['nombre']), 'UTF-8'),
                 'apellido' => filled($validated['apellido'] ?? null) ? mb_strtoupper(trim($validated['apellido']), 'UTF-8') : null,
                 'telefono' => $validated['telefono'],
                 'email' => $email,
                 'direccion' => $validated['direccion'] ?? null,
+                'rol' => 'CLIENTE',
+                'password' => null,
+                'activo' => true,
+                'observaciones' => 'Registrado desde catálogo web.',
             ]);
         } else {
-            $persona->update(array_filter([
+            $email = $validated['email'] ?? null;
+            if ($email && Usuario::where('email', $email)->where('id', '!=', $cliente->id)->exists()) {
+                $email = null;
+            }
+
+            $cliente->update(array_filter([
                 'telefono' => $validated['telefono'],
-                'email' => $validated['email'] ?? null,
+                'email' => $email,
                 'direccion' => $validated['direccion'] ?? null,
             ], static fn ($value): bool => filled($value)));
         }
 
-        return Cliente::firstOrCreate(
-            ['persona_id' => $persona->id],
-            ['activo' => true, 'observaciones' => 'Registrado desde catálogo web.'],
-        );
+        return $cliente;
     }
 
     private function crearEnlaceWhatsApp(Pedido $pedido, string $preferenciaPago): ?string

@@ -15,7 +15,7 @@ class ClienteRequest extends FormRequest
     public function rules(): array
     {
         $cliente = $this->route('cliente');
-        $personaId = $cliente ? $cliente->persona_id : null;
+        $clienteId = $cliente ? $cliente->id : null;
 
         return [
             'nombre' => ['required', 'string', 'max:100'],
@@ -25,7 +25,7 @@ class ClienteRequest extends FormRequest
                 'nullable',
                 'email',
                 'max:255',
-                Rule::unique('personas', 'email')->ignore($personaId),
+                Rule::unique('usuarios', 'email')->ignore($clienteId),
             ],
             'direccion' => ['nullable', 'string', 'max:255'],
             'observaciones' => ['nullable', 'string'],

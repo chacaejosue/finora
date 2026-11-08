@@ -3,19 +3,17 @@
 namespace App\Services;
 
 use App\Models\Asiento;
-use App\Models\Cliente;
 use App\Models\Compra;
 use App\Models\CuentaContable;
 use App\Models\DetalleAsiento;
-use App\Models\ModeloContable;
 use App\Models\MovimientoInventario;
 use App\Models\Pago;
 use App\Models\Producto;
 use App\Models\Proveedor;
-use App\Models\TipoComprobante;
 use App\Models\Venta;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -47,17 +45,143 @@ class ContabilidadService
     }
 
     /**
+     * Devuelve las plantillas contables parametrizadas bajo normativa boliviana (Ley 843).
+     */
+    public function obtenerModelosContables(): Collection
+    {
+        if (CuentaContable::count() === 0) {
+            (new \Database\Seeders\ContabilidadBoliviaSeeder())->run();
+        }
+
+        $cuentas = CuentaContable::all()->keyBy('codigo');
+
+        $definiciones = [
+            [
+                'codigo' => 'VENTA_CONTADO',
+                'nombre' => 'Venta de Mercaderías al Contado (Ley 843)',
+                'descripcion' => 'Genera asiento de ingreso por venta al contado aplicando 87% valor neto, 13% Débito Fiscal IVA y 3% Impuesto a las Transacciones.',
+                'tipo_comprobante' => 'ING',
+                'detalles' => [
+                    ['cuenta_codigo' => '1.1.1.01', 'lado' => 'DEBE', 'porcentaje' => 100.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Ingreso a caja por venta al contado'],
+                    ['cuenta_codigo' => '6.1.1.01', 'lado' => 'DEBE', 'porcentaje' => 3.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Impuesto a las transacciones (3%)'],
+                    ['cuenta_codigo' => '4.1.1.01', 'lado' => 'HABER', 'porcentaje' => 87.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Ventas de mercaderías netas (87%)'],
+                    ['cuenta_codigo' => '2.1.2.01', 'lado' => 'HABER', 'porcentaje' => 13.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Débito Fiscal IVA (13%)'],
+                    ['cuenta_codigo' => '2.1.2.02', 'lado' => 'HABER', 'porcentaje' => 3.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Impuesto a las transacciones por pagar (3%)'],
+                ],
+            ],
+            [
+                'codigo' => 'VENTA_CREDITO',
+                'nombre' => 'Venta de Mercaderías a Crédito (Ley 843)',
+                'descripcion' => 'Genera comprobante de traspaso reconociendo la cuenta por cobrar, devengando 87% venta, 13% Débito Fiscal y 3% IT.',
+                'tipo_comprobante' => 'TRS',
+                'detalles' => [
+                    ['cuenta_codigo' => '1.1.2.01', 'lado' => 'DEBE', 'porcentaje' => 100.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Cuentas por cobrar comerciales cliente'],
+                    ['cuenta_codigo' => '6.1.1.01', 'lado' => 'DEBE', 'porcentaje' => 3.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Impuesto a las transacciones (3%)'],
+                    ['cuenta_codigo' => '4.1.1.01', 'lado' => 'HABER', 'porcentaje' => 87.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Ventas de mercaderías netas (87%)'],
+                    ['cuenta_codigo' => '2.1.2.01', 'lado' => 'HABER', 'porcentaje' => 13.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Débito Fiscal IVA (13%)'],
+                    ['cuenta_codigo' => '2.1.2.02', 'lado' => 'HABER', 'porcentaje' => 3.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Impuesto a las transacciones por pagar (3%)'],
+                ],
+            ],
+            [
+                'codigo' => 'COSTO_VENTAS',
+                'nombre' => 'Costo de Mercaderías Vendidas (CPP)',
+                'descripcion' => 'Genera comprobante de traspaso registrando el costo de ventas y descargando el almacén al Costo Promedio Ponderado.',
+                'tipo_comprobante' => 'TRS',
+                'detalles' => [
+                    ['cuenta_codigo' => '5.1.1.01', 'lado' => 'DEBE', 'porcentaje' => 100.00, 'tipo_monto' => 'COSTO', 'glosa_defecto' => 'Costo de mercaderías vendidas'],
+                    ['cuenta_codigo' => '1.1.3.01', 'lado' => 'HABER', 'porcentaje' => 100.00, 'tipo_monto' => 'COSTO', 'glosa_defecto' => 'Salida de almacén valuada al CPP'],
+                ],
+            ],
+            [
+                'codigo' => 'COMPRA_CONTADO',
+                'nombre' => 'Compra de Mercaderías al Contado (Ley 843)',
+                'descripcion' => 'Genera comprobante de egreso ingresando el 87% a inventarios y el 13% a Crédito Fiscal IVA contra desembolso de Caja/Bancos.',
+                'tipo_comprobante' => 'EGR',
+                'detalles' => [
+                    ['cuenta_codigo' => '1.1.3.01', 'lado' => 'DEBE', 'porcentaje' => 87.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Ingreso de mercaderías al almacén (87% neto)'],
+                    ['cuenta_codigo' => '1.1.2.03', 'lado' => 'DEBE', 'porcentaje' => 13.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Crédito Fiscal IVA (13%) s/ factura proveedor'],
+                    ['cuenta_codigo' => '1.1.1.01', 'lado' => 'HABER', 'porcentaje' => 100.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Desembolso de efectivo por compra al contado'],
+                ],
+            ],
+            [
+                'codigo' => 'COMPRA_CREDITO',
+                'nombre' => 'Compra de Mercaderías a Crédito (Ley 843)',
+                'descripcion' => 'Genera comprobante de traspaso ingresando el 87% a inventarios y el 13% a Crédito Fiscal IVA contra pasivo a proveedores.',
+                'tipo_comprobante' => 'TRS',
+                'detalles' => [
+                    ['cuenta_codigo' => '1.1.3.01', 'lado' => 'DEBE', 'porcentaje' => 87.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Ingreso de mercaderías al almacén (87% neto)'],
+                    ['cuenta_codigo' => '1.1.2.03', 'lado' => 'DEBE', 'porcentaje' => 13.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Crédito Fiscal IVA (13%) s/ factura proveedor'],
+                    ['cuenta_codigo' => '2.1.1.01', 'lado' => 'HABER', 'porcentaje' => 100.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Obligación con proveedor a crédito'],
+                ],
+            ],
+            [
+                'codigo' => 'COBRO_VENTA',
+                'nombre' => 'Cobranza de Clientes / Cancelación de Cuotas',
+                'descripcion' => 'Genera comprobante de ingreso cancelando la cuenta por cobrar contra entrada efectiva de fondos a Caja/Bancos.',
+                'tipo_comprobante' => 'ING',
+                'detalles' => [
+                    ['cuenta_codigo' => '1.1.1.01', 'lado' => 'DEBE', 'porcentaje' => 100.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Ingreso de fondos por cobranza'],
+                    ['cuenta_codigo' => '1.1.2.01', 'lado' => 'HABER', 'porcentaje' => 100.00, 'tipo_monto' => 'TOTAL', 'glosa_defecto' => 'Cancelación de cuenta por cobrar del cliente'],
+                ],
+            ],
+            [
+                'codigo' => 'AJUSTE_INVENTARIO_MERMA',
+                'nombre' => 'Ajuste de Inventario por Merma o Faltante',
+                'descripcion' => 'Genera comprobante de traspaso registrando la pérdida contra la baja física en inventarios valuada al CPP.',
+                'tipo_comprobante' => 'TRS',
+                'detalles' => [
+                    ['cuenta_codigo' => '6.3.1.01', 'lado' => 'DEBE', 'porcentaje' => 100.00, 'tipo_monto' => 'COSTO', 'glosa_defecto' => 'Pérdida por ajuste / merma de inventario'],
+                    ['cuenta_codigo' => '1.1.3.01', 'lado' => 'HABER', 'porcentaje' => 100.00, 'tipo_monto' => 'COSTO', 'glosa_defecto' => 'Baja de inventario por ajuste'],
+                ],
+            ],
+            [
+                'codigo' => 'AJUSTE_INVENTARIO_SOBRANTE',
+                'nombre' => 'Ajuste de Inventario por Sobrante',
+                'descripcion' => 'Genera comprobante de traspaso registrando el alta en almacén contra otros ingresos operativos.',
+                'tipo_comprobante' => 'TRS',
+                'detalles' => [
+                    ['cuenta_codigo' => '1.1.3.01', 'lado' => 'DEBE', 'porcentaje' => 100.00, 'tipo_monto' => 'COSTO', 'glosa_defecto' => 'Alta de inventario por sobrante'],
+                    ['cuenta_codigo' => '4.2.1.01', 'lado' => 'HABER', 'porcentaje' => 100.00, 'tipo_monto' => 'COSTO', 'glosa_defecto' => 'Ingreso extraordinario por sobrante de inventario'],
+                ],
+            ],
+        ];
+
+        return collect($definiciones)->map(function (array $def) use ($cuentas) {
+            $detalles = collect($def['detalles'])->map(function (array $det) use ($cuentas) {
+                $cuenta = $cuentas->get($det['cuenta_codigo']);
+
+                return (object) [
+                    'cuenta_contable_id' => $cuenta?->id,
+                    'cuentaContable' => $cuenta,
+                    'lado' => $det['lado'],
+                    'porcentaje' => $det['porcentaje'],
+                    'tipo_monto' => $det['tipo_monto'],
+                    'glosa_defecto' => $det['glosa_defecto'],
+                ];
+            })->filter(fn (object $det) => $det->cuenta_contable_id !== null)->values();
+
+            return (object) [
+                'codigo' => $def['codigo'],
+                'nombre' => $def['nombre'],
+                'descripcion' => $def['descripcion'],
+                'tipo_comprobante' => $def['tipo_comprobante'],
+                'tipoComprobante' => Asiento::obtenerTipoComprobante($def['tipo_comprobante']),
+                'detalles' => $detalles,
+            ];
+        });
+    }
+
+    /**
      * Genera el siguiente número correlativo de comprobante por año y tipo.
      * Ejemplo: CI-2026-00001, CE-2026-00001, CT-2026-00001, CA-2026-00001
      */
     public function generarNumeroComprobante(string $codigoTipo, ?string $fecha = null): string
     {
         $anio = $fecha ? Carbon::parse($fecha)->year : now()->year;
-        $tipo = TipoComprobante::where('codigo', $codigoTipo)->first();
-        $tipoId = $tipo ? $tipo->id : null;
+        $codigoTipo = strtoupper(trim($codigoTipo));
 
         $ultimoNumero = Asiento::whereYear('fecha', $anio)
-            ->when($tipoId, fn ($q) => $q->where('tipo_comprobante_id', $tipoId))
+            ->where('tipo_comprobante', $codigoTipo)
             ->where('numero', 'like', "C{$codigoTipo[0]}-{$anio}-%")
             ->orderByDesc('id')
             ->value('numero');
@@ -67,32 +191,18 @@ class ContabilidadService
             $correlativo = ((int) $coincidencias[1]) + 1;
         }
 
-        $prefijo = 'C' . substr(strtoupper($codigoTipo), 0, 1); // CI, CE, CT, CA
+        $prefijo = 'C' . substr($codigoTipo, 0, 1); // CI, CE, CT, CA
 
         return sprintf('%s-%d-%05d', $prefijo, $anio, $correlativo);
     }
 
     /**
-     * Genera un Asiento contable evaluando dinámicamente un ModeloContable parametrizado.
+     * Genera un Asiento contable evaluando dinámicamente una plantilla contable parametrizada.
      * Aplica normativa de Bolivia y compensación de centavos por redondeo (Partida Doble exacta).
      */
     public function generarAsientoDesdeModelo(string $codigoModelo, float $montoTotal, array $opciones = []): ?Asiento
     {
-        $modelo = ModeloContable::with(['detalles.cuentaContable', 'tipoComprobante'])
-            ->where('codigo', $codigoModelo)
-            ->where('activo', true)
-            ->first();
-
-        if (! $modelo) {
-            // Si la base de datos se encuentra vacía de semillas (ej. en pruebas automáticas con RefreshDatabase)
-            if (ModeloContable::count() === 0) {
-                (new \Database\Seeders\ContabilidadBoliviaSeeder())->run();
-                $modelo = ModeloContable::with(['detalles.cuentaContable', 'tipoComprobante'])
-                    ->where('codigo', $codigoModelo)
-                    ->where('activo', true)
-                    ->first();
-            }
-        }
+        $modelo = $this->obtenerModelosContables()->firstWhere('codigo', $codigoModelo);
 
         if (! $modelo) {
             return null;
@@ -188,11 +298,11 @@ class ContabilidadService
             }
         }
 
-        $numeroComprobante = $this->generarNumeroComprobante($modelo->tipoComprobante->codigo, $fecha);
+        $numeroComprobante = $this->generarNumeroComprobante($modelo->tipo_comprobante, $fecha);
 
         return DB::transaction(function () use ($modelo, $numeroComprobante, $fecha, $glosa, $contabilizable, $totalDebe, $totalHaber, $usuarioId, $lineas) {
             $asiento = Asiento::create([
-                'tipo_comprobante_id' => $modelo->tipo_comprobante_id,
+                'tipo_comprobante' => $modelo->tipo_comprobante,
                 'numero' => $numeroComprobante,
                 'fecha' => $fecha,
                 'glosa' => $glosa,
@@ -383,7 +493,7 @@ class ContabilidadService
      */
     public function contabilizarPago(Pago $pago): ?Asiento
     {
-        $pago->loadMissing('venta.cliente.persona');
+        $pago->loadMissing('venta.cliente');
         $venta = $pago->venta;
 
         // Si la venta es de contado, no duplicar el asiento de cobro
@@ -482,12 +592,9 @@ class ContabilidadService
      */
     public function revertirAsiento(Asiento $asientoOriginal, string $motivo, ?int $usuarioId = null): Asiento
     {
-        $asientoOriginal->loadMissing(['detalles', 'tipoComprobante']);
+        $asientoOriginal->loadMissing(['detalles']);
 
-        $tipoTraspaso = TipoComprobante::where('codigo', 'TRS')->first();
-        $tipoId = $tipoTraspaso ? $tipoTraspaso->id : $asientoOriginal->tipo_comprobante_id;
-        $codigoTipo = $tipoTraspaso ? 'TRS' : $asientoOriginal->tipoComprobante->codigo;
-
+        $codigoTipo = 'TRS';
         $numeroReversion = $this->generarNumeroComprobante($codigoTipo);
         $glosaReversion = sprintf(
             'REVERSIÓN / ANULACIÓN de Comprobante %s: %s',
@@ -495,11 +602,11 @@ class ContabilidadService
             $motivo
         );
 
-        return DB::transaction(function () use ($asientoOriginal, $tipoId, $numeroReversion, $glosaReversion, $usuarioId) {
+        return DB::transaction(function () use ($asientoOriginal, $codigoTipo, $numeroReversion, $glosaReversion, $usuarioId) {
             $asientoOriginal->update(['estado' => 'ANULADO']);
 
             $asientoReversion = Asiento::create([
-                'tipo_comprobante_id' => $tipoId,
+                'tipo_comprobante' => $codigoTipo,
                 'numero' => $numeroReversion,
                 'fecha' => now()->toDateString(),
                 'glosa' => $glosaReversion,
@@ -547,13 +654,16 @@ class ContabilidadService
             );
         }
 
-        $tipo = TipoComprobante::findOrFail($datos['tipo_comprobante_id']);
+        $codigoTipo = strtoupper((string) ($datos['tipo_comprobante'] ?? $datos['tipo_comprobante_id'] ?? 'TRS'));
+        if (! array_key_exists($codigoTipo, Asiento::TIPOS_COMPROBANTE)) {
+            $codigoTipo = 'TRS';
+        }
         $fecha = $datos['fecha'] ?? now()->toDateString();
-        $numero = $datos['numero'] ?? $this->generarNumeroComprobante($tipo->codigo, $fecha);
+        $numero = $datos['numero'] ?? $this->generarNumeroComprobante($codigoTipo, $fecha);
 
-        return DB::transaction(function () use ($datos, $tipo, $fecha, $numero, $totalDebe, $totalHaber, $usuarioId, $detalles) {
+        return DB::transaction(function () use ($datos, $codigoTipo, $fecha, $numero, $totalDebe, $totalHaber, $usuarioId, $detalles) {
             $asiento = Asiento::create([
-                'tipo_comprobante_id' => $tipo->id,
+                'tipo_comprobante' => $codigoTipo,
                 'numero' => $numero,
                 'fecha' => $fecha,
                 'glosa' => $datos['glosa'],
@@ -583,11 +693,10 @@ class ContabilidadService
      */
     public function registrarBalanceApertura(array $datos, array $detallesApertura, ?int $usuarioId = null): Asiento
     {
-        $tipoApertura = TipoComprobante::where('codigo', 'APE')->firstOrFail();
         $fecha = $datos['fecha'] ?? now()->startOfYear()->toDateString();
         $numero = $datos['numero'] ?? $this->generarNumeroComprobante('APE', $fecha);
 
-        $datos['tipo_comprobante_id'] = $tipoApertura->id;
+        $datos['tipo_comprobante'] = 'APE';
         $datos['fecha'] = $fecha;
         $datos['numero'] = $numero;
         $datos['glosa'] = $datos['glosa'] ?? 'Balance de Apertura e Inicio de Actividades Contables';

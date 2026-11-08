@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompraRequest;
-use App\Models\Auditoria;
 use App\Models\Categoria;
 use App\Models\Compra;
 use App\Models\DetalleCompra;
@@ -22,7 +21,7 @@ class CompraController extends Controller
 
     public function index(Request $request)
     {
-        $query = Compra::with(['proveedor', 'registradoPor.persona']);
+        $query = Compra::with(['proveedor', 'registradoPor']);
 
         if ($request->filled('estado')) {
             $query->where('estado', $request->input('estado'));
@@ -106,7 +105,7 @@ class CompraController extends Controller
 
     public function show(Compra $compra)
     {
-        $compra->load(['proveedor', 'registradoPor.persona', 'detalles.producto']);
+        $compra->load(['proveedor', 'registradoPor', 'detalles.producto']);
 
         return view('panel.compras.show', compact('compra'));
     }
@@ -144,8 +143,6 @@ class CompraController extends Controller
                         'observacion' => "Ingreso por recepción de compra #{$compra->id}",
                     ]);
                 }
-
-                Auditoria::registrar('RECIBIR_COMPRA', $compra, 'Compra recibida y agregada al inventario.');
             } else {
                 $compra->update(['estado' => $nuevoEstado]);
             }

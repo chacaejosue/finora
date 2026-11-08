@@ -46,11 +46,6 @@ class CuentaContable extends Model
         return $this->hasMany(DetalleAsiento::class, 'cuenta_contable_id');
     }
 
-    public function detallesModeloContable(): HasMany
-    {
-        return $this->hasMany(DetalleModeloContable::class, 'cuenta_contable_id');
-    }
-
     public function scopeActivo(Builder $query): Builder
     {
         return $query->where('activo', true);

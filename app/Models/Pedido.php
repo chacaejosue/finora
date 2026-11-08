@@ -14,6 +14,7 @@ class Pedido extends Model
     protected $fillable = [
         'cliente_id',
         'registrado_por_usuario_id',
+        'canal_origen',
         'fecha',
         'fecha_entrega',
         'entregado_por_usuario_id',
@@ -33,7 +34,7 @@ class Pedido extends Model
 
     public function cliente(): BelongsTo
     {
-        return $this->belongsTo(Cliente::class, 'cliente_id');
+        return $this->belongsTo(Usuario::class, 'cliente_id');
     }
 
     public function registradoPor(): BelongsTo

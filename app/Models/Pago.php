@@ -39,11 +39,6 @@ class Pago extends Model
         return $this->belongsTo(Usuario::class, 'registrado_por_usuario_id');
     }
 
-    public function aplicaciones(): HasMany
-    {
-        return $this->hasMany(AplicacionPago::class, 'pago_id');
-    }
-
     public function asientos(): MorphMany
     {
         return $this->morphMany(Asiento::class, 'contabilizable');

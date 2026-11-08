@@ -6,19 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\Asiento;
 use App\Models\CuentaContable;
 use App\Models\DetalleAsiento;
-use App\Models\ModeloContable;
 use App\Models\MovimientoInventario;
 use App\Models\Producto;
-use App\Models\TipoComprobante;
 use App\Services\ContabilidadService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 
 class ContabilidadController extends Controller
 {
-    public function __construct(private ContabilidadService $contabilidad) {}
+    public function __construct(private ContabilidadService $contabilidad)
+    {
+        if (CuentaContable::count() === 0) {
+            (new \Database\Seeders\ContabilidadBoliviaSeeder())->run();
+        }
+    }
 
     /**
      * 1. Dashboard / Resumen Contable en tiempo real.
@@ -107,7 +111,7 @@ class ContabilidadController extends Controller
             : 0;
 
         // Últimos 8 asientos para monitor rápido
-        $ultimosAsientos = Asiento::with(['tipoComprobante', 'usuario.persona'])
+        $ultimosAsientos = Asiento::with(['usuario'])
             ->latest('id')
             ->take(8)
             ->get();
@@ -141,14 +145,11 @@ class ContabilidadController extends Controller
      */
     public function balanceApertura()
     {
-        $tipoApertura = TipoComprobante::where('codigo', 'APE')->first();
-        $asientoApertura = $tipoApertura
-            ? Asiento::with(['detalles.cuentaContable'])
-                ->where('tipo_comprobante_id', $tipoApertura->id)
-                ->where('estado', 'APROBADO')
-                ->latest('id')
-                ->first()
-            : null;
+        $asientoApertura = Asiento::with(['detalles.cuentaContable'])
+            ->where('tipo_comprobante', 'APE')
+            ->where('estado', 'APROBADO')
+            ->latest('id')
+            ->first();
 
         $cuentasActivo = CuentaContable::where('tipo', 'ACTIVO')
             ->where('permite_movimiento', true)
@@ -252,10 +253,10 @@ class ContabilidadController extends Controller
      */
     public function libroDiario(Request $request)
     {
-        $query = Asiento::with(['tipoComprobante', 'detalles.cuentaContable', 'usuario.persona']);
+        $query = Asiento::with(['detalles.cuentaContable', 'usuario']);
 
         if ($request->filled('tipo_id')) {
-            $query->where('tipo_comprobante_id', $request->input('tipo_id'));
+            $query->where('tipo_comprobante', strtoupper((string) $request->input('tipo_id')));
         }
 
         if ($request->filled('fecha_desde')) {
@@ -279,7 +280,7 @@ class ContabilidadController extends Controller
         }
 
         $asientos = $query->orderBy('fecha', 'desc')->orderBy('id', 'desc')->paginate(15)->withQueryString();
-        $tiposComprobante = TipoComprobante::where('activo', true)->get();
+        $tiposComprobante = Asiento::catalogoTiposComprobante();
 
         return view('panel.contabilidad.libro-diario', compact('asientos', 'tiposComprobante'));
     }
@@ -289,7 +290,7 @@ class ContabilidadController extends Controller
      */
     public function createAsiento()
     {
-        $tiposComprobante = TipoComprobante::where('activo', true)->get();
+        $tiposComprobante = Asiento::catalogoTiposComprobante();
         $cuentas = CuentaContable::where('permite_movimiento', true)
             ->where('activo', true)
             ->orderBy('codigo')
@@ -304,7 +305,7 @@ class ContabilidadController extends Controller
     public function storeAsiento(Request $request)
     {
         $validated = $request->validate([
-            'tipo_comprobante_id' => ['required', 'exists:tipos_comprobante,id'],
+            'tipo_comprobante_id' => ['required', Rule::in(array_keys(Asiento::TIPOS_COMPROBANTE))],
             'fecha' => ['required', 'date'],
             'glosa' => ['required', 'string', 'max:600'],
             'detalles' => ['required', 'array', 'min:2'],
@@ -316,7 +317,7 @@ class ContabilidadController extends Controller
 
         try {
             $asiento = $this->contabilidad->registrarAsientoManual([
-                'tipo_comprobante_id' => $validated['tipo_comprobante_id'],
+                'tipo_comprobante' => $validated['tipo_comprobante_id'],
                 'fecha' => $validated['fecha'],
                 'glosa' => $validated['glosa'],
             ], $validated['detalles'], auth()->id());
@@ -370,7 +371,7 @@ class ContabilidadController extends Controller
         $saldoFinal = 0.0;
 
         if ($cuentaSeleccionada) {
-            $query = DetalleAsiento::with(['asiento.tipoComprobante'])
+            $query = DetalleAsiento::with(['asiento'])
                 ->where('cuenta_contable_id', $cuentaSeleccionada->id)
                 ->whereHas('asiento', function ($q) use ($request) {
                     $q->where('estado', 'APROBADO');
@@ -712,9 +713,7 @@ class ContabilidadController extends Controller
 
         $todasCuentas = CuentaContable::orderBy('codigo')->get();
 
-        $modelosContables = ModeloContable::with(['tipoComprobante', 'detalles.cuentaContable'])
-            ->where('activo', true)
-            ->get();
+        $modelosContables = $this->contabilidad->obtenerModelosContables();
 
         return view('panel.contabilidad.plan-cuentas', compact(
             'cuentasRaiz',

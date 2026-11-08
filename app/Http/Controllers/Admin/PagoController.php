@@ -4,11 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PagoRequest;
-use App\Models\AplicacionPago;
-use App\Models\Auditoria;
-use App\Models\Cliente;
 use App\Models\Cuota;
 use App\Models\Pago;
+use App\Models\Usuario;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +15,7 @@ class PagoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pago::with(['venta.cliente.persona', 'registradoPor.persona']);
+        $query = Pago::with(['venta.cliente', 'registradoPor']);
 
         if ($request->filled('venta_id')) {
             $query->where('venta_id', $request->input('venta_id'));
@@ -26,7 +24,7 @@ class PagoController extends Controller
         $pagos = $query->latest('fecha')->paginate(15)->withQueryString();
 
         // Resumen de cuentas por cobrar por cliente
-        $clientesDeudores = Cliente::with(['persona', 'ventas' => function ($q) {
+        $clientesDeudores = Usuario::clientes()->with(['ventas' => function ($q) {
             $q->where('estado', 'CONFIRMADA');
         }])->get()->map(function ($cli) {
             $deuda = $cli->ventas->sum(fn ($v) => $v->saldo_pendiente);
@@ -42,10 +40,10 @@ class PagoController extends Controller
     {
         $ventaSeleccionada = null;
         if ($request->filled('venta_id')) {
-            $ventaSeleccionada = Venta::with(['cliente.persona', 'detalles.producto', 'pagos'])->find($request->input('venta_id'));
+            $ventaSeleccionada = Venta::with(['cliente', 'detalles.producto', 'pagos'])->find($request->input('venta_id'));
         }
 
-        $ventasConSaldo = Venta::with('cliente.persona')
+        $ventasConSaldo = Venta::with('cliente')
             ->where('estado', 'CONFIRMADA')
             ->get()
             ->filter(fn ($v) => $v->saldo_pendiente > 0);
@@ -68,11 +66,11 @@ class PagoController extends Controller
                 'observacion' => $validated['observacion'] ?? null,
             ]);
 
-            $venta = Venta::with('credito')->find($validated['venta_id']);
+            $venta = Venta::find($validated['venta_id']);
             $montoRestante = (float) $pago->monto;
 
-            if ($venta?->credito) {
-                $cuotas = Cuota::where('credito_id', $venta->credito->id)
+            if ($venta) {
+                $cuotas = Cuota::where('venta_id', $venta->id)
                     ->orderBy('numero')
                     ->lockForUpdate()
                     ->get();
@@ -82,9 +80,7 @@ class PagoController extends Controller
                         break;
                     }
 
-                    $aplicado = (float) AplicacionPago::where('cuota_id', $cuota->id)
-                        ->whereHas('pago', fn ($query) => $query->where('estado', 'REGISTRADO'))
-                        ->sum('monto_aplicado');
+                    $aplicado = (float) $cuota->monto_pagado;
                     $saldoCuota = max(0, (float) $cuota->monto - $aplicado);
                     $montoAplicado = min($montoRestante, $saldoCuota);
 
@@ -92,24 +88,15 @@ class PagoController extends Controller
                         continue;
                     }
 
-                    AplicacionPago::create([
-                        'pago_id' => $pago->id,
-                        'cuota_id' => $cuota->id,
-                        'monto_aplicado' => $montoAplicado,
-                    ]);
+                    $nuevoPagado = round($aplicado + $montoAplicado, 2);
                     $montoRestante -= $montoAplicado;
 
                     $cuota->update([
-                        'estado' => $montoAplicado + $aplicado >= (float) $cuota->monto ? 'PAGADA' : 'PARCIAL',
+                        'monto_pagado' => $nuevoPagado,
+                        'estado' => $nuevoPagado >= (float) $cuota->monto ? 'PAGADA' : 'PARCIAL',
                     ]);
                 }
             }
-
-            if ($venta && $venta->credito && $venta->saldo_pendiente <= 0.01) {
-                $venta->credito->update(['estado' => 'PAGADO']);
-            }
-
-            Auditoria::registrar('REGISTRAR_PAGO', $pago, 'Pago registrado y aplicado a las cuotas disponibles.');
         });
 
         return redirect()->route('panel.ventas.show', $validated['venta_id'])

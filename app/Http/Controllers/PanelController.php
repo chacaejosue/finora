@@ -18,7 +18,6 @@ class PanelController extends Controller
     {
         /** @var Usuario $usuario */
         $usuario = Auth::user();
-        $usuario->load('persona');
 
         return view('panel', [
             'usuario' => $usuario,
@@ -38,7 +37,6 @@ class PanelController extends Controller
     {
         /** @var Usuario $usuario */
         $usuario = Auth::user();
-        $usuario->load('persona');
 
         return view('panel.colaborador', [
             'usuario' => $usuario,
@@ -60,19 +58,18 @@ class PanelController extends Controller
     {
         /** @var Usuario $usuario */
         $usuario = Auth::user();
-        $usuario->load('persona.cliente');
 
-        $cliente = $usuario->persona?->cliente;
-        $pedidos = $cliente?->pedidos()
+        $cliente = $usuario;
+        $pedidos = $cliente->pedidos()
             ->with('detalles.producto')
             ->latest('fecha')
             ->limit(5)
-            ->get() ?? collect();
-        $ventas = $cliente?->ventas()
-            ->with(['detalles.producto', 'credito', 'pagos'])
+            ->get();
+        $ventas = $cliente->ventas()
+            ->with(['detalles.producto', 'cuotas', 'pagos'])
             ->latest('fecha')
             ->limit(5)
-            ->get() ?? collect();
+            ->get();
 
         return view('cliente.index', compact('usuario', 'cliente', 'pedidos', 'ventas'));
     }

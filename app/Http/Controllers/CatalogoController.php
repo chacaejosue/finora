@@ -16,7 +16,7 @@ class CatalogoController extends Controller
             $query->where('activo', true)->where('publicado', true)->latest('id');
         }])->where('activo', true)->orderBy('nombre')->get();
 
-        $productos = Producto::with(['categoria', 'linea', 'proveedor'])
+        $productos = Producto::with(['categoria', 'proveedor'])
             ->where('activo', true)
             ->where('publicado', true)
             ->whereHas('categoria', fn ($query) => $query->where('activo', true))
@@ -47,7 +47,7 @@ class CatalogoController extends Controller
             fn (Categoria $categoria): bool => Str::slug($categoria->nombre) === $categoriaSlug
         );
 
-        $productos = Producto::with(['categoria', 'linea', 'proveedor'])
+        $productos = Producto::with(['categoria', 'proveedor'])
             ->where('activo', true)
             ->where('publicado', true)
             ->whereHas('categoria', function ($query) {

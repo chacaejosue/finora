@@ -12,7 +12,7 @@ class Producto extends Model
 
     protected $fillable = [
         'proveedor_id',
-        'linea_id',
+        'marca_linea',
         'categoria_id',
         'codigo',
         'nombre',
@@ -71,11 +71,11 @@ class Producto extends Model
     }
 
     /**
-     * Línea comercial a la que pertenece el producto (opcional).
+     * Compatibilidad para vistas que lean $producto->linea?->nombre a partir de marca_linea.
      */
-    public function linea(): BelongsTo
+    public function getLineaAttribute(): ?object
     {
-        return $this->belongsTo(Linea::class, 'linea_id');
+        return $this->marca_linea ? (object) ['nombre' => $this->marca_linea] : null;
     }
 
     /**

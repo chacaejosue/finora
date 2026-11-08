@@ -27,7 +27,7 @@ class CrearAccesoClienteRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('personas', 'email')->ignore($this->route('cliente')?->persona_id),
+                Rule::unique('usuarios', 'email')->ignore($this->route('cliente')?->id),
             ],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ];
