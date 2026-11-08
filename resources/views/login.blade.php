@@ -20,12 +20,12 @@
     <!-- Carga de estilos y scripts del proyecto mediante Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="login-page h-full font-sans bg-finora-surface text-finora-navy antialiased selection:bg-finora-cyan selection:text-finora-navy overflow-hidden">
-    <!-- Contenedor principal de pantalla dividida (2.3: Ajustado para vista fija sin scroll innecesario) -->
-    <div class="h-screen w-full flex flex-col lg:flex-row overflow-hidden">
+<body class="login-page min-h-screen lg:h-full font-sans bg-finora-surface text-finora-navy antialiased selection:bg-finora-cyan selection:text-finora-navy overflow-x-hidden lg:overflow-hidden">
+    <!-- Contenedor principal de pantalla dividida (Completamente responsivo en móvil y desktop) -->
+    <div class="min-h-screen lg:h-screen w-full flex flex-col lg:flex-row overflow-x-hidden lg:overflow-hidden">
 
         <!-- Panel izquierdo: Formulario de acceso seguro -->
-        <main class="w-full lg:w-[48%] xl:w-[45%] flex flex-col justify-between px-6 py-5 sm:px-12 md:px-14 lg:px-12 xl:px-16 bg-white z-10 h-full overflow-y-auto lg:overflow-hidden">
+        <main class="w-full lg:w-[48%] xl:w-[45%] flex flex-col justify-between px-6 py-5 sm:px-12 md:px-14 lg:px-12 xl:px-16 bg-white z-10 min-h-screen lg:min-h-0 lg:h-full overflow-y-auto lg:overflow-hidden">
 
             <!-- Logotipo y marca principal -->
             <header class="w-full">

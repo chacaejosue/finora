@@ -65,99 +65,109 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Buscador principal
+    // Buscadores (Header escritorio, Header móvil y catálogo principal)
+    const mobileHeaderSearchInput = document.getElementById('mobileHeaderSearchInput');
+    const headerSearchForm = document.getElementById('headerSearchForm');
+    const mobileHeaderSearchForm = document.getElementById('mobileHeaderSearchForm');
+
+    let scrollTimeout = null;
+    function smoothScrollToProducts() {
+        const catalogo = document.getElementById('catalogo-destacados');
+        if (!catalogo) return;
+        const rect = catalogo.getBoundingClientRect();
+        // Si no estamos ya enfocados en la sección de productos filtrados, bajar automáticamente
+        if (rect.top > 140 || rect.top < -60) {
+            catalogo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function handleSearchInput(value, sourceInput) {
+        searchQuery = value.toLowerCase().trim();
+
+        // Sincronizar todos los campos de búsqueda
+        if (headerSearchInput && sourceInput !== headerSearchInput) {
+            headerSearchInput.value = value;
+        }
+        if (mobileHeaderSearchInput && sourceInput !== mobileHeaderSearchInput) {
+            mobileHeaderSearchInput.value = value;
+        }
+        if (searchInput && sourceInput !== searchInput) {
+            searchInput.value = value;
+        }
+
+        updateVisibility();
+
+        // Al buscar algo, bajar automáticamente a la zona donde se filtran los productos
+        if (searchQuery.length >= 1) {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(smoothScrollToProducts, 280);
+        }
+    }
+
+    if (headerSearchInput) {
+        headerSearchInput.addEventListener('input', (e) => {
+            handleSearchInput(e.target.value, headerSearchInput);
+        });
+
+        headerSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(scrollTimeout);
+                smoothScrollToProducts();
+            }
+        });
+    }
+
+    if (mobileHeaderSearchInput) {
+        mobileHeaderSearchInput.addEventListener('input', (e) => {
+            handleSearchInput(e.target.value, mobileHeaderSearchInput);
+        });
+
+        mobileHeaderSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(scrollTimeout);
+                const mobileDrawer = document.getElementById('mobileMenuDrawer');
+                if (mobileDrawer) mobileDrawer.classList.add('hidden');
+                smoothScrollToProducts();
+            }
+        });
+    }
+
+    if (headerSearchForm) {
+        headerSearchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            clearTimeout(scrollTimeout);
+            smoothScrollToProducts();
+        });
+    }
+
+    if (mobileHeaderSearchForm) {
+        mobileHeaderSearchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            clearTimeout(scrollTimeout);
+            const mobileDrawer = document.getElementById('mobileMenuDrawer');
+            if (mobileDrawer) mobileDrawer.classList.add('hidden');
+            smoothScrollToProducts();
+        });
+    }
+
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
-            searchQuery = e.target.value.toLowerCase().trim();
-            if (headerSearchInput && headerSearchInput.value !== e.target.value) {
-                headerSearchInput.value = e.target.value;
-            }
-            updateVisibility();
+            handleSearchInput(e.target.value, searchInput);
         });
 
         searchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                document.getElementById('catalogo-destacados')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                smoothScrollToProducts();
             }
         });
     }
 
-    // Buscador del header
-    if (headerSearchInput) {
-        headerSearchInput.addEventListener('input', (e) => {
-            searchQuery = e.target.value.toLowerCase().trim();
-            if (searchInput && searchInput.value !== e.target.value) {
-                searchInput.value = e.target.value;
-            }
-            updateVisibility();
-        });
-    }
-
-    // Favoritos / Wishlist Hearts (con persistencia en LocalStorage)
-    const storedWishlist = JSON.parse(localStorage.getItem('finora-favoritos') || '[]');
-    document.querySelectorAll('.wishlist-toggle-btn').forEach(btn => {
-        const prodId = btn.getAttribute('data-prod-id');
-        const icon = btn.querySelector('.heart-icon');
-
-        if (storedWishlist.includes(prodId)) {
-            btn.classList.add('is-active', 'text-rose-500');
-            btn.classList.remove('text-slate-400');
-            if (icon) icon.classList.add('fill-current');
-        }
-
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            let wishlist = JSON.parse(localStorage.getItem('finora-favoritos') || '[]');
-            const index = wishlist.indexOf(prodId);
-
-            if (index > -1) {
-                wishlist.splice(index, 1);
-                btn.classList.remove('is-active', 'text-rose-500');
-                btn.classList.add('text-slate-400');
-                if (icon) icon.classList.remove('fill-current');
-            } else {
-                wishlist.push(prodId);
-                btn.classList.add('is-active', 'text-rose-500');
-                btn.classList.remove('text-slate-400');
-                if (icon) icon.classList.add('fill-current');
-
-                // Pequeña animación pop
-                btn.classList.add('scale-125');
-                setTimeout(() => btn.classList.remove('scale-125'), 250);
-            }
-            localStorage.setItem('finora-favoritos', JSON.stringify(wishlist));
-        });
-    });
-
-    // Suscripción al Newsletter
-    const newsletterForm = document.getElementById('newsletterForm');
-    const newsletterBtn = document.getElementById('newsletterBtn');
-    const newsletterInput = document.getElementById('newsletterInput');
-
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = newsletterInput?.value.trim();
-            if (!email) return;
-
-            if (newsletterBtn) {
-                const originalHtml = newsletterBtn.innerHTML;
-                newsletterBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span> ¡Suscrito!';
-                newsletterBtn.classList.remove('bg-slate-900', 'hover:bg-slate-800');
-                newsletterBtn.classList.add('bg-emerald-600', 'text-white');
-                newsletterBtn.disabled = true;
-
-                if (newsletterInput) newsletterInput.value = '';
-
-                setTimeout(() => {
-                    newsletterBtn.innerHTML = originalHtml;
-                    newsletterBtn.classList.remove('bg-emerald-600', 'text-white');
-                    newsletterBtn.classList.add('bg-slate-900', 'hover:bg-slate-800');
-                    newsletterBtn.disabled = false;
-                }, 4000);
-            }
-        });
+    // Favoritos / Wishlist Hearts (con persistencia en LocalStorage y MySQL)
+    if (window.finoraInitLikes) {
+        window.finoraInitLikes();
     }
 
     // Apertura de Modales de Políticas desde cualquier lugar
