@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Persona;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -21,11 +20,9 @@ class CrearConsultorCommandTest extends TestCase
             ->expectsOutput('Consultor registrado correctamente. Ya puede iniciar sesión en Finora.')
             ->assertExitCode(0);
 
-        $this->assertDatabaseHas('personas', [
+        $this->assertDatabaseHas('usuarios', [
             'nombre' => 'Consultora Inicial',
             'email' => 'consultora.inicial@test.com',
-        ]);
-        $this->assertDatabaseHas('usuarios', [
             'rol' => 'CONSULTOR',
             'activo' => true,
         ]);
@@ -33,12 +30,9 @@ class CrearConsultorCommandTest extends TestCase
 
     public function test_el_comando_rechaza_un_correo_duplicado(): void
     {
-        $persona = Persona::create([
+        Usuario::create([
             'nombre' => 'Consultora Existente',
             'email' => 'existente@test.com',
-        ]);
-        Usuario::create([
-            'persona_id' => $persona->id,
             'password' => 'Password123!@#',
             'rol' => 'CONSULTOR',
             'activo' => true,

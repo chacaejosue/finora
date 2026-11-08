@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('asientos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tipo_comprobante_id')->constrained('tipos_comprobante')->restrictOnDelete();
+            $table->enum('tipo_comprobante', ['ING', 'EGR', 'TRS', 'APE'])->default('TRS')->index();
             $table->string('numero', 50)->index(); // Correlativo: ej. CI-2026-00001
             $table->date('fecha')->index();
             $table->text('glosa');

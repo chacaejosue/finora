@@ -3,10 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Categoria;
-use App\Models\Cliente;
 use App\Models\DetalleVenta;
 use App\Models\Pedido;
-use App\Models\Persona;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Usuario;
@@ -28,6 +26,48 @@ class BackendConsistencyTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Panel del Colaborador');
         $response->assertSee('Operaciones disponibles');
+    }
+
+    public function test_colaborador_no_puede_acceder_a_contabilidad_ni_ajustar_inventario_ni_anular_ventas(): void
+    {
+        $colaborador = $this->crearUsuario('COLABORADOR', 'colaborador.restringido@finora.test');
+        $cliente = $this->crearCliente('cliente.restringido@finora.test');
+        $producto = $this->crearProducto();
+
+        $venta = Venta::create([
+            'cliente_id' => $cliente->id,
+            'registrado_por_usuario_id' => $colaborador->id,
+            'fecha' => now(),
+            'forma_pago' => 'CONTADO',
+            'estado' => 'CONFIRMADA',
+            'descuento' => 0,
+        ]);
+
+        $this->actingAs($colaborador)->get(route('contabilidad.index'))->assertStatus(403);
+        $this->actingAs($colaborador)->post(route('panel.inventario.ajuste'), [
+            'producto_id' => $producto->id,
+            'tipo' => 'AJUSTE_ENTRADA',
+            'cantidad' => 5,
+            'observacion' => 'No autorizado',
+        ])->assertStatus(403);
+        $this->actingAs($colaborador)->patch(route('panel.ventas.anular', $venta))->assertStatus(403);
+        $this->actingAs($colaborador)->get(route('panel.proveedores.index'))->assertStatus(403);
+        $this->actingAs($colaborador)->get(route('panel.categorias.index'))->assertStatus(403);
+    }
+
+    public function test_consultor_puede_ver_todas_las_vistas_de_contabilidad(): void
+    {
+        $consultor = $this->crearUsuario('CONSULTOR', 'consultor.contabilidad@finora.test');
+        (new \Database\Seeders\ContabilidadBoliviaSeeder())->run();
+
+        $this->actingAs($consultor)->get(route('contabilidad.index'))->assertStatus(200);
+        $this->actingAs($consultor)->get(route('contabilidad.balance-apertura'))->assertStatus(200);
+        $this->actingAs($consultor)->get(route('contabilidad.libro-diario'))->assertStatus(200);
+        $this->actingAs($consultor)->get(route('contabilidad.asientos.crear'))->assertStatus(200);
+        $this->actingAs($consultor)->get(route('contabilidad.libro-mayor'))->assertStatus(200);
+        $this->actingAs($consultor)->get(route('contabilidad.sumas-saldos'))->assertStatus(200);
+        $this->actingAs($consultor)->get(route('contabilidad.estados-financieros'))->assertStatus(200);
+        $this->actingAs($consultor)->get(route('contabilidad.plan-cuentas'))->assertStatus(200);
     }
 
     public function test_cliente_ve_solo_sus_datos_en_el_dashboard(): void
@@ -52,7 +92,7 @@ class BackendConsistencyTest extends TestCase
             'fecha' => now(),
         ]);
 
-        $response = $this->actingAs($cliente->persona->usuario)->get(route('mi-cuenta'));
+        $response = $this->actingAs($cliente)->get(route('mi-cuenta'));
 
         $response->assertStatus(200);
         $response->assertSee('Mis pedidos');
@@ -133,12 +173,11 @@ class BackendConsistencyTest extends TestCase
     public function test_consultor_puede_crear_acceso_para_un_cliente_existente(): void
     {
         $consultor = $this->crearUsuario('CONSULTOR', 'cliente.acceso@finora.test');
-        $persona = Persona::create([
+        $cliente = Usuario::create([
             'nombre' => 'Cliente',
             'email' => 'cliente.sin.acceso@finora.test',
-        ]);
-        $cliente = Cliente::create([
-            'persona_id' => $persona->id,
+            'rol' => 'CLIENTE',
+            'password' => null,
             'activo' => true,
         ]);
 
@@ -150,14 +189,12 @@ class BackendConsistencyTest extends TestCase
 
         $response->assertRedirect();
         $this->assertDatabaseHas('usuarios', [
-            'persona_id' => $cliente->persona_id,
+            'id' => $cliente->id,
+            'email' => 'cliente.con.acceso@finora.test',
             'rol' => 'CLIENTE',
             'activo' => true,
         ]);
-        $this->assertDatabaseHas('personas', [
-            'id' => $cliente->persona_id,
-            'email' => 'cliente.con.acceso@finora.test',
-        ]);
+        $this->assertNotNull($cliente->fresh()->password);
     }
 
     public function test_se_puede_registrar_la_entrega_de_un_pedido_listo(): void
@@ -182,47 +219,28 @@ class BackendConsistencyTest extends TestCase
             'estado' => 'COMPLETADO',
             'recibido_por' => 'Ana Pérez',
         ]);
-        $this->assertDatabaseHas('auditorias', [
-            'accion' => 'REGISTRAR_ENTREGA',
-            'entidad_id' => $pedido->id,
-        ]);
     }
 
     private function crearUsuario(string $rol, string $email): Usuario
     {
-        $persona = Persona::create([
+        return Usuario::create([
             'nombre' => ucfirst(strtolower($rol)),
             'email' => $email,
-        ]);
-
-        return Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => $rol,
             'activo' => true,
         ]);
     }
 
-    private function crearCliente(string $email): Cliente
+    private function crearCliente(string $email): Usuario
     {
-        $persona = Persona::create([
+        return Usuario::create([
             'nombre' => 'Cliente',
             'email' => $email,
-        ]);
-
-        $cliente = Cliente::create([
-            'persona_id' => $persona->id,
-            'activo' => true,
-        ]);
-
-        Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CLIENTE',
             'activo' => true,
         ]);
-
-        return $cliente->load('persona.usuario');
     }
 
     private function crearProducto(): Producto

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PedidoRequest extends FormRequest
 {
@@ -14,7 +15,11 @@ class PedidoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cliente_id' => ['nullable', 'exists:clientes,id', 'required_without:nuevo_cliente_nombre'],
+            'cliente_id' => [
+                'nullable',
+                Rule::exists('usuarios', 'id')->where(fn ($query) => $query->where('rol', 'CLIENTE')),
+                'required_without:nuevo_cliente_nombre',
+            ],
             'nuevo_cliente_nombre' => ['nullable', 'string', 'max:100', 'required_without:cliente_id'],
             'nuevo_cliente_apellido' => ['nullable', 'string', 'max:100'],
             'nuevo_cliente_telefono' => ['nullable', 'string', 'max:30'],

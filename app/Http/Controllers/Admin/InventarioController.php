@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Auditoria;
 use App\Models\MovimientoInventario;
 use App\Models\Producto;
 use Illuminate\Http\Request;
@@ -14,7 +13,7 @@ class InventarioController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Producto::with(['categoria', 'linea', 'proveedor'])
+        $query = Producto::with(['categoria', 'proveedor'])
             ->where('activo', true);
 
         if ($request->filled('search')) {
@@ -32,7 +31,7 @@ class InventarioController extends Controller
 
     public function movimientos(Request $request)
     {
-        $query = MovimientoInventario::with(['producto', 'registradoPor.persona', 'detalleCompra.compra', 'detalleVenta.venta']);
+        $query = MovimientoInventario::with(['producto', 'registradoPor', 'detalleCompra.compra', 'detalleVenta.venta']);
 
         if ($request->filled('producto_id')) {
             $query->where('producto_id', $request->input('producto_id'));
@@ -75,11 +74,6 @@ class InventarioController extends Controller
                 'cantidad' => $cantidadSigned,
                 'fecha' => now(),
                 'observacion' => $validated['observacion'],
-            ]);
-
-            Auditoria::registrar('AJUSTAR_INVENTARIO', $producto, 'Se registró un ajuste manual de inventario.', null, [
-                'tipo' => $validated['tipo'],
-                'cantidad' => $cantidadSigned,
             ]);
         });
 

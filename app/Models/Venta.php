@@ -35,7 +35,7 @@ class Venta extends Model
 
     public function cliente(): BelongsTo
     {
-        return $this->belongsTo(Cliente::class, 'cliente_id');
+        return $this->belongsTo(Usuario::class, 'cliente_id');
     }
 
     public function pedido(): BelongsTo
@@ -58,9 +58,9 @@ class Venta extends Model
         return $this->hasMany(Pago::class, 'venta_id');
     }
 
-    public function credito(): HasOne
+    public function cuotas(): HasMany
     {
-        return $this->hasOne(Credito::class, 'venta_id');
+        return $this->hasMany(Cuota::class, 'venta_id');
     }
 
     public function asientos(): MorphMany

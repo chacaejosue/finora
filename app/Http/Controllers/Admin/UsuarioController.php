@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UsuarioRequest;
-use App\Models\Auditoria;
-use App\Models\Persona;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,11 +13,11 @@ class UsuarioController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Usuario::with('persona');
+        $query = Usuario::query();
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->whereHas('persona', function ($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nombre', 'like', "%{$search}%")
                     ->orWhere('apellido', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
@@ -45,23 +43,17 @@ class UsuarioController extends Controller
         $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
-            $persona = Persona::create([
+            Usuario::create([
                 'nombre' => $validated['nombre'],
                 'apellido' => $validated['apellido'] ?? null,
                 'telefono' => $validated['telefono'] ?? null,
                 'email' => $validated['email'],
                 'genero' => $validated['genero'] ?? null,
                 'direccion' => $validated['direccion'] ?? null,
-            ]);
-
-            Usuario::create([
-                'persona_id' => $persona->id,
                 'password' => Hash::make($validated['password']),
                 'rol' => $validated['rol'],
                 'activo' => $validated['activo'] ?? true,
             ]);
-
-            Auditoria::registrar('CREAR_USUARIO', $persona, 'Cuenta de usuario creada.');
         });
 
         return redirect()->route('panel.usuarios.index')
@@ -70,8 +62,6 @@ class UsuarioController extends Controller
 
     public function edit(Usuario $usuario)
     {
-        $usuario->load('persona');
-
         return view('panel.usuarios.edit', compact('usuario'));
     }
 
@@ -80,16 +70,13 @@ class UsuarioController extends Controller
         $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $usuario) {
-            $usuario->persona->update([
+            $userData = [
                 'nombre' => $validated['nombre'],
                 'apellido' => $validated['apellido'] ?? null,
                 'telefono' => $validated['telefono'] ?? null,
                 'email' => $validated['email'],
                 'genero' => $validated['genero'] ?? null,
                 'direccion' => $validated['direccion'] ?? null,
-            ]);
-
-            $userData = [
                 'rol' => $validated['rol'],
                 'activo' => isset($validated['activo']) ? (bool) $validated['activo'] : $usuario->activo,
             ];
@@ -99,8 +86,6 @@ class UsuarioController extends Controller
             }
 
             $usuario->update($userData);
-
-            Auditoria::registrar('ACTUALIZAR_USUARIO', $usuario, 'Cuenta de usuario actualizada.');
         });
 
         return redirect()->route('panel.usuarios.index')
@@ -115,8 +100,6 @@ class UsuarioController extends Controller
         }
 
         $usuario->update(['activo' => ! $usuario->activo]);
-
-        Auditoria::registrar('CAMBIAR_ESTADO_USUARIO', $usuario, 'Estado de usuario actualizado.', null, ['activo' => $usuario->activo]);
 
         $estadoText = $usuario->activo ? 'activado' : 'desactivado';
 

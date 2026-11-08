@@ -3,10 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Categoria;
-use App\Models\Cliente;
 use App\Models\Compra;
 use App\Models\Pedido;
-use App\Models\Persona;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Usuario;
@@ -20,7 +18,7 @@ class FlujoNegocioCompletoTest extends TestCase
 
     private Usuario $consultor;
 
-    private Cliente $cliente;
+    private Usuario $cliente;
 
     private Producto $producto;
 
@@ -31,17 +29,24 @@ class FlujoNegocioCompletoTest extends TestCase
         parent::setUp();
 
         // 1. Usuario Consultor
-        $pAdmin = Persona::create(['nombre' => 'Josué', 'apellido' => 'Chacae', 'email' => 'josue@finora.test']);
         $this->consultor = Usuario::create([
-            'persona_id' => $pAdmin->id,
+            'nombre' => 'Josué',
+            'apellido' => 'Chacae',
+            'email' => 'josue@finora.test',
             'password' => bcrypt('password'),
             'rol' => 'CONSULTOR',
             'activo' => true,
         ]);
 
         // 2. Cliente
-        $pCliente = Persona::create(['nombre' => 'Ana', 'apellido' => 'Rios', 'email' => 'ana@ejemplo.com', 'telefono' => '78901234']);
-        $this->cliente = Cliente::create(['persona_id' => $pCliente->id, 'activo' => true]);
+        $this->cliente = Usuario::create([
+            'nombre' => 'Ana',
+            'apellido' => 'Rios',
+            'email' => 'ana@ejemplo.com',
+            'telefono' => '78901234',
+            'rol' => 'CLIENTE',
+            'activo' => true,
+        ]);
 
         // 3. Proveedor, Categoría y Producto
         $this->proveedor = Proveedor::create(['nombre' => 'Natura Cosmeticos', 'activo' => true]);
@@ -143,7 +148,6 @@ class FlujoNegocioCompletoTest extends TestCase
 
         $venta->refresh();
         $this->assertEquals(0.00, $venta->saldo_pendiente);
-        $this->assertEquals('PAGADO', $venta->credito->estado);
-        $this->assertDatabaseHas('cuotas', ['credito_id' => $venta->credito->id, 'estado' => 'PAGADA']);
+        $this->assertDatabaseHas('cuotas', ['venta_id' => $venta->id, 'estado' => 'PAGADA']);
     }
 }

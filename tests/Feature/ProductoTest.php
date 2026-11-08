@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Categoria;
-use App\Models\Persona;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Usuario;
@@ -17,13 +16,9 @@ class ProductoTest extends TestCase
 
     private function crearConsultor(): Usuario
     {
-        $persona = Persona::create([
+        return Usuario::create([
             'nombre' => 'Consultor',
             'email' => 'consultor.prod@finora.test',
-        ]);
-
-        return Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CONSULTOR',
             'activo' => true,
@@ -58,13 +53,13 @@ class ProductoTest extends TestCase
     }
 
     /**
-     * Usuarios con otros roles (COLABORADOR, CLIENTE) tienen acceso prohibido al CRUD.
+     * Usuarios con otros roles (CLIENTE) tienen acceso prohibido al CRUD, y COLABORADOR no puede crear productos.
      */
     public function test_roles_no_autorizados_son_bloqueados(): void
     {
-        $persona = Persona::create(['nombre' => 'Cliente', 'email' => 'cliente@finora.test']);
         $cliente = Usuario::create([
-            'persona_id' => $persona->id,
+            'nombre' => 'Cliente',
+            'email' => 'cliente@finora.test',
             'password' => Hash::make('Clave123!@#'),
             'rol' => 'CLIENTE',
             'activo' => true,
@@ -72,6 +67,16 @@ class ProductoTest extends TestCase
 
         $response = $this->actingAs($cliente)->get('/panel/productos');
         $response->assertStatus(403);
+
+        $colaborador = Usuario::create([
+            'nombre' => 'Colaborador',
+            'email' => 'colab.prod@finora.test',
+            'password' => Hash::make('Clave123!@#'),
+            'rol' => 'COLABORADOR',
+            'activo' => true,
+        ]);
+
+        $this->actingAs($colaborador)->get('/panel/productos/create')->assertStatus(403);
     }
 
     /**
@@ -128,6 +133,30 @@ class ProductoTest extends TestCase
             'publicado' => true,
             'activo' => true,
         ]);
+    }
+
+    public function test_consultor_puede_crear_producto_con_stock_y_costo_inicial(): void
+    {
+        $consultor = $this->crearConsultor();
+        [$proveedor, $categoria] = $this->crearProveedorYCategoria();
+
+        $response = $this->actingAs($consultor)->post('/panel/productos', [
+            'codigo' => 'PROD-STOCK-INI',
+            'nombre' => 'Perfume Kaiak en Habitación',
+            'proveedor_id' => $proveedor->id,
+            'categoria_id' => $categoria->id,
+            'marca_linea' => 'Kaiak',
+            'precio_venta_actual' => 150.00,
+            'stock_inicial' => 4,
+            'costo_inicial' => 95.00,
+            'publicado' => '1',
+            'activo' => '1',
+        ]);
+
+        $response->assertRedirect('/panel/productos');
+        $producto = Producto::where('codigo', 'PROD-STOCK-INI')->firstOrFail();
+        $this->assertEquals(4, $producto->stock_fisico);
+        $this->assertEquals(95.00, (float) $producto->costo_promedio);
     }
 
     /**

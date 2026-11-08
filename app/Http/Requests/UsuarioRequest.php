@@ -16,7 +16,6 @@ class UsuarioRequest extends FormRequest
     {
         $usuario = $this->route('usuario');
         $usuarioId = $usuario ? $usuario->id : null;
-        $personaId = $usuario ? $usuario->persona_id : null;
 
         $isCreate = $this->isMethod('post');
 
@@ -28,7 +27,7 @@ class UsuarioRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('personas', 'email')->ignore($personaId),
+                Rule::unique('usuarios', 'email')->ignore($usuarioId),
             ],
             'direccion' => ['nullable', 'string', 'max:255'],
             'genero' => ['nullable', 'string', Rule::in(['MASCULINO', 'FEMENINO', 'OTRO'])],

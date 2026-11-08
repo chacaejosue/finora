@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
@@ -7,43 +8,44 @@
 @source '../views/**/*.blade.php';
 
 @theme {
-    /* Paleta de colores */
-    --color-surface-tint: #525f75;
-    --color-background: #f6faff;
-    --color-secondary: #0050cc;
-    --color-outline: #75777d;
+    /* Paleta de colores Minimalista Finora (Landing Design System) */
+    --color-surface-tint: #64748b;
+    --color-background: #f7fafd;
+    --color-secondary: #00c1de;
+    --color-outline: #94a3b8;
     --color-surface-container-lowest: #ffffff;
-    --color-on-surface: #171c20;
-    --color-primary-fixed: #d6e3fe;
-    --color-surface: #f6faff;
-    --color-secondary-container: #0266ff;
-    --color-surface-variant: #dfe3e8;
+    --color-on-surface: #0e1b2e;
+    --color-primary-fixed: #e0f8fc;
+    --color-surface: #f7fafd;
+    --color-secondary-container: #00c1de;
+    --color-surface-variant: #e2e8f0;
     --color-on-secondary: #ffffff;
-    --color-surface-container-highest: #dfe3e8;
-    --color-secondary-fixed: #dae1ff;
-    --color-on-surface-variant: #44474c;
-    --color-on-background: #171c20;
-    --color-surface-container-high: #e4e9ed;
-    --color-surface-container-low: #f0f4f9;
-    --color-primary-container: #0e1c2f;
-    --color-surface-container: #eaeef3;
+    --color-surface-container-highest: #e2e8f0;
+    --color-secondary-fixed: #dcf4fb;
+    --color-on-surface-variant: #475569;
+    --color-on-background: #0e1b2e;
+    --color-surface-container-high: #f1f5f9;
+    --color-surface-container-low: #f8fafc;
+    --color-primary-container: #0e1b2e;
+    --color-surface-container: #f1f5f9;
 
-    /* Identidad visual Finora */
-    --color-finora-navy: #0B192C;
-    --color-finora-dark: #0F1E36;
-    --color-finora-blue: #0062FF;
-    --color-finora-deep-blue: #0050CC;
-    --color-finora-cyan: #00D2DF;
-    --color-finora-sky: #00A3FF;
-    --color-finora-light-blue: #EAF3FF;
-    --color-finora-subtle: #525F75;
-    --color-finora-surface: #F6FAFF;
-    --color-finora-border: #E2E8F0;
+    /* Identidad visual Finora sincronizada con Landing */
+    --color-finora-navy: #0e1b2e;
+    --color-finora-dark: #0e1b2e;
+    --color-finora-blue: #00c1de;
+    --color-finora-deep-blue: #00a3bd;
+    --color-finora-cyan: #00c1de;
+    --color-finora-sky: #00c1de;
+    --color-finora-light-blue: #e0f8fc;
+    --color-finora-subtle: #64748b;
+    --color-finora-surface: #f7fafd;
+    --color-finora-border: #f1f5f9;
 
-    --font-heading: 'Outfit', sans-serif;
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --font-heading: 'Plus Jakarta Sans', sans-serif;
 
-    --shadow-finora-btn: 0 10px 25px -4px rgba(0, 98, 255, 0.35), 0 4px 10px -2px rgba(0, 210, 223, 0.2);
-    --shadow-finora-card: 0 20px 40px -15px rgba(11, 25, 44, 0.06), 0 0 1px 1px rgba(226, 232, 240, 0.8);
+    --shadow-finora-btn: 0 10px 25px -5px rgba(0, 193, 222, 0.32), 0 4px 10px -2px rgba(0, 193, 222, 0.18);
+    --shadow-finora-card: 0 10px 30px -5px rgba(0, 193, 222, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
 
     /* Espaciados */
     --spacing-space-xs: 0.25rem;
@@ -55,17 +57,17 @@
     --spacing-margin: 2rem;
 
     /* Tipografías */
-    --font-title-md: 'Manrope', sans-serif;
-    --font-label-md: 'Manrope', sans-serif;
-    --font-body-sm: 'Manrope', sans-serif;
-    --font-headline-lg: 'Outfit', sans-serif;
-    --font-headline-md: 'Outfit', sans-serif;
-    --font-body-lg: 'Manrope', sans-serif;
-    --font-body-md: 'Manrope', sans-serif;
-    --font-display-lg: 'Outfit', sans-serif;
-    --font-label-sm: 'Manrope', sans-serif;
-    --font-headline-sm: 'Outfit', sans-serif;
-    --font-title-lg: 'Manrope', sans-serif;
+    --font-title-md: 'Plus Jakarta Sans', sans-serif;
+    --font-label-md: 'Plus Jakarta Sans', sans-serif;
+    --font-body-sm: 'Plus Jakarta Sans', sans-serif;
+    --font-headline-lg: 'Plus Jakarta Sans', sans-serif;
+    --font-headline-md: 'Plus Jakarta Sans', sans-serif;
+    --font-body-lg: 'Plus Jakarta Sans', sans-serif;
+    --font-body-md: 'Plus Jakarta Sans', sans-serif;
+    --font-display-lg: 'Plus Jakarta Sans', sans-serif;
+    --font-label-sm: 'Plus Jakarta Sans', sans-serif;
+    --font-headline-sm: 'Plus Jakarta Sans', sans-serif;
+    --font-title-lg: 'Plus Jakarta Sans', sans-serif;
 
     /* Tamaños de texto e interlineados */
     --text-title-md: 16px;
@@ -172,23 +174,38 @@ input::-ms-clear {
 }
 
 
-/* Utilidades visuales y fondos interactivos Finora */
+/* Utilidades visuales y fondos interactivos Finora (Landing Aesthetic) */
 .finora-gradient-btn {
-    background: linear-gradient(135deg, #0050CC 0%, #0062FF 50%, #00D2DF 100%);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #00c1de;
+    color: #ffffff;
+    border-radius: 9999px;
+    box-shadow: 0 10px 25px -5px rgba(0, 193, 222, 0.3);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .finora-gradient-btn:hover {
-    background: linear-gradient(135deg, #0045B3 0%, #0056E0 50%, #00BFCC 100%);
+    background: #00a3bd;
     transform: translateY(-1px);
-    box-shadow: 0 14px 28px -5px rgba(0, 98, 255, 0.42);
+    box-shadow: 0 14px 28px -5px rgba(0, 193, 222, 0.42);
+}
+
+.hero-gradient {
+    background: radial-gradient(circle at 75% 35%, #bcecf9 0%, #e8f7fc 45%, #ffffff 80%);
+}
+
+.banner-gradient {
+    background: linear-gradient(105deg, #dcf4fb 0%, #d1f0fa 35%, #edf9fd 70%, #d8f1f8 100%);
+}
+
+.shadow-soft {
+    box-shadow: 0 10px 30px -5px rgba(0, 193, 222, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
 }
 
 .finora-soft-bg {
     background:
-        radial-gradient(circle at 85% 20%, rgba(0, 210, 223, 0.18) 0%, rgba(246, 250, 255, 0) 55%),
-        radial-gradient(circle at 15% 85%, rgba(0, 98, 255, 0.12) 0%, rgba(246, 250, 255, 0) 50%),
-        linear-gradient(180deg, #F6FAFF 0%, #EEF6FF 100%);
+        radial-gradient(circle at 85% 20%, rgba(0, 193, 222, 0.16) 0%, rgba(247, 250, 253, 0) 55%),
+        radial-gradient(circle at 15% 85%, rgba(0, 193, 222, 0.1) 0%, rgba(247, 250, 253, 0) 50%),
+        linear-gradient(180deg, #f7fafd 0%, #edf8fc 100%);
 }
 
 /* Animaciones y dinamismo */
@@ -450,6 +467,12 @@ input::-ms-clear {
 }
 
 @layer components {
+    body.bg-finora-surface {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #f7fafd;
+        color: #0e1b2e;
+    }
+
     body.bg-finora-surface main {
         animation: fadeIn 0.35s ease both;
     }
@@ -459,28 +482,32 @@ input::-ms-clear {
     }
 
     body.bg-finora-surface main form[method='GET'] {
-        background:
-            linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.96));
-        box-shadow: 0 10px 28px -18px rgba(11, 25, 44, 0.28);
+        background: #ffffff;
+        border-radius: 1.5rem;
+        border-color: #f1f5f9;
+        box-shadow: 0 10px 30px -5px rgba(0, 193, 222, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
     }
 
     body.bg-finora-surface main form[method='GET'] input,
     body.bg-finora-surface main form[method='GET'] select,
     body.bg-finora-surface main form[method='GET'] textarea {
         min-height: 42px;
+        border-radius: 9999px;
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     }
 
     body.bg-finora-surface main form[method='GET'] input:focus,
     body.bg-finora-surface main form[method='GET'] select:focus,
     body.bg-finora-surface main form[method='GET'] textarea:focus {
-        border-color: rgba(0, 98, 255, 0.55);
-        box-shadow: 0 0 0 4px rgba(0, 98, 255, 0.1);
+        border-color: rgba(0, 193, 222, 0.55);
+        box-shadow: 0 0 0 4px rgba(0, 193, 222, 0.12);
     }
 
     body.bg-finora-surface main > div.bg-white,
     body.bg-finora-surface main > section.bg-white {
-        box-shadow: 0 18px 40px -28px rgba(11, 25, 44, 0.45);
+        border-radius: 1.5rem;
+        border-color: #f1f5f9;
+        box-shadow: 0 10px 30px -5px rgba(0, 193, 222, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
     }
 
     body.bg-finora-surface main table thead th {
@@ -494,7 +521,7 @@ input::-ms-clear {
     }
 
     body.bg-finora-surface main table tbody tr:hover {
-        box-shadow: inset 3px 0 0 var(--color-finora-blue);
+        box-shadow: inset 3px 0 0 #00c1de;
     }
 
     body.bg-finora-surface main input:not([type='hidden']),
@@ -506,17 +533,21 @@ input::-ms-clear {
     body.bg-finora-surface main input:not([type='hidden']):focus,
     body.bg-finora-surface main select:focus,
     body.bg-finora-surface main textarea:focus {
-        border-color: rgba(0, 98, 255, 0.55);
-        box-shadow: 0 0 0 4px rgba(0, 98, 255, 0.1);
+        border-color: rgba(0, 193, 222, 0.55);
+        box-shadow: 0 0 0 4px rgba(0, 193, 222, 0.12);
     }
 
     body.bg-finora-surface main button[type='submit'],
     body.bg-finora-surface main a.finora-gradient-btn {
         min-height: 42px;
+        border-radius: 9999px;
     }
 
     body.bg-finora-surface header {
-        box-shadow: 0 8px 24px -22px rgba(11, 25, 44, 0.7);
+        background-color: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        border-bottom-color: rgba(241, 245, 249, 0.9);
+        box-shadow: none;
     }
 
     body.bg-finora-surface header a,

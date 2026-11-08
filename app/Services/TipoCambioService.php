@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Configuracion;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -13,6 +12,8 @@ class TipoCambioService
     private const MANUAL_KEY = 'finora.exchange_rate.manual';
 
     private const OFFICIAL_KEY = 'finora.exchange_rate.official';
+
+    private const UPDATED_AT_KEY = 'finora.exchange_rate.updated_at';
 
     public function bolivianosPorDolar(): float
     {
@@ -32,12 +33,13 @@ class TipoCambioService
      */
     public function informacion(): array
     {
-        $tasaOficial = Configuracion::where('clave', self::OFFICIAL_KEY)->first();
+        $tasaOficial = Cache::get(self::OFFICIAL_KEY);
+        $actualizado = Cache::get(self::UPDATED_AT_KEY);
 
         return [
             'tasa' => $this->bolivianosPorDolar(),
             'fuente' => $this->fuente(),
-            'actualizado' => $tasaOficial?->updated_at?->toIso8601String() ?: now()->toIso8601String(),
+            'actualizado' => $actualizado ?: now()->toIso8601String(),
             'es_respaldo' => $tasaOficial === null && $this->fuente() === 'OFICIAL',
         ];
     }
@@ -58,16 +60,10 @@ class TipoCambioService
 
     public function actualizarFuente(string $fuente, ?float $tasaManual = null): void
     {
-        Configuracion::updateOrCreate(
-            ['clave' => self::MODE_KEY],
-            ['valor' => $fuente, 'descripcion' => 'Fuente activa del tipo de cambio.'],
-        );
+        Cache::forever(self::MODE_KEY, $fuente);
 
         if ($tasaManual !== null) {
-            Configuracion::updateOrCreate(
-                ['clave' => self::MANUAL_KEY],
-                ['valor' => number_format($tasaManual, 6, '.', ''), 'descripcion' => 'Tipo de cambio manual USD a BOB.'],
-            );
+            Cache::forever(self::MANUAL_KEY, number_format($tasaManual, 6, '.', ''));
         }
 
         Cache::forget('finora.tipo-cambio.usd-bob.oficial');
@@ -76,25 +72,23 @@ class TipoCambioService
     private function guardarTasaOficial(?float $tasa): float
     {
         if ($tasa === null) {
-            return (float) (Configuracion::where('clave', self::OFFICIAL_KEY)->value('valor') ?: config('finora.usd_to_bob_fallback', 12.00));
+            return (float) (Cache::get(self::OFFICIAL_KEY) ?: config('finora.usd_to_bob_fallback', 12.00));
         }
 
-        Configuracion::updateOrCreate(
-            ['clave' => self::OFFICIAL_KEY],
-            ['valor' => number_format($tasa, 6, '.', ''), 'descripcion' => 'Última tasa oficial obtenida del BCB.'],
-        );
+        Cache::forever(self::OFFICIAL_KEY, number_format($tasa, 6, '.', ''));
+        Cache::forever(self::UPDATED_AT_KEY, now()->toIso8601String());
 
         return $tasa;
     }
 
     public function fuente(): string
     {
-        return Configuracion::where('clave', self::MODE_KEY)->value('valor') ?: 'OFICIAL';
+        return Cache::get(self::MODE_KEY) ?: 'OFICIAL';
     }
 
     public function manual(): ?float
     {
-        $valor = Configuracion::where('clave', self::MANUAL_KEY)->value('valor');
+        $valor = Cache::get(self::MANUAL_KEY);
 
         return $valor !== null ? (float) $valor : null;
     }

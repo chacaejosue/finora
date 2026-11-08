@@ -4,14 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\VentaRequest;
-use App\Models\Auditoria;
-use App\Models\Cliente;
-use App\Models\Credito;
 use App\Models\DetalleVenta;
 use App\Models\MovimientoInventario;
 use App\Models\Pago;
 use App\Models\Pedido;
 use App\Models\Producto;
+use App\Models\Usuario;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +19,7 @@ class VentaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Venta::with(['cliente.persona', 'pedido', 'registradoPor.persona']);
+        $query = Venta::with(['cliente', 'pedido', 'registradoPor']);
 
         if ($request->filled('estado')) {
             $query->where('estado', $request->input('estado'));
@@ -36,7 +34,7 @@ class VentaController extends Controller
         }
 
         $ventas = $query->latest('id')->paginate(15)->withQueryString();
-        $clientes = Cliente::with('persona')->where('activo', true)->get();
+        $clientes = Usuario::clientes()->where('activo', true)->get();
 
         return view('panel.ventas.index', compact('ventas', 'clientes'));
     }
@@ -45,10 +43,10 @@ class VentaController extends Controller
     {
         $pedido = null;
         if ($request->filled('pedido_id')) {
-            $pedido = Pedido::with(['cliente.persona', 'detalles.producto'])->find($request->input('pedido_id'));
+            $pedido = Pedido::with(['cliente', 'detalles.producto'])->find($request->input('pedido_id'));
         }
 
-        $clientes = Cliente::with('persona')->where('activo', true)->get();
+        $clientes = Usuario::clientes()->where('activo', true)->get();
         $productos = Producto::where('activo', true)->get();
 
         return view('panel.ventas.create', compact('clientes', 'productos', 'pedido'));
@@ -97,7 +95,7 @@ class VentaController extends Controller
 
     public function show(Venta $venta)
     {
-        $venta->load(['cliente.persona', 'registradoPor.persona', 'detalles.producto', 'pagos', 'credito']);
+        $venta->load(['cliente', 'registradoPor', 'detalles.producto', 'pagos', 'cuotas']);
 
         return view('panel.ventas.show', compact('venta'));
     }
@@ -166,34 +164,24 @@ class VentaController extends Controller
                 $venta->pedido->update(['estado' => 'LISTO_ENTREGA']);
             }
 
-            // Si es a crédito, registrar el crédito y sus cuotas.
+            // Si es a crédito, generar directamente las cuotas vinculadas a la venta.
             if ($venta->forma_pago === 'CREDITO') {
-                $credito = Credito::firstOrCreate(
-                    ['venta_id' => $venta->id],
-                    [
-                        'monto_financiado' => $venta->total,
-                        'numero_cuotas' => $venta->numero_cuotas ?: 1,
-                        'interes_porcentaje' => 0,
-                        'fecha_inicio' => now(),
-                        'fecha_fin' => now()->addDays(30 * max(1, (int) ($venta->numero_cuotas ?: 1))),
-                        'estado' => 'ACTIVO',
-                    ]
-                );
-
-                if ($credito->cuotas()->doesntExist()) {
-                    $numeroCuotas = max(1, (int) $credito->numero_cuotas);
-                    $montoBase = round((float) $credito->monto_financiado / $numeroCuotas, 2);
+                if ($venta->cuotas()->doesntExist()) {
+                    $numeroCuotas = max(1, (int) ($venta->numero_cuotas ?: 1));
+                    $montoFinanciado = (float) $venta->total;
+                    $montoBase = round($montoFinanciado / $numeroCuotas, 2);
                     $totalCuotas = 0;
 
                     for ($numero = 1; $numero <= $numeroCuotas; $numero++) {
                         $montoCuota = $numero === $numeroCuotas
-                            ? round((float) $credito->monto_financiado - $totalCuotas, 2)
+                            ? round($montoFinanciado - $totalCuotas, 2)
                             : $montoBase;
                         $totalCuotas += $montoCuota;
 
-                        $credito->cuotas()->create([
+                        $venta->cuotas()->create([
                             'numero' => $numero,
                             'monto' => $montoCuota,
+                            'monto_pagado' => 0,
                             'fecha_vencimiento' => now()->addDays(30 * $numero),
                             'estado' => 'PENDIENTE',
                         ]);
@@ -210,8 +198,6 @@ class VentaController extends Controller
                     'observacion' => 'Pago automático por venta de contado confirmada.',
                 ]);
             }
-
-            Auditoria::registrar('CONFIRMAR_VENTA', $venta, 'Venta confirmada y salida de inventario registrada.');
         });
 
         return redirect()->route('panel.ventas.show', $venta)
@@ -241,14 +227,7 @@ class VentaController extends Controller
                         'observacion' => "Reverso por anulación de venta #{$venta->id}",
                     ]);
                 }
-
-                // Anular crédito si existe
-                if ($venta->credito) {
-                    $venta->credito->update(['estado' => 'ANULADO']);
-                }
             }
-
-            Auditoria::registrar('ANULAR_VENTA', $venta, 'Venta anulada.');
         });
 
         return redirect()->route('panel.ventas.show', $venta)

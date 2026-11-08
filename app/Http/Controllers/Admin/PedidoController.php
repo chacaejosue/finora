@@ -5,12 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EntregarPedidoRequest;
 use App\Http\Requests\PedidoRequest;
-use App\Models\Auditoria;
-use App\Models\Cliente;
 use App\Models\DetallePedido;
 use App\Models\Pedido;
-use App\Models\Persona;
 use App\Models\Producto;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +16,7 @@ class PedidoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pedido::with(['cliente.persona', 'registradoPor.persona', 'detalles']);
+        $query = Pedido::with(['cliente', 'registradoPor', 'detalles']);
 
         if ($request->filled('estado')) {
             $query->where('estado', $request->input('estado'));
@@ -29,14 +27,14 @@ class PedidoController extends Controller
         }
 
         $pedidos = $query->latest('id')->paginate(15)->withQueryString();
-        $clientes = Cliente::with('persona')->where('activo', true)->get();
+        $clientes = Usuario::clientes()->where('activo', true)->get();
 
         return view('panel.pedidos.index', compact('pedidos', 'clientes'));
     }
 
     public function create()
     {
-        $clientes = Cliente::with('persona')->where('activo', true)->get();
+        $clientes = Usuario::clientes()->where('activo', true)->get();
         $productos = Producto::where('activo', true)->get();
 
         return view('panel.pedidos.create', compact('clientes', 'productos'));
@@ -50,14 +48,12 @@ class PedidoController extends Controller
             $clienteId = $validated['cliente_id'] ?? null;
 
             if (! $clienteId && ! empty($validated['nuevo_cliente_nombre'])) {
-                $persona = Persona::create([
+                $nuevoCliente = Usuario::create([
                     'nombre' => mb_strtoupper(trim($validated['nuevo_cliente_nombre']), 'UTF-8'),
                     'apellido' => ! empty($validated['nuevo_cliente_apellido']) ? mb_strtoupper(trim($validated['nuevo_cliente_apellido']), 'UTF-8') : null,
                     'telefono' => $validated['nuevo_cliente_telefono'] ?? null,
-                ]);
-
-                $nuevoCliente = Cliente::create([
-                    'persona_id' => $persona->id,
+                    'rol' => 'CLIENTE',
+                    'password' => null,
                     'activo' => true,
                     'observaciones' => 'Registrado automáticamente desde pedido',
                 ]);
@@ -96,7 +92,7 @@ class PedidoController extends Controller
 
     public function show(Pedido $pedido)
     {
-        $pedido->load(['cliente.persona', 'registradoPor.persona', 'entregadoPor.persona', 'detalles.producto', 'venta']);
+        $pedido->load(['cliente', 'registradoPor', 'entregadoPor', 'detalles.producto', 'venta']);
 
         return view('panel.pedidos.show', compact('pedido'));
     }
@@ -148,12 +144,6 @@ class PedidoController extends Controller
             'entregado_por_usuario_id' => $request->user()->id,
             'recibido_por' => $request->validated('recibido_por'),
             'observaciones_entrega' => $request->validated('observaciones_entrega'),
-        ]);
-
-        Auditoria::registrar('REGISTRAR_ENTREGA', $pedido, 'Se registró la entrega del pedido.', null, [
-            'estado' => $pedido->estado,
-            'recibido_por' => $pedido->recibido_por,
-            'fecha_entrega' => $pedido->fecha_entrega?->toISOString(),
         ]);
 
         return redirect()->route('panel.pedidos.show', $pedido)

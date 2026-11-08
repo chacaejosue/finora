@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('productos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('proveedor_id')->constrained('proveedores')->restrictOnDelete();
-            $table->foreignId('linea_id')->nullable()->constrained('lineas')->nullOnDelete();
+            $table->string('marca_linea', 120)->nullable()->index();
             $table->foreignId('categoria_id')->constrained('categorias')->restrictOnDelete();
             $table->string('codigo', 80)->unique();
             $table->string('nombre', 180);
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['categoria_id', 'activo']);
-            $table->index(['linea_id', 'activo']);
+            $table->index(['marca_linea', 'activo']);
         });
     }
 

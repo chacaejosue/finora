@@ -17,7 +17,10 @@ class VentaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cliente_id' => ['required', 'exists:clientes,id'],
+            'cliente_id' => [
+                'required',
+                Rule::exists('usuarios', 'id')->where(fn ($query) => $query->where('rol', 'CLIENTE')),
+            ],
             'pedido_id' => ['nullable', 'exists:pedidos,id'],
             'forma_pago' => ['required', 'string', Rule::in(['CONTADO', 'CREDITO'])],
             'metodo_pago' => ['nullable', 'string', Rule::in(['EFECTIVO', 'TRANSFERENCIA', 'QR', 'TARJETA', 'OTRO']), 'required_if:forma_pago,CONTADO'],

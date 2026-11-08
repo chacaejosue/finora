@@ -2,12 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Persona;
 use App\Models\Usuario;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 #[Signature('finora:crear-consultor')]
@@ -37,7 +35,7 @@ class CrearConsultorCommand extends Command
             return self::FAILURE;
         }
 
-        if (Persona::where('email', $email)->exists()) {
+        if (Usuario::where('email', $email)->exists()) {
             $this->error('Ya existe una persona con ese correo electrónico.');
 
             return self::FAILURE;
@@ -52,19 +50,13 @@ class CrearConsultorCommand extends Command
             return self::FAILURE;
         }
 
-        DB::transaction(function () use ($nombre, $email, $password): void {
-            $persona = Persona::create([
-                'nombre' => $nombre,
-                'email' => $email,
-            ]);
-
-            Usuario::create([
-                'persona_id' => $persona->id,
-                'password' => Hash::make($password),
-                'rol' => 'CONSULTOR',
-                'activo' => true,
-            ]);
-        });
+        Usuario::create([
+            'nombre' => $nombre,
+            'email' => $email,
+            'password' => Hash::make($password),
+            'rol' => 'CONSULTOR',
+            'activo' => true,
+        ]);
 
         $this->info('Consultor registrado correctamente. Ya puede iniciar sesión en Finora.');
 

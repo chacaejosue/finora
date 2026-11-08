@@ -2,21 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Models\AplicacionPago;
-use App\Models\Auditoria;
 use App\Models\Categoria;
-use App\Models\Cliente;
 use App\Models\Compra;
-use App\Models\Credito;
 use App\Models\Cuota;
 use App\Models\DetalleCompra;
 use App\Models\DetallePedido;
 use App\Models\DetalleVenta;
-use App\Models\Linea;
 use App\Models\MovimientoInventario;
 use App\Models\Pago;
 use App\Models\Pedido;
-use App\Models\Persona;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Usuario;
@@ -31,7 +25,7 @@ class DemoDataSeeder extends Seeder
     {
         $consultorEmail = (string) config('finora.demo_consultor_email', 'consultora.demo@finora.test');
 
-        if (Persona::where('email', $consultorEmail)->exists()) {
+        if (Usuario::where('email', $consultorEmail)->exists()) {
             $this->command?->warn('Los datos de demostración ya existen en la base de datos.');
             $this->command?->line('Para reiniciar todos los datos desde cero, ejecuta: <comment>php artisan migrate:fresh --seed</comment>');
 
@@ -47,33 +41,15 @@ class DemoDataSeeder extends Seeder
             $this->crearComprasEInventario($consultor, $catalogo['productos']);
             $this->crearPedidos($consultor, $clientes, $catalogo['productos']);
             $this->crearVentas($consultor, $clientes, $catalogo['productos']);
-
-            Auditoria::create([
-                'usuario_id' => $consultor->id,
-                'accion' => 'CARGAR_DATOS_DEMO',
-                'entidad' => self::class,
-                'descripcion' => 'Se cargó el conjunto de datos demostrativos de Finora.',
-                'valores_nuevos' => [
-                    'consultor_id' => $consultor->id,
-                    'colaborador_id' => $colaborador->id,
-                    'clientes' => count($clientes),
-                    'productos' => count($catalogo['productos']),
-                ],
-                'ip' => '127.0.0.1',
-            ]);
         });
     }
 
     private function crearUsuario(string $rol, string $email, string $nombre): Usuario
     {
-        $persona = Persona::create([
+        return Usuario::create([
             'nombre' => $nombre,
             'email' => $email,
             'telefono' => '70000000',
-        ]);
-
-        return Usuario::create([
-            'persona_id' => $persona->id,
             'password' => Hash::make(config($rol === 'CONSULTOR' ? 'finora.demo_consultor_password' : 'finora.demo_colaborador_password')),
             'rol' => $rol,
             'activo' => true,
@@ -81,7 +57,7 @@ class DemoDataSeeder extends Seeder
     }
 
     /**
-     * @return array<int, Cliente>
+     * @return array<int, Usuario>
      */
     private function crearClientes(): array
     {
@@ -96,23 +72,13 @@ class DemoDataSeeder extends Seeder
         $clientes = [];
 
         foreach ($datos as $indice => $dato) {
-            $persona = Persona::create($dato);
-            $cliente = Cliente::create([
-                'persona_id' => $persona->id,
+            $clientes[] = Usuario::create([
+                ...$dato,
+                'rol' => 'CLIENTE',
+                'password' => $indice === 0 ? Hash::make(config('finora.demo_cliente_password')) : null,
                 'activo' => true,
                 'observaciones' => $indice === 0 ? 'Cliente demo con acceso al portal.' : 'Cliente demo para pruebas.',
             ]);
-
-            if ($indice === 0) {
-                Usuario::create([
-                    'persona_id' => $persona->id,
-                    'password' => Hash::make(config('finora.demo_cliente_password')),
-                    'rol' => 'CLIENTE',
-                    'activo' => true,
-                ]);
-            }
-
-            $clientes[] = $cliente;
         }
 
         return $clientes;
@@ -144,15 +110,6 @@ class DemoDataSeeder extends Seeder
             $categorias[$dato['nombre']] = Categoria::create([...$dato, 'activo' => true]);
         }
 
-        $lineas = [];
-        foreach (['Aromas', 'Esencia', 'Botánica', 'Rostro', 'Cotidiano'] as $nombre) {
-            $lineas[$nombre] = Linea::create([
-                'nombre' => $nombre,
-                'descripcion' => "Línea demo de productos {$nombre}.",
-                'activo' => true,
-            ]);
-        }
-
         $productos = [];
         $datosProductos = [
             ['codigo' => 'DEM-ARO-001', 'nombre' => 'Brisa de Montaña 50 ml', 'categoria' => 'Perfumería', 'linea' => 'Aromas', 'proveedor' => 'Aroma Andino', 'precio' => 24.00, 'costo' => 12.00, 'stock' => 0, 'imagen' => 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&q=80'],
@@ -172,7 +129,7 @@ class DemoDataSeeder extends Seeder
         foreach ($datosProductos as $dato) {
             $producto = Producto::create([
                 'proveedor_id' => $proveedores[$dato['proveedor']]->id,
-                'linea_id' => $lineas[$dato['linea']]->id,
+                'marca_linea' => $dato['linea'],
                 'categoria_id' => $categorias[$dato['categoria']]->id,
                 'codigo' => $dato['codigo'],
                 'nombre' => $dato['nombre'],
@@ -336,39 +293,28 @@ class DemoDataSeeder extends Seeder
             ]);
         }
 
-        $credito = Credito::create([
-            'venta_id' => $ventaCredito->id,
-            'monto_financiado' => $ventaCredito->total,
-            'numero_cuotas' => 3,
-            'interes_porcentaje' => 0,
-            'fecha_inicio' => now()->subDays(3),
-            'fecha_fin' => now()->addDays(87),
-            'estado' => 'ACTIVO',
-        ]);
         $montoCuota = round($ventaCredito->total / 3, 2);
-        $cuotas = [];
+        $primerMonto = $montoCuota;
+        $abonoInicial = round($primerMonto / 2, 2);
+
         for ($numero = 1; $numero <= 3; $numero++) {
-            $cuotas[] = Cuota::create([
-                'credito_id' => $credito->id,
+            Cuota::create([
+                'venta_id' => $ventaCredito->id,
                 'numero' => $numero,
                 'monto' => $numero === 3 ? $ventaCredito->total - ($montoCuota * 2) : $montoCuota,
+                'monto_pagado' => $numero === 1 ? $abonoInicial : 0,
                 'fecha_vencimiento' => now()->addDays(30 * $numero),
                 'estado' => $numero === 1 ? 'PARCIAL' : 'PENDIENTE',
             ]);
         }
-        $pago = Pago::create([
+        Pago::create([
             'venta_id' => $ventaCredito->id,
             'registrado_por_usuario_id' => $consultor->id,
-            'monto' => round($cuotas[0]->monto / 2, 2),
+            'monto' => $abonoInicial,
             'fecha' => now()->subDay(),
             'metodo' => 'TRANSFERENCIA',
             'estado' => 'REGISTRADO',
             'observacion' => 'Abono demo de la primera cuota.',
-        ]);
-        AplicacionPago::create([
-            'pago_id' => $pago->id,
-            'cuota_id' => $cuotas[0]->id,
-            'monto_aplicado' => $pago->monto,
         ]);
 
         $ventaBorrador = Venta::create([

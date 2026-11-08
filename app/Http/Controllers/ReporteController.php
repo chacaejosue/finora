@@ -87,7 +87,7 @@ class ReporteController extends Controller
 
     private function ventas(string $desde, string $hasta)
     {
-        return Venta::with(['cliente.persona', 'detalles.producto', 'pagos'])
+        return Venta::with(['cliente', 'detalles.producto', 'pagos'])
             ->where('estado', 'CONFIRMADA')
             ->whereBetween('fecha', ["{$desde} 00:00:00", "{$hasta} 23:59:59"])
             ->latest('fecha')

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('ventas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('cliente_id')->constrained('clientes')->restrictOnDelete();
+            $table->foreignId('cliente_id')->constrained('usuarios')->restrictOnDelete();
             $table->foreignId('pedido_id')->nullable()->constrained('pedidos')->nullOnDelete();
             $table->foreignId('registrado_por_usuario_id')->nullable()->constrained('usuarios')->nullOnDelete();
             $table->timestamp('fecha')->useCurrent();

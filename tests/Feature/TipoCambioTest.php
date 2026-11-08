@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Persona;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -29,9 +28,9 @@ class TipoCambioTest extends TestCase
 
     public function test_consultor_can_activate_a_manual_rate(): void
     {
-        $persona = Persona::create(['nombre' => 'Consultor', 'email' => 'tipo-cambio@test.com']);
         $consultor = Usuario::create([
-            'persona_id' => $persona->id,
+            'nombre' => 'Consultor',
+            'email' => 'tipo-cambio@test.com',
             'password' => Hash::make('Password123!@#'),
             'rol' => 'CONSULTOR',
             'activo' => true,
@@ -61,9 +60,6 @@ class TipoCambioTest extends TestCase
             ->assertSuccessful()
             ->expectsOutput('Tipo de cambio actualizado: 11.9700 Bs/USD.');
 
-        $this->assertDatabaseHas('configuraciones', [
-            'clave' => 'finora.exchange_rate.official',
-            'valor' => '11.970000',
-        ]);
+        $this->assertSame('11.970000', Cache::get('finora.exchange_rate.official'));
     }
 }

@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductoRequest;
-use App\Models\Auditoria;
 use App\Models\Categoria;
-use App\Models\Linea;
 use App\Models\MovimientoInventario;
 use App\Models\Producto;
 use App\Models\Proveedor;
@@ -19,7 +17,7 @@ class ProductoController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Producto::with(['proveedor', 'categoria', 'linea']);
+        $query = Producto::with(['proveedor', 'categoria']);
 
         // Filtro por término de búsqueda (código o nombre)
         if ($search = trim((string) $request->input('search', ''))) {
@@ -34,9 +32,9 @@ class ProductoController extends Controller
             $query->where('categoria_id', $categoriaId);
         }
 
-        // Filtro por línea
-        if ($lineaId = $request->input('linea_id')) {
-            $query->where('linea_id', $lineaId);
+        // Filtro por marca o línea
+        if ($marcaLinea = trim((string) $request->input('marca_linea', ''))) {
+            $query->where('marca_linea', 'like', "%{$marcaLinea}%");
         }
 
         // Filtro por estado activo
@@ -52,13 +50,11 @@ class ProductoController extends Controller
         $productos = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
 
         $categorias = Categoria::orderBy('nombre')->get();
-        $lineas = Linea::orderBy('nombre')->get();
         $proveedores = Proveedor::orderBy('nombre')->get();
 
         return view('panel.productos.index', [
             'productos' => $productos,
             'categorias' => $categorias,
-            'lineas' => $lineas,
             'proveedores' => $proveedores,
         ]);
     }
@@ -70,12 +66,10 @@ class ProductoController extends Controller
     {
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
         $categorias = Categoria::where('activo', true)->orderBy('nombre')->get();
-        $lineas = Linea::where('activo', true)->orderBy('nombre')->get();
 
         return view('panel.productos.create', [
             'proveedores' => $proveedores,
             'categorias' => $categorias,
-            'lineas' => $lineas,
         ]);
     }
 
@@ -86,7 +80,8 @@ class ProductoController extends Controller
     {
         $datos = $request->validated();
         $stockInicial = (int) ($datos['stock_inicial'] ?? 0);
-        unset($datos['stock_inicial']);
+        $costoInicial = (float) ($datos['costo_inicial'] ?? 0);
+        unset($datos['stock_inicial'], $datos['costo_inicial']);
 
         // Manejo de la carga de imagen en almacenamiento público local (guardando ruta relativa)
         if ($request->hasFile('imagen')) {
@@ -98,10 +93,11 @@ class ProductoController extends Controller
 
         $datos['publicado'] = $request->boolean('publicado');
         $datos['activo'] = $request->boolean('activo', true);
+        if ($costoInicial > 0) {
+            $datos['costo_promedio'] = $costoInicial;
+        }
 
         $producto = Producto::create($datos);
-
-        Auditoria::registrar('CREAR_PRODUCTO', $producto, 'Producto registrado en el catálogo.');
 
         if ($stockInicial > 0) {
             MovimientoInventario::create([
@@ -109,6 +105,8 @@ class ProductoController extends Controller
                 'registrado_por_usuario_id' => $request->user()?->id,
                 'tipo' => 'AJUSTE_ENTRADA',
                 'cantidad' => $stockInicial,
+                'costo_unitario' => $costoInicial,
+                'costo_total' => round($stockInicial * $costoInicial, 2),
                 'fecha' => now(),
                 'observacion' => 'Stock inicial al registrar producto',
             ]);
@@ -125,13 +123,11 @@ class ProductoController extends Controller
     {
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
         $categorias = Categoria::where('activo', true)->orderBy('nombre')->get();
-        $lineas = Linea::where('activo', true)->orderBy('nombre')->get();
 
         return view('panel.productos.edit', [
             'producto' => $producto,
             'proveedores' => $proveedores,
             'categorias' => $categorias,
-            'lineas' => $lineas,
         ]);
     }
 
@@ -143,7 +139,7 @@ class ProductoController extends Controller
         $datos = $request->validated();
 
         // Eliminar campos que no son columnas de la tabla
-        unset($datos['imagen'], $datos['imagen_url'], $datos['stock_inicial']);
+        unset($datos['imagen'], $datos['imagen_url'], $datos['stock_inicial'], $datos['costo_inicial']);
 
         if ($request->hasFile('imagen')) {
             // Nuevo archivo subido: reemplazar imagen
@@ -158,8 +154,6 @@ class ProductoController extends Controller
         $datos['activo'] = $request->boolean('activo');
 
         $producto->update($datos);
-
-        Auditoria::registrar('ACTUALIZAR_PRODUCTO', $producto, 'Producto actualizado en el catálogo.');
 
         return redirect()->route('panel.productos.index')
             ->with('exito', 'Producto actualizado correctamente.');
@@ -188,8 +182,6 @@ class ProductoController extends Controller
     public function destroy(Producto $producto)
     {
         $producto->update(['activo' => false]);
-
-        Auditoria::registrar('DESACTIVAR_PRODUCTO', $producto, 'Producto desactivado del catálogo.');
 
         return redirect()->route('panel.productos.index')
             ->with('exito', 'Producto desactivado correctamente.');
