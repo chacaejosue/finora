@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('tipo', 40)->index();
             // Cantidad con signo: positiva para entrada, negativa para salida.
             $table->integer('cantidad');
+            $table->decimal('costo_unitario', 12, 2)->default(0);
+            $table->decimal('costo_total', 12, 2)->default(0);
             $table->timestamp('fecha')->useCurrent();
             $table->text('observacion')->nullable();
             $table->timestamps();

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->timestamp('fecha_recepcion')->nullable();
             // BORRADOR, SOLICITADA, EN_CAMINO, RECIBIDA, CANCELADA.
             $table->string('estado', 40)->default('BORRADOR')->index();
+            $table->string('forma_pago', 30)->default('CONTADO')->index();
             $table->text('observaciones')->nullable();
             $table->timestamps();
 

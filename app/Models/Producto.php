@@ -18,6 +18,9 @@ class Producto extends Model
         'nombre',
         'descripcion',
         'precio_venta_actual',
+        'precio_oferta',
+        'en_oferta',
+        'likes',
         'costo_promedio',
         'imagen_principal',
         'publicado',
@@ -28,10 +31,57 @@ class Producto extends Model
     {
         return [
             'precio_venta_actual' => 'decimal:2',
+            'precio_oferta' => 'decimal:2',
+            'en_oferta' => 'boolean',
+            'likes' => 'integer',
             'costo_promedio' => 'decimal:2',
             'publicado' => 'boolean',
             'activo' => 'boolean',
         ];
+    }
+
+    /**
+     * Determina si el producto está en oferta/descuento.
+     */
+    public function getEsOfertaAttribute(): bool
+    {
+        return (bool) ($this->en_oferta || ($this->precio_oferta !== null && $this->precio_oferta < $this->precio_venta_actual));
+    }
+
+    /**
+     * Devuelve el precio final que paga el cliente (con descuento si aplica).
+     */
+    public function getPrecioFinalAttribute(): float
+    {
+        return (float) ($this->es_oferta && $this->precio_oferta !== null ? $this->precio_oferta : $this->precio_venta_actual);
+    }
+
+    /**
+     * Calcula el porcentaje de descuento si está en oferta (ej. 20 para 20%).
+     */
+    public function getDescuentoPorcentajeAttribute(): ?int
+    {
+        if (! $this->es_oferta || ! $this->precio_oferta || $this->precio_venta_actual <= 0) {
+            return null;
+        }
+
+        $descuento = round((1 - ($this->precio_oferta / $this->precio_venta_actual)) * 100);
+
+        return $descuento > 0 ? (int) $descuento : null;
+    }
+
+    /**
+     * Scope para consultar solo productos en oferta.
+     */
+    public function scopeEnOferta($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('en_oferta', true)
+                ->orWhere(function ($sub) {
+                    $sub->whereNotNull('precio_oferta')
+                        ->whereColumn('precio_oferta', '<', 'precio_venta_actual');
+                });
+        });
     }
 
     /**
