@@ -13,6 +13,10 @@ return new class extends Migration
             $table->foreignId('cliente_id')->constrained('usuarios')->restrictOnDelete();
             $table->foreignId('registrado_por_usuario_id')->nullable()->constrained('usuarios')->nullOnDelete();
             $table->timestamp('fecha')->useCurrent();
+            $table->timestamp('fecha_entrega')->nullable();
+            $table->foreignId('entregado_por_usuario_id')->nullable()->constrained('usuarios')->nullOnDelete();
+            $table->string('recibido_por', 150)->nullable();
+            $table->text('observaciones_entrega')->nullable();
             // PENDIENTE, RESERVADO, PENDIENTE_ABASTECIMIENTO, LISTO_ENTREGA, COMPLETADO, CANCELADO.
             $table->string('estado', 50)->default('PENDIENTE')->index();
             $table->text('observaciones')->nullable();

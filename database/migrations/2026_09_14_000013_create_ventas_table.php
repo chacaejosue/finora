@@ -16,6 +16,8 @@ return new class extends Migration
             $table->timestamp('fecha')->useCurrent();
             // CONTADO o CREDITO.
             $table->string('forma_pago', 30)->index();
+            $table->string('metodo_pago', 40)->nullable();
+            $table->unsignedSmallInteger('numero_cuotas')->nullable();
             // BORRADOR, CONFIRMADA, CANCELADA, ANULADA.
             $table->string('estado', 30)->default('BORRADOR')->index();
             // Descuento monetario aplicado a la venta completa.

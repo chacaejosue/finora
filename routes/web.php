@@ -24,6 +24,8 @@ Route::get('/', [CatalogoController::class, 'landing'])->name('landing');
 
 // Catálogo público conectado a MySQL
 Route::get('/categorias', [CatalogoController::class, 'index'])->name('categorias');
+Route::get('/ofertas', [CatalogoController::class, 'ofertas'])->name('ofertas');
+Route::post('/productos/{producto}/like', [CatalogoController::class, 'toggleLike'])->name('productos.like');
 Route::get('/carrito', [PedidoPublicoController::class, 'create'])->name('carrito');
 Route::get('/tipo-cambio', TipoCambioController::class)->name('tipo-cambio');
 Route::post('/carrito/pedido', [PedidoPublicoController::class, 'store'])

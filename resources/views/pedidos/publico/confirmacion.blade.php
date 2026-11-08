@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pedido Recibido - Finora | Belleza que Inspira</title>
+    <title>Pedido Recibido | Catálogo de Consultoría Natura</title>
     <link rel="icon" type="image/png" href="{{ asset('images/branding/finora-icono.png') }}">
 
     <!-- Tipografía: Plus Jakarta Sans -->
@@ -72,7 +72,7 @@
                 Pedido #{{ $pedido->id }}
             </h1>
             <p class="mt-2 text-xs sm:text-sm leading-relaxed text-slate-500 max-w-md mx-auto">
-                Hemos recibido tu solicitud. Tu consultor Finora verificará el stock y coordinará contigo la entrega y método de pago por WhatsApp.
+                Hemos recibido tu solicitud. Tu consultora independiente verificará el stock y coordinará contigo la entrega y método de pago por WhatsApp.
             </p>
 
             <div class="mt-6 rounded-2xl bg-slate-50/80 border border-slate-100 p-4 text-left">
