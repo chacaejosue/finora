@@ -15,12 +15,6 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withSchedule(function (Schedule $schedule): void {
-        $schedule->command('finora:actualizar-tipo-cambio')
-            ->dailyAt('00:05')
-            ->timezone('America/La_Paz')
-            ->withoutOverlapping(30);
-    })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectTo(
             guests: '/login',

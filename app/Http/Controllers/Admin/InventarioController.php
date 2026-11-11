@@ -14,6 +14,15 @@ class InventarioController extends Controller
     public function index(Request $request)
     {
         $query = Producto::with(['categoria', 'proveedor'])
+            ->withSum('movimientosInventario as stock_fisico_calc', 'cantidad')
+            ->selectSub(
+                \App\Models\DetallePedido::selectRaw('COALESCE(SUM(cantidad_reservada), 0)')
+                    ->whereColumn('producto_id', 'productos.id')
+                    ->whereHas('pedido', function ($q) {
+                        $q->whereIn('estado', ['PENDIENTE', 'RESERVADO', 'PENDIENTE_ABASTECIMIENTO', 'LISTO_ENTREGA']);
+                    }),
+                'cantidad_reservada_calc'
+            )
             ->where('activo', true);
 
         if ($request->filled('search')) {

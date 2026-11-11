@@ -17,7 +17,16 @@ class ProductoController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Producto::with(['proveedor', 'categoria']);
+        $query = Producto::with(['proveedor', 'categoria'])
+            ->withSum('movimientosInventario as stock_fisico_calc', 'cantidad')
+            ->selectSub(
+                \App\Models\DetallePedido::selectRaw('COALESCE(SUM(cantidad_reservada), 0)')
+                    ->whereColumn('producto_id', 'productos.id')
+                    ->whereHas('pedido', function ($q) {
+                        $q->whereIn('estado', ['PENDIENTE', 'RESERVADO', 'PENDIENTE_ABASTECIMIENTO', 'LISTO_ENTREGA']);
+                    }),
+                'cantidad_reservada_calc'
+            );
 
         // Filtro por término de búsqueda (código o nombre)
         if ($search = trim((string) $request->input('search', ''))) {
@@ -93,6 +102,13 @@ class ProductoController extends Controller
 
         $datos['publicado'] = $request->boolean('publicado');
         $datos['activo'] = $request->boolean('activo', true);
+        $datos['en_oferta'] = $request->boolean('en_oferta');
+        if ($datos['en_oferta'] && ! empty($datos['precio_oferta']) && (float) $datos['precio_oferta'] > 0) {
+            $datos['precio_oferta'] = (float) $datos['precio_oferta'];
+        } else {
+            $datos['precio_oferta'] = null;
+            $datos['en_oferta'] = false;
+        }
         if ($costoInicial > 0) {
             $datos['costo_promedio'] = $costoInicial;
         }
@@ -152,6 +168,13 @@ class ProductoController extends Controller
 
         $datos['publicado'] = $request->boolean('publicado');
         $datos['activo'] = $request->boolean('activo');
+        $datos['en_oferta'] = $request->boolean('en_oferta');
+        if ($datos['en_oferta'] && ! empty($datos['precio_oferta']) && (float) $datos['precio_oferta'] > 0) {
+            $datos['precio_oferta'] = (float) $datos['precio_oferta'];
+        } else {
+            $datos['precio_oferta'] = null;
+            $datos['en_oferta'] = false;
+        }
 
         $producto->update($datos);
 

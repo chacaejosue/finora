@@ -26,11 +26,23 @@ class ReporteController extends Controller
             ->sortBy('movimientos_inventario_sum_cantidad')
             ->take(10);
 
+        $totalVentas = (float) $ventas->sum(fn (Venta $venta): float => $venta->total);
+        $costoVentas = (float) $ventas->sum(function (Venta $venta): float {
+            return (float) $venta->detalles->sum(function ($d): float {
+                return (float) $d->cantidad * (float) ($d->producto?->costo_promedio ?? 0);
+            });
+        });
+        $gananciaReal = max(0, $totalVentas - $costoVentas);
+        $margenRentabilidad = $totalVentas > 0 ? round(($gananciaReal / $totalVentas) * 100, 1) : 0;
+
         return view('panel.reportes.index', [
             'desde' => $desde,
             'hasta' => $hasta,
             'ventas' => $ventas,
-            'totalVentas' => $ventas->sum(fn (Venta $venta): float => $venta->total),
+            'totalVentas' => $totalVentas,
+            'costoVentas' => $costoVentas,
+            'gananciaReal' => $gananciaReal,
+            'margenRentabilidad' => $margenRentabilidad,
             'totalCobrado' => $ventas->sum(fn (Venta $venta): float => (float) $venta->pagos->where('estado', 'REGISTRADO')->sum('monto')),
             'ventasContado' => $ventas->where('forma_pago', 'CONTADO')->count(),
             'ventasCredito' => $ventas->where('forma_pago', 'CREDITO')->count(),
@@ -53,16 +65,21 @@ class ReporteController extends Controller
 
         return response()->streamDownload(function () use ($ventas): void {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Venta', 'Fecha', 'Cliente', 'Forma de pago', 'Estado', 'Total', 'Pagado', 'Saldo']);
+            fputcsv($handle, ['Venta', 'Fecha', 'Cliente', 'Forma de pago', 'Estado', 'Total Venta', 'Costo Estimado', 'Ganancia Real', 'Pagado', 'Saldo']);
 
             foreach ($ventas as $venta) {
+                $costoVenta = (float) $venta->detalles->sum(fn ($d): float => (float) $d->cantidad * (float) ($d->producto?->costo_promedio ?? 0));
+                $gananciaVenta = max(0, $venta->total - $costoVenta);
+
                 fputcsv($handle, [
                     $venta->id,
                     $venta->fecha?->format('Y-m-d H:i'),
-                    $venta->cliente?->persona?->nombre,
+                    trim(($venta->cliente?->nombre ?? '') . ' ' . ($venta->cliente?->apellido ?? '')),
                     $venta->forma_pago,
                     $venta->estado,
                     number_format($venta->total, 2, '.', ''),
+                    number_format($costoVenta, 2, '.', ''),
+                    number_format($gananciaVenta, 2, '.', ''),
                     number_format((float) $venta->pagos->where('estado', 'REGISTRADO')->sum('monto'), 2, '.', ''),
                     number_format($venta->saldo_pendiente, 2, '.', ''),
                 ]);
@@ -97,7 +114,12 @@ class ReporteController extends Controller
     private function productosMasVendidos(string $desde, string $hasta)
     {
         return DetalleVenta::query()
-            ->select('productos.nombre', DB::raw('SUM(detalle_ventas.cantidad) as unidades'), DB::raw('SUM(detalle_ventas.cantidad * detalle_ventas.precio_unitario) as importe'))
+            ->select(
+                'productos.nombre',
+                DB::raw('SUM(detalle_ventas.cantidad) as unidades'),
+                DB::raw('SUM(detalle_ventas.cantidad * detalle_ventas.precio_unitario) as importe'),
+                DB::raw('SUM(detalle_ventas.cantidad * (detalle_ventas.precio_unitario - COALESCE(productos.costo_promedio, 0))) as ganancia')
+            )
             ->join('ventas', 'ventas.id', '=', 'detalle_ventas.venta_id')
             ->join('productos', 'productos.id', '=', 'detalle_ventas.producto_id')
             ->where('ventas.estado', 'CONFIRMADA')

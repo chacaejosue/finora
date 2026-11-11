@@ -480,7 +480,7 @@ class ContabilidadService
                 'fecha' => $compra->fecha_recepcion ? Carbon::parse($compra->fecha_recepcion)->toDateString() : now()->toDateString(),
                 'glosa' => $glosa,
                 'contabilizable' => $compra,
-                'metodo_pago' => $esContado ? 'EFECTIVO' : null,
+                'metodo_pago' => $esContado ? ($compra->metodo_pago ?: 'EFECTIVO') : null,
                 'usuario_id' => $compra->registrado_por_usuario_id,
             ]
         );

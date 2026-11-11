@@ -85,6 +85,19 @@ class Producto extends Model
     }
 
     /**
+     * Scope para consultar productos con existencias físicas disponibles en kardex.
+     */
+    public function scopeConStockDisponible($query)
+    {
+        return $query->whereIn('id', function ($sub) {
+            $sub->select('producto_id')
+                ->from('movimientos_inventario')
+                ->groupBy('producto_id')
+                ->havingRaw('SUM(cantidad) > 0');
+        });
+    }
+
+    /**
      * Obtiene la URL pública de la imagen principal del producto.
      *
      * Reconoce tres formatos almacenados en `imagen_principal`:
@@ -148,11 +161,27 @@ class Producto extends Model
 
     public function getStockFisicoAttribute(): int
     {
+        if (array_key_exists('stock_fisico_calc', $this->attributes)) {
+            return (int) $this->attributes['stock_fisico_calc'];
+        }
+
+        if (array_key_exists('movimientos_inventario_sum_cantidad', $this->attributes)) {
+            return (int) $this->attributes['movimientos_inventario_sum_cantidad'];
+        }
+
+        if ($this->relationLoaded('movimientosInventario')) {
+            return (int) $this->movimientosInventario->sum('cantidad');
+        }
+
         return (int) $this->movimientosInventario()->sum('cantidad');
     }
 
     public function getCantidadReservadaAttribute(): int
     {
+        if (array_key_exists('cantidad_reservada_calc', $this->attributes)) {
+            return (int) $this->attributes['cantidad_reservada_calc'];
+        }
+
         return (int) DetallePedido::where('producto_id', $this->id)
             ->whereHas('pedido', function ($q) {
                 $q->whereIn('estado', ['PENDIENTE', 'RESERVADO', 'PENDIENTE_ABASTECIMIENTO', 'LISTO_ENTREGA']);

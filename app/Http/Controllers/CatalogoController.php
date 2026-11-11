@@ -12,9 +12,7 @@ class CatalogoController extends Controller
 {
     public function landing(): View
     {
-        $categorias = Categoria::with(['productos' => function ($query) {
-            $query->where('activo', true)->where('publicado', true)->latest('id');
-        }])->where('activo', true)->orderBy('nombre')->get();
+        $categorias = Categoria::where('activo', true)->orderBy('nombre')->get();
 
         $productos = Producto::with(['categoria', 'proveedor'])
             ->where('activo', true)
@@ -64,8 +62,9 @@ class CatalogoController extends Controller
 
         $categoriaSlug = $request->string('categoria')->toString();
         $soloOfertas = $request->boolean('ofertas') || $categoriaSlug === 'ofertas' || $request->string('filtro')->toString() === 'ofertas';
+        $soloStock = $request->boolean('en_stock') || $categoriaSlug === 'en-stock' || $request->string('filtro')->toString() === 'stock';
 
-        $categoriaSeleccionada = $soloOfertas ? null : $categorias->first(
+        $categoriaSeleccionada = ($soloOfertas || $soloStock) ? null : $categorias->first(
             fn (Categoria $categoria): bool => Str::slug($categoria->nombre) === $categoriaSlug
         );
 
@@ -75,6 +74,19 @@ class CatalogoController extends Controller
             ->enOferta()
             ->count();
 
+        $totalEnStock = Producto::where('activo', true)
+            ->where('publicado', true)
+            ->whereHas('categoria', fn ($q) => $q->where('activo', true))
+            ->conStockDisponible()
+            ->count();
+
+        $totalProductos = Producto::where('activo', true)
+            ->where('publicado', true)
+            ->whereHas('categoria', fn ($q) => $q->where('activo', true))
+            ->count();
+
+        $isServerFiltered = (bool) ($soloOfertas || $soloStock || $categoriaSeleccionada || $request->filled('buscar'));
+
         $productos = Producto::with(['categoria', 'proveedor'])
             ->where('activo', true)
             ->where('publicado', true)
@@ -82,7 +94,8 @@ class CatalogoController extends Controller
                 $query->where('activo', true);
             })
             ->when($soloOfertas, fn ($query) => $query->enOferta())
-            ->when(! $soloOfertas && $categoriaSeleccionada, fn ($query) => $query->where('categoria_id', $categoriaSeleccionada->id))
+            ->when($soloStock, fn ($query) => $query->conStockDisponible())
+            ->when(! $soloOfertas && ! $soloStock && $categoriaSeleccionada, fn ($query) => $query->where('categoria_id', $categoriaSeleccionada->id))
             ->orderBy('nombre', 'asc')
             ->get();
 
@@ -93,6 +106,10 @@ class CatalogoController extends Controller
             'categoriaSeleccionada' => $categoriaSeleccionada,
             'soloOfertas' => $soloOfertas,
             'totalOfertas' => $totalOfertas,
+            'soloStock' => $soloStock,
+            'totalEnStock' => $totalEnStock,
+            'totalProductos' => $totalProductos,
+            'isServerFiltered' => $isServerFiltered,
         ]);
     }
 

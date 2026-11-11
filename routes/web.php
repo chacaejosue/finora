@@ -32,6 +32,7 @@ Route::post('/carrito/pedido', [PedidoPublicoController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('carrito.pedido');
 
+
 // Rutas de autenticación (solo para visitantes sin sesión)
 Route::middleware('guest')->group(function () {
     Route::get('/login', function () {
@@ -104,14 +105,15 @@ Route::middleware('auth')->prefix('panel')->group(function () {
         Route::get('inventario/movimientos', [InventarioController::class, 'movimientos'])->name('inventario.movimientos');
 
         // Pedidos
+        Route::get('pedidos/ultimos', [PedidoController::class, 'ultimos'])->name('pedidos.ultimos');
         Route::post('pedidos/{pedido}/reservar', [PedidoController::class, 'reservarStock'])->name('pedidos.reservar');
         Route::patch('pedidos/{pedido}/entregar', [PedidoController::class, 'entregar'])->name('pedidos.entregar');
         Route::patch('pedidos/{pedido}/estado', [PedidoController::class, 'cambiarEstado'])->name('pedidos.estado');
         Route::resource('pedidos', PedidoController::class)->except(['destroy', 'edit', 'update']);
 
-        // Ventas (Registro y Confirmación)
+        // Ventas (Registro, Edición de Borrador y Confirmación)
         Route::patch('ventas/{venta}/confirmar', [VentaController::class, 'confirmar'])->name('ventas.confirmar');
-        Route::resource('ventas', VentaController::class)->except(['destroy', 'edit', 'update']);
+        Route::resource('ventas', VentaController::class);
 
         // Pagos
         Route::resource('pagos', PagoController::class)->only(['index', 'create', 'store']);

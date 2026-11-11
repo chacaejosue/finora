@@ -25,7 +25,7 @@ class PagoController extends Controller
 
         // Resumen de cuentas por cobrar por cliente
         $clientesDeudores = Usuario::clientes()->with(['ventas' => function ($q) {
-            $q->where('estado', 'CONFIRMADA');
+            $q->where('estado', 'CONFIRMADA')->with(['detalles', 'pagos']);
         }])->get()->map(function ($cli) {
             $deuda = $cli->ventas->sum(fn ($v) => $v->saldo_pendiente);
             $cli->total_deuda = $deuda;

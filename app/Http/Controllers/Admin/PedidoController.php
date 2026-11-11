@@ -32,6 +32,37 @@ class PedidoController extends Controller
         return view('panel.pedidos.index', compact('pedidos', 'clientes'));
     }
 
+    public function ultimos(Request $request)
+    {
+        $desdeId = $request->query('desde_id');
+
+        if ($desdeId === null || $desdeId === '') {
+            return response()->json([
+                'ultimo_id' => Pedido::max('id') ?? 0,
+                'pedidos' => [],
+            ]);
+        }
+
+        $nuevos = Pedido::with(['cliente', 'detalles.producto'])
+            ->where('id', '>', (int) $desdeId)
+            ->orderBy('id', 'asc')
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'ultimo_id' => $nuevos->max('id') ?? (int) $desdeId,
+            'pedidos' => $nuevos->map(fn (Pedido $pedido) => [
+                'id' => $pedido->id,
+                'cliente_nombre' => $pedido->cliente ? $pedido->cliente->nombre_completo : 'Cliente no especificado',
+                'fecha' => $pedido->fecha ? $pedido->fecha->format('d/m/Y H:i') : now()->format('d/m/Y H:i'),
+                'total' => number_format((float) $pedido->total, 2, ',', '.'),
+                'estado' => $pedido->estado,
+                'items_count' => (int) $pedido->detalles->sum('cantidad'),
+                'url_show' => route('panel.pedidos.show', $pedido->id),
+            ]),
+        ]);
+    }
+
     public function create()
     {
         $clientes = Usuario::clientes()->where('activo', true)->get();

@@ -18,9 +18,13 @@ class VentaRequest extends FormRequest
     {
         return [
             'cliente_id' => [
-                'required',
+                'nullable',
+                'required_without:nuevo_cliente_nombre',
                 Rule::exists('usuarios', 'id')->where(fn ($query) => $query->where('rol', 'CLIENTE')),
             ],
+            'nuevo_cliente_nombre' => ['nullable', 'string', 'max:100', 'required_without:cliente_id'],
+            'nuevo_cliente_apellido' => ['nullable', 'string', 'max:100'],
+            'nuevo_cliente_telefono' => ['nullable', 'string', 'max:30'],
             'pedido_id' => ['nullable', 'exists:pedidos,id'],
             'forma_pago' => ['required', 'string', Rule::in(['CONTADO', 'CREDITO'])],
             'metodo_pago' => ['nullable', 'string', Rule::in(['EFECTIVO', 'TRANSFERENCIA', 'QR', 'TARJETA', 'OTRO']), 'required_if:forma_pago,CONTADO'],
@@ -77,6 +81,8 @@ class VentaRequest extends FormRequest
     {
         return [
             'cliente_id.required' => 'Debe seleccionar un cliente para la venta.',
+            'cliente_id.required_without' => 'Debe seleccionar un cliente existente o ingresar el nombre del nuevo cliente.',
+            'nuevo_cliente_nombre.required_without' => 'Debe ingresar el nombre del cliente o seleccionar uno existente.',
             'forma_pago.required' => 'Debe seleccionar la forma de pago (CONTADO o CREDITO).',
             'metodo_pago.required_if' => 'Debe seleccionar el método de pago para una venta de contado.',
             'detalles.required' => 'Debe incluir al menos un producto en la venta.',
