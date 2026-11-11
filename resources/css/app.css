@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block');
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -101,17 +101,29 @@
         font-family: 'Material Symbols Outlined';
         font-weight: normal;
         font-style: normal;
-        font-size: 1em;
+        font-size: inherit;
         line-height: 1;
         letter-spacing: normal;
         text-transform: none;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1em;
+        height: 1em;
+        max-width: 1em;
+        max-height: 1em;
+        overflow: hidden;
         white-space: nowrap;
         word-wrap: normal;
         direction: ltr;
         -webkit-font-feature-settings: 'liga';
         -webkit-font-smoothing: antialiased;
         font-feature-settings: 'liga';
+        text-rendering: optimizeLegibility;
+        font-display: block;
+        vertical-align: -0.125em;
+        user-select: none;
+        flex-shrink: 0;
     }
 
     html,
@@ -209,6 +221,37 @@ input::-ms-clear {
 }
 
 /* Animaciones y dinamismo */
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes floatGentle {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes pulseAura {
+    0%, 100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.85;
+        transform: scale(1.05);
+    }
+}
+
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -261,37 +304,16 @@ input::-ms-clear {
     }
 }
 
-.hero-gradient-text {
-    display: inline-block;
-    min-height: 1.12em;
-    line-height: 1.12;
-    padding-bottom: 0.04em;
-    background-image: linear-gradient(
-        110deg,
-        #0050cc 0%,
-        #0062ff 16%,
-        #008dff 30%,
-        #00b4d8 44%,
-        #00d2df 50%,
-        #00b4d8 56%,
-        #008dff 70%,
-        #0062ff 84%,
-        #0050cc 100%
-    );
-    background-size: 220% 100%;
-    animation: heroGradientShift 4.5s linear infinite;
-    transition: opacity 0.28s ease, transform 0.28s ease;
+.animate-page-enter {
+    animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.hero-phrase-changing {
-    opacity: 0;
-    transform: translateY(0.18em);
+.animate-float {
+    animation: floatGentle 5s ease-in-out infinite;
 }
 
-#floating-buttons .finora-theme-toggle {
-    position: static;
-    z-index: auto;
-    flex: 0 0 auto;
+.animate-aura {
+    animation: pulseAura 4s ease-in-out infinite;
 }
 
 .animate-fade-in-up {
@@ -311,13 +333,195 @@ input::-ms-clear {
 }
 
 /* Delays para efecto cascada (stagger) */
-.delay-75  { animation-delay: 75ms; }
-.delay-100 { animation-delay: 100ms; }
-.delay-150 { animation-delay: 150ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-250 { animation-delay: 250ms; }
-.delay-300 { animation-delay: 300ms; }
+.delay-75, .stagger-1  { animation-delay: 50ms; }
+.delay-100, .stagger-2 { animation-delay: 100ms; }
+.delay-150, .stagger-3 { animation-delay: 150ms; }
+.delay-200, .stagger-4 { animation-delay: 200ms; }
+.delay-250, .stagger-5 { animation-delay: 250ms; }
+.delay-300, .stagger-6 { animation-delay: 300ms; }
 .delay-400 { animation-delay: 400ms; }
+
+/* Micro-interacciones de tarjetas y botones */
+.card-hover-lift {
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.card-hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px -8px rgba(0, 193, 222, 0.15), 0 4px 12px -2px rgba(14, 27, 46, 0.04);
+}
+
+.btn-bounce {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, filter 0.2s ease;
+    will-change: transform;
+}
+
+.btn-bounce:hover {
+    transform: translateY(-1.5px) scale(1.02);
+}
+
+.btn-bounce:active {
+    transform: translateY(1px) scale(0.98);
+}
+
+.table-row-hover {
+    transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.table-row-hover:hover {
+    background-color: rgba(224, 248, 252, 0.35);
+}
+
+/* Animación de apertura suave de barra de submódulos */
+@keyframes subnavEnter {
+    from {
+        opacity: 0.6;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-subnav-enter {
+    animation: subnavEnter 0.16s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* Transición ultra-fluida y sincronizada entre rutas (Sin solapamientos ni sombras fantasma) */
+@view-transition {
+    navigation: auto;
+}
+
+header {
+    view-transition-name: main-header;
+}
+
+main {
+    view-transition-name: panel-main;
+}
+
+::view-transition-group(panel-main) {
+    animation-duration: 110ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+::view-transition-old(panel-main),
+::view-transition-new(panel-main) {
+    animation-duration: 110ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    animation-fill-mode: both;
+    mix-blend-mode: normal;
+}
+
+::view-transition-old(panel-main) {
+    animation-name: fadeOutClean;
+}
+
+::view-transition-new(panel-main) {
+    animation-name: fadeInClean;
+}
+
+@keyframes fadeOutClean {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.998);
+    }
+}
+
+@keyframes fadeInClean {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Respeto estricto a preferencias de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    *, ::view-transition-old(root), ::view-transition-new(root), main, main > * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Modales con animación de zoom sutil al abrirse */
+[id^="modal"]:not(.hidden) > div {
+    animation: modalZoomIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes modalZoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Alertas con entrada deslizante suave */
+[role="alert"] {
+    animation: alertSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes alertSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Menú desplegable de perfil de usuario */
+#userProfileDropdown:not(.hidden) {
+    animation: dropdownPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes dropdownPop {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Filas de tablas con iluminación al pasar el cursor */
+tbody tr {
+    transition: background-color 0.16s ease;
+}
+
+tbody tr:hover {
+    background-color: rgba(224, 248, 252, 0.35);
+}
+
+/* Micro-interacción al presionar botones */
+button:active:not(:disabled), a.rounded-full:active, a.rounded-xl:active {
+    transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    main, .animate-page-enter, .animate-fade-in-up, .animate-float, .animate-aura, [id^="modal"] > div, [role="alert"] {
+        animation: none !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}
 
 /* Micro-interacciones de tarjetas */
 .finora-card-interactive {
@@ -362,7 +566,8 @@ input::-ms-clear {
     border-radius: 9999px;
     background: radial-gradient(circle at 30% 25%, #ffffff 0 8%, #00d2df 28%, #0062ff 72%, #0050cc 100%);
     box-shadow: 0 0 0 5px rgba(0, 98, 255, 0.14), 0 8px 22px rgba(0, 80, 204, 0.42);
-    transition: left .7s cubic-bezier(.16, 1, .3, 1), top .7s cubic-bezier(.16, 1, .3, 1), transform .7s cubic-bezier(.16, 1, .3, 1), opacity .7s ease;
+    transition: left .85s cubic-bezier(.22, .75, .25, 1), top .85s cubic-bezier(.22, .75, .25, 1), transform .85s cubic-bezier(.22, .75, .25, 1), opacity .85s ease;
+    will-change: left, top, transform, opacity;
 }
 
 .finora-cart-orb::after {
@@ -379,8 +584,8 @@ input::-ms-clear {
 }
 
 .finora-cart-orb-flying {
-    transform: scale(.55) rotate(180deg);
-    opacity: .15;
+    transform: scale(.45) rotate(180deg);
+    opacity: .35;
 }
 
 .finora-typing {

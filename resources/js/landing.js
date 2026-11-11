@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+function initFinoraLanding() {
     const productItems = document.querySelectorAll('.product-item');
     const filterChips = document.querySelectorAll('.filter-chip');
     const searchInput = document.getElementById('catalog-search');
@@ -195,4 +195,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-});
+}
+
+window.finoraInitLanding = initFinoraLanding;
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFinoraLanding);
+} else {
+    initFinoraLanding();
+}
