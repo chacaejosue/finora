@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Finora - Crear Compra | Panel del Consultor</title>
+    <title>Finora | Crear Compra | Panel del Consultor</title>
     <link rel="icon" type="image/png" href="{{ asset('images/branding/finora-icono.png') }}"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Outfit:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full font-sans bg-finora-surface text-finora-navy antialiased selection:bg-finora-cyan selection:text-finora-navy flex flex-col min-h-screen">
@@ -16,9 +16,6 @@
     <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 backdrop-blur-md bg-white/90">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <button id="openPanelDrawerBtn" type="button" class="p-2 rounded-xl text-slate-600 hover:text-finora-navy hover:bg-slate-100 transition-colors cursor-pointer" title="Navegación de módulos">
-                    <span class="material-symbols-outlined text-[24px]">menu</span>
-                </button>
                 <a class="inline-flex items-center gap-3.5 group" href="{{ route('panel.index') }}">
                     <div class="relative w-10 h-10 flex items-center justify-center shrink-0">
                         <img src="{{ asset('images/branding/finora-isotipo.png') }}" alt="Finora" class="h-9 w-auto object-contain group-hover:scale-105 transition-transform"/>
@@ -46,33 +43,81 @@
             <form action="{{ route('panel.compras.store') }}" method="POST" class="space-y-6">
                 @csrf
 
-                <div>
-                    <label for="proveedor_id" class="block text-xs font-bold text-finora-navy mb-1">Proveedor *</label>
-                    <select id="proveedor_id" name="proveedor_id" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
-                        <option value="">-- Seleccionar Proveedor --</option>
-                        @foreach ($proveedores as $prov)
-                            <option value="{{ $prov->id }}" {{ old('proveedor_id') == $prov->id ? 'selected' : '' }}>{{ $prov->nombre }}</option>
-                        @endforeach
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="proveedor_id" class="block text-xs font-bold text-finora-navy mb-1">Proveedor *</label>
+                        <select id="proveedor_id" name="proveedor_id" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
+                            <option value="">-- Seleccionar Proveedor --</option>
+                            @foreach ($proveedores as $prov)
+                                <option value="{{ $prov->id }}" {{ old('proveedor_id') == $prov->id ? 'selected' : '' }}>{{ $prov->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('proveedor_id') <span class="text-red-600 text-[11px] mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label for="forma_pago" class="block text-xs font-bold text-finora-navy mb-1">Forma de Pago / Financiamiento *</label>
+                        <select id="forma_pago" name="forma_pago" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
+                            <option value="CREDITO" {{ old('forma_pago', 'CREDITO') === 'CREDITO' ? 'selected' : '' }}>Crédito Comercial Proveedor (Factura Natura a 21 días)</option>
+                            <option value="CONTADO" {{ old('forma_pago') === 'CONTADO' ? 'selected' : '' }}>Al Contado (Pago Inmediato con Fondos Propios)</option>
+                        </select>
+                        @error('forma_pago') <span class="text-red-600 text-[11px] mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <!-- Origen de Fondos (visible si es Al Contado) -->
+                <div id="contenedor-origen-fondos" class="{{ old('forma_pago', 'CREDITO') === 'CONTADO' ? '' : 'hidden' }} bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label for="metodo_pago" class="block text-xs font-bold text-finora-navy">¿De qué cuenta sale el dinero? *</label>
+                        <div class="flex items-center gap-3 text-[11px] text-slate-500">
+                            <span>Disponible en Caja: <strong class="text-slate-800">Bs {{ number_format($saldoCaja, 2) }}</strong></span>
+                            <span>&bull;</span>
+                            <span>En Bancos: <strong class="text-slate-800">Bs {{ number_format($saldoBancos, 2) }}</strong></span>
+                        </div>
+                    </div>
+                    <select id="metodo_pago" name="metodo_pago" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-finora-navy focus:ring-2 focus:ring-finora-blue outline-none">
+                        <option value="EFECTIVO" data-saldo="{{ $saldoCaja }}" {{ old('metodo_pago') === 'EFECTIVO' ? 'selected' : '' }}>Caja Chica / Efectivo (Saldo: Bs {{ number_format($saldoCaja, 2) }})</option>
+                        <option value="TRANSFERENCIA" data-saldo="{{ $saldoBancos }}" {{ old('metodo_pago') === 'TRANSFERENCIA' ? 'selected' : '' }}>Cuenta Bancaria / Transferencia / QR (Saldo: Bs {{ number_format($saldoBancos, 2) }})</option>
                     </select>
-                    @error('proveedor_id') <span class="text-red-600 text-[11px] mt-1 block">{{ $message }}</span> @enderror
+
+                    <div id="alerta-fondos-insuficientes" class="hidden rounded-xl border border-amber-300 bg-amber-100/70 p-3 text-xs text-amber-900">
+                        <div class="flex items-start gap-2">
+                            <span class="material-symbols-outlined text-amber-700 text-sm mt-0.5">warning</span>
+                            <div class="space-y-1">
+                                <p class="font-bold">Atención de Liquidez:</p>
+                                <p class="text-[11px] leading-relaxed">
+                                    El total calculado de esta compra supera el saldo disponible en la cuenta seleccionada.
+                                    Si estás comprando con la línea de crédito comercial de Natura a 21 días, selecciona <strong>"Crédito Comercial Proveedor"</strong> arriba. Si tienes dinero no registrado, puedes registrar tu capital inicial en el <strong>Balance de Apertura</strong> o como Aporte de Capital.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="border-t border-b border-slate-100 py-4 space-y-3">
                     <div class="flex items-center justify-between">
                         <h3 class="font-heading font-bold text-sm text-finora-navy">Detalle de Productos</h3>
-                        <button type="button" id="btn-add-item" class="px-3 py-1.5 bg-blue-50 text-finora-blue hover:bg-blue-100 rounded-xl text-xs font-bold inline-flex items-center gap-1 transition-colors">
-                            <span class="material-symbols-outlined text-sm">add</span>
-                            Agregar Producto
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('panel.productos.create') }}" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-finora-blue hover:underline" title="Abre el registro de producto completo con foto en otra pestaña">
+                                <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+                                <span>¿Crear producto con foto?</span>
+                            </a>
+                            <button type="button" id="btn-add-item" class="px-3 py-1.5 bg-blue-50 text-finora-blue hover:bg-blue-100 rounded-xl text-xs font-bold inline-flex items-center gap-1 transition-colors cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">add</span>
+                                Agregar Producto
+                            </button>
+                        </div>
                     </div>
 
                     <div id="items-container" class="space-y-3">
                         <div class="item-row bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
                             <div class="flex items-center justify-between">
                                 <span class="text-[10px] font-bold text-finora-subtle uppercase">Ítem de Compra</span>
-                                 <button type="button" class="btn-toggle-nuevo-prod inline-flex items-center gap-1 rounded-lg border-2 border-finora-blue bg-blue-50 px-3 py-2 text-xs font-extrabold text-finora-blue shadow-sm hover:bg-finora-blue hover:text-white transition-colors">
-                                     <span class="material-symbols-outlined text-base">edit_note</span> Escribir producto no registrado
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" class="btn-toggle-nuevo-prod inline-flex items-center rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-100 transition-colors cursor-pointer">
+                                        Escribir producto no registrado
+                                    </button>
+                                </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
                                 <div class="sm:col-span-6 campo-prod-existente">
@@ -93,16 +138,12 @@
                                 </div>
                                 <div class="sm:col-span-3">
                                     <label class="block text-[10px] font-bold text-finora-subtle mb-1">Cantidad</label>
-                                    <input type="number" min="1" name="detalles[0][cantidad]" value="1" required class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-finora-navy outline-none">
+                                    <input type="number" min="1" name="detalles[0][cantidad]" value="1" required class="input-cantidad w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-finora-navy outline-none">
                                 </div>
                                 <div class="sm:col-span-3">
-                                    <label class="block text-[10px] font-bold text-finora-subtle mb-1">Precio Natura (USD)</label>
-                                    <input type="number" step="0.01" min="0" name="detalles[0][costo_unitario_usd]" value="0.00" required class="input-costo-usd w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-finora-navy outline-none">
-                                    <p class="mt-1 text-[10px] text-finora-subtle">Se guardará convertido en Bs.</p>
-                                </div>
-                                <div class="sm:col-span-3">
-                                    <label class="block text-[10px] font-bold text-finora-subtle mb-1">Costo guardado (Bs)</label>
-                                    <input type="text" value="Bs 0,00" readonly class="input-costo-bob w-full rounded-lg border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-xs font-bold text-finora-blue outline-none">
+                                    <label class="block text-[10px] font-bold text-finora-subtle mb-1">Costo Unitario (Bs) *</label>
+                                    <input type="number" step="0.01" min="0" name="detalles[0][costo_unitario]" value="0.00" required class="input-costo-bob w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-finora-navy outline-none">
+                                    <p class="mt-1 text-[10px] text-finora-subtle">Precio final pagado a Natura en Bs.</p>
                                 </div>
                             </div>
                         </div>
@@ -145,27 +186,6 @@
             const list = document.getElementById('missing-fields-list');
 
             const productsOptions = `@foreach ($productos as $prod)<option value="{{ $prod->id }}">{{ $prod->codigo }} - {{ $prod->nombre }}</option>@endforeach`;
-            let tipoCambio = 12;
-
-            const formatBob = (value) => `Bs ${Number(value).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-            const actualizarCostoConvertido = (row) => {
-                const usd = Number(row.querySelector('.input-costo-usd')?.value || 0);
-                const bob = row.querySelector('.input-costo-bob');
-                if (bob) bob.value = formatBob(usd * tipoCambio);
-            };
-
-            const cargarTipoCambio = async () => {
-                try {
-                    const response = await fetch('{{ route('tipo-cambio') }}', { headers: { Accept: 'application/json' } });
-                    const data = await response.json();
-                    tipoCambio = Number(data.bolivianos_por_dolar) || 12;
-                } catch {
-                    tipoCambio = 12;
-                }
-
-                container.querySelectorAll('.item-row').forEach(actualizarCostoConvertido);
-            };
 
             function attachRowToggle(row) {
                 const btnToggle = row.querySelector('.btn-toggle-nuevo-prod');
@@ -183,25 +203,60 @@
                             selectProd.removeAttribute('required');
                             selectProd.value = '';
                             inputNombreNuevo.setAttribute('required', 'required');
-                            btnToggle.textContent = '← Elegir de catálogo existente';
+                            btnToggle.textContent = 'Elegir de catálogo existente';
                         } else {
                             campoNuevo.classList.add('hidden');
                             campoExistente.classList.remove('hidden');
                             selectProd.setAttribute('required', 'required');
                             inputNombreNuevo.removeAttribute('required');
                             inputNombreNuevo.value = '';
-                            btnToggle.textContent = '+ Escribir producto no registrado';
+                            btnToggle.textContent = 'Escribir producto no registrado';
                         }
                     });
                 }
             }
 
             container.querySelectorAll('.item-row').forEach(row => attachRowToggle(row));
-            container.addEventListener('input', event => {
-                if (event.target.classList.contains('input-costo-usd')) {
-                    actualizarCostoConvertido(event.target.closest('.item-row'));
+
+            const formaPagoSelect = document.getElementById('forma_pago');
+            const contenedorOrigen = document.getElementById('contenedor-origen-fondos');
+            const metodoPagoSelect = document.getElementById('metodo_pago');
+            const alertaFondos = document.getElementById('alerta-fondos-insuficientes');
+
+            function verificarLiquidez() {
+                if (!formaPagoSelect) return;
+                const esContado = formaPagoSelect.value === 'CONTADO';
+                if (contenedorOrigen) {
+                    if (esContado) {
+                        contenedorOrigen.classList.remove('hidden');
+                    } else {
+                        contenedorOrigen.classList.add('hidden');
+                        if (alertaFondos) alertaFondos.classList.add('hidden');
+                        return;
+                    }
                 }
-            });
+
+                let totalCompra = 0;
+                container.querySelectorAll('.item-row').forEach(row => {
+                    const cant = parseFloat(row.querySelector('.input-cantidad')?.value) || 0;
+                    const costo = parseFloat(row.querySelector('.input-costo-bob')?.value) || 0;
+                    totalCompra += cant * costo;
+                });
+
+                if (esContado && metodoPagoSelect && alertaFondos) {
+                    const opt = metodoPagoSelect.selectedOptions[0];
+                    const saldoDisponible = opt ? parseFloat(opt.dataset.saldo || 0) : 0;
+                    if (totalCompra > saldoDisponible && totalCompra > 0) {
+                        alertaFondos.classList.remove('hidden');
+                    } else {
+                        alertaFondos.classList.add('hidden');
+                    }
+                }
+            }
+
+            if (formaPagoSelect) formaPagoSelect.addEventListener('change', verificarLiquidez);
+            if (metodoPagoSelect) metodoPagoSelect.addEventListener('change', verificarLiquidez);
+            container.addEventListener('input', verificarLiquidez);
 
             btnAdd.addEventListener('click', () => {
                 const div = document.createElement('div');
@@ -210,8 +265,8 @@
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-bold text-finora-subtle uppercase">Ítem de Compra</span>
                         <div class="flex items-center gap-2">
-                             <button type="button" class="btn-toggle-nuevo-prod inline-flex items-center gap-1 rounded-lg border-2 border-finora-blue bg-blue-50 px-3 py-2 text-xs font-extrabold text-finora-blue shadow-sm hover:bg-finora-blue hover:text-white transition-colors">
-                                 <span class="material-symbols-outlined text-base">edit_note</span> Escribir producto no registrado
+                             <button type="button" class="btn-toggle-nuevo-prod inline-flex items-center rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-100 transition-colors cursor-pointer">
+                                 Escribir producto no registrado
                             </button>
                             <button type="button" class="btn-remove-row text-red-500 hover:text-red-700 p-0.5" title="Eliminar fila">
                                 <span class="material-symbols-outlined text-base">delete</span>
@@ -235,30 +290,24 @@
                         </div>
                         <div class="sm:col-span-3">
                             <label class="block text-[10px] font-bold text-finora-subtle mb-1">Cantidad</label>
-                            <input type="number" min="1" name="detalles[${itemIdx}][cantidad]" value="1" required class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-finora-navy outline-none">
+                            <input type="number" min="1" name="detalles[${itemIdx}][cantidad]" value="1" required class="input-cantidad w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-finora-navy outline-none">
                         </div>
                         <div class="sm:col-span-3">
-                            <label class="block text-[10px] font-bold text-finora-subtle mb-1">Costo Unitario ($)</label>
-                            <input type="number" step="0.01" min="0" name="detalles[${itemIdx}][costo_unitario_usd]" value="0.00" required class="input-costo-usd w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-finora-navy outline-none">
-                            <p class="mt-1 text-[10px] text-finora-subtle">Se guardará convertido en Bs.</p>
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-[10px] font-bold text-finora-subtle mb-1">Costo guardado (Bs)</label>
-                            <input type="text" value="Bs 0,00" readonly class="input-costo-bob w-full rounded-lg border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-xs font-bold text-finora-blue outline-none">
+                            <label class="block text-[10px] font-bold text-finora-subtle mb-1">Costo Unitario (Bs) *</label>
+                            <input type="number" step="0.01" min="0" name="detalles[${itemIdx}][costo_unitario]" value="0.00" required class="input-costo-bob w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-finora-navy outline-none">
+                            <p class="mt-1 text-[10px] text-finora-subtle">Precio final pagado a Natura en Bs.</p>
                         </div>
                     </div>
                 `;
                 container.appendChild(div);
                 attachRowToggle(div);
-                actualizarCostoConvertido(div);
                 itemIdx++;
 
                 div.querySelector('.btn-remove-row').addEventListener('click', () => {
                     div.remove();
+                    verificarLiquidez();
                 });
             });
-
-            cargarTipoCambio();
 
             // Validación interactiva de campos vacíos (2.9)
             form.addEventListener('submit', (e) => {

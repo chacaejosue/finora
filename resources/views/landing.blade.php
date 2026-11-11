@@ -77,16 +77,17 @@
 
         /* Animación para el orbe de carrito */
         .finora-cart-orb {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border-radius: 9999px;
             background: #00c1de;
-            box-shadow: 0 0 15px rgba(0, 193, 222, 0.6);
-            transition: all 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 0 18px rgba(0, 193, 222, 0.65);
+            transition: left 0.85s cubic-bezier(0.22, 0.75, 0.25, 1), top 0.85s cubic-bezier(0.22, 0.75, 0.25, 1), transform 0.85s cubic-bezier(0.22, 0.75, 0.25, 1), opacity 0.85s ease;
+            will-change: left, top, transform, opacity;
         }
         .finora-cart-orb-flying {
-            transform: scale(0.3);
-            opacity: 0.2;
+            transform: scale(0.45) rotate(180deg);
+            opacity: 0.35;
         }
     </style>
 
@@ -176,20 +177,14 @@
                 'precio_regular' => $regularPrice,
                 'precio_display' => 'Bs ' . number_format($finalPrice, 2),
                 'precio_original_display' => ($isOffer && $finalPrice < $regularPrice) ? 'Bs ' . number_format($regularPrice, 2) : null,
+                'hasStock' => (bool) ($dbProd->stock_disponible > 0),
                 'likes' => (int) ($dbProd->likes ?? 0),
                 'descuento' => ($isOffer && $dbProd->descuento_porcentaje) ? '-' . $dbProd->descuento_porcentaje . '%' : null,
             ];
         }
 
-        // Fallback en caso de base de datos vacía
-        if (empty($featuredProducts)) {
-            $featuredProducts = [
-                ['id' => 1, 'codigo' => 'DEM-001', 'nombre' => 'Perfume Aurora', 'linea' => 'Perfumería', 'categoriaNombre' => 'Perfumería', 'desc' => 'Fragancia cautivadora con notas florales y maderosas.', 'precio' => 39.99, 'precio_display' => 'Bs 39.99', 'precio_original_display' => 'Bs 49.99', 'likes' => 28, 'descuento' => '-20%', 'imagen' => asset('images/prod-aurora.jpg'), 'tag' => 'Natura'],
-                ['id' => 2, 'codigo' => 'DEM-002', 'nombre' => 'Crema Hidratante Soft', 'linea' => 'Cuidado facial', 'categoriaNombre' => 'Cuidado facial', 'desc' => 'Hidratación profunda 24h para una piel suave y radiante.', 'precio' => 29.99, 'precio_display' => 'Bs 29.99', 'precio_original_display' => null, 'likes' => 19, 'descuento' => null, 'imagen' => asset('images/prod-crema.jpg'), 'tag' => 'Natura'],
-                ['id' => 3, 'codigo' => 'DEM-003', 'nombre' => 'Aceite Esencial Calm', 'linea' => 'Cuidado corporal', 'categoriaNombre' => 'Cuidado corporal', 'desc' => 'Aceite botánico relajante con extractos naturales.', 'precio' => 34.99, 'precio_display' => 'Bs 34.99', 'precio_original_display' => 'Bs 40.99', 'likes' => 14, 'descuento' => '-15%', 'imagen' => asset('images/prod-aceite.jpg'), 'tag' => 'Natura'],
-                ['id' => 4, 'codigo' => 'DEM-004', 'nombre' => 'Colonia Essence Men', 'linea' => 'Perfumería', 'categoriaNombre' => 'Perfumería', 'desc' => 'Aroma fresco, sofisticado y de larga duración.', 'precio' => 32.99, 'precio_display' => 'Bs 32.99', 'precio_original_display' => null, 'likes' => 11, 'descuento' => null, 'imagen' => asset('images/prod-colonia.jpg'), 'tag' => 'Natura'],
-            ];
-        }
+        // Si la base de datos está vacía, $featuredProducts permanece vacío para activar el Empty State elegante sin inventar IDs inexistentes
+        // que puedan provocar fallos al agregarse al carrito.
 
         // Catálogo completo preservado en memoria
         $categoriasLanding = $categorias->map(fn ($categoria) => [
@@ -340,7 +335,7 @@
             <div class="bg-white rounded-3xl shadow-soft border border-slate-100/80 p-4 sm:p-6 lg:py-6 lg:px-4">
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
                     @foreach($categoryItems as $cat)
-                    <a class="group flex flex-col items-center text-center p-3 sm:p-4 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer rounded-2xl hover:bg-slate-50/70 {{ $loop->last && count($categoryItems) % 2 !== 0 ? 'col-span-2 sm:col-span-1 max-w-[200px] mx-auto w-full' : '' }}" href="{{ $cat['url'] }}">
+                    <a class="group card-hover-lift flex flex-col items-center text-center p-3 sm:p-4 cursor-pointer rounded-2xl bg-white hover:bg-slate-50/70 {{ $loop->last && count($categoryItems) % 2 !== 0 ? 'col-span-2 sm:col-span-1 max-w-[200px] mx-auto w-full' : '' }}" href="{{ $cat['url'] }}">
                         <!-- Globo de categoría con proporciones y esquinas redondeadas uniformes -->
                         <div class="w-full max-w-[150px] aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-gradient-to-b from-sky-50 via-cyan-50/40 to-slate-100 mb-3 transition-transform duration-300 group-hover:scale-105 shadow-xs">
                             <img alt="{{ $cat['nombre'] }}" class="w-full h-full object-cover object-center select-none" draggable="false" src="{{ $cat['imagen'] }}" onerror="this.onerror=null; this.src='{{ asset('images/branding/finora-icono.png') }}'; this.classList.remove('object-cover'); this.classList.add('object-contain', 'p-4');">
@@ -424,10 +419,11 @@
                     </a>
                 </div>
             </div>
+            @if(count($featuredProducts) > 0)
             <!-- Products Grid / Mobile Carousel (Carrusel swipeable fluido en móvil, rejilla 4 cols en desktop) -->
             <div class="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 overflow-x-auto sm:overflow-visible no-scrollbar pb-4 sm:pb-0 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0">
                 @foreach($featuredProducts as $prod)
-                <div class="product-item min-w-[270px] max-w-[285px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink bg-white rounded-3xl p-4 sm:p-5 shadow-sm hover:shadow-card transition-all duration-300 border border-slate-100/90 flex flex-col justify-between group cursor-pointer"
+                <div class="product-item min-w-[270px] max-w-[285px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink bg-white rounded-3xl p-4 sm:p-5 shadow-sm card-hover-lift border border-slate-100/90 flex flex-col justify-between group cursor-pointer"
                      role="button"
                      tabindex="0"
                      aria-label="Ver detalles de {{ $prod['nombre'] }}"
@@ -459,8 +455,20 @@
                             </svg>
                         </button>
                         <!-- Product Image -->
-                        <div class="w-full h-52 overflow-hidden rounded-2xl bg-slate-100/80 mb-4">
+                        <div class="w-full h-52 overflow-hidden rounded-2xl bg-slate-100/80 mb-4 relative">
                             <img alt="{{ $prod['nombre'] }}" class="w-full h-full object-cover object-center group-hover:scale-105 transition duration-300 select-none" draggable="false" src="{{ $prod['imagen'] }}" onerror="this.onerror=null; this.src='{{ asset('images/branding/finora-icono.png') }}'; this.classList.remove('object-cover'); this.classList.add('object-contain', 'p-6');">
+
+                            @if ($prod['hasStock'])
+                            <span class="absolute bottom-2 left-2 z-10 px-2 py-0.5 rounded-full bg-emerald-600/95 backdrop-blur-xs text-white text-[10px] font-bold shadow-xs flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                Entrega Inmediata
+                            </span>
+                            @else
+                            <span class="absolute bottom-2 left-2 z-10 px-2 py-0.5 rounded-full bg-amber-500/90 backdrop-blur-xs text-white text-[10px] font-bold shadow-xs flex items-center gap-1">
+                                <span class="text-[9px]">📦</span>
+                                A Pedido
+                            </span>
+                            @endif
                         </div>
                     </div>
                     <div>
@@ -502,6 +510,23 @@
                 </div>
                 @endforeach
             </div>
+            @else
+            <!-- Empty State Elegante cuando aún no hay productos registrados en BD -->
+            <div class="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-50/70 via-white to-sky-50/40 p-8 sm:p-12 text-center max-w-xl mx-auto shadow-sm my-6">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-sky-100 text-[#00c1de] flex items-center justify-center shadow-inner">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-[#0e1b2e] mb-2">Catálogo en Actualización de Ciclo</h3>
+                <p class="text-xs sm:text-sm text-slate-500 mb-6">Estamos preparando los nuevos productos y promociones del ciclo Natura actual. ¡Explora las categorías disponibles o contáctanos para ver la revista digital!</p>
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <a href="{{ route('categorias') }}" class="px-5 py-2.5 rounded-full bg-[#00c1de] hover:bg-[#00a3bd] text-white text-xs font-bold transition-all shadow-md">
+                        Ver Categorías Disponibles →
+                    </a>
+                </div>
+            </div>
+            @endif
 
             <!-- Empty State Recovery en Portada -->
             <div id="landingEmptyCatalog" class="hidden rounded-3xl bg-white p-8 sm:p-12 text-center shadow-card border border-slate-100 mt-4">

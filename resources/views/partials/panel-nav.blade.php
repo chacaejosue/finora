@@ -8,12 +8,12 @@
 @endphp
 
 <!-- Barra Unificada de 4 Módulos y Sub-pestañas (Diseño Minimalista Landing) -->
-<div class="bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-18 z-20">
+<div id="panelNavbarContainer" class="bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-18 z-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Nivel 1: Los 4 Módulos Principales -->
-        <nav class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-2.5 no-scrollbar text-xs font-semibold" aria-label="Módulos principales del panel">
+        <nav class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto px-1.5 py-2.5 no-scrollbar text-xs font-semibold" aria-label="Módulos principales del panel">
             <a href="{{ route('panel.index') }}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full whitespace-nowrap transition-all {{ $esInicioPanel ? 'bg-[#0e1b2e] text-white font-bold shadow-xs' : 'text-slate-600 hover:text-[#0e1b2e] hover:bg-slate-100/80' }}">
+               class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full whitespace-nowrap shrink-0 transition-all {{ $esInicioPanel ? 'bg-[#0e1b2e] text-white font-bold shadow-xs' : 'text-slate-600 hover:text-[#0e1b2e] hover:bg-slate-100/80' }}">
                 <span class="material-symbols-outlined text-[16px]">space_dashboard</span>
                 <span>Inicio</span>
             </a>
@@ -22,14 +22,14 @@
 
             <!-- 1. Ventas y Pedidos -->
             <a href="{{ route('panel.ventas.index') }}"
-               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap transition-all {{ $esModVentas ? 'bg-[#00c1de] text-white font-bold shadow-xs' : 'text-slate-600 hover:text-[#0e1b2e] hover:bg-cyan-50/60' }}">
+               class="btn-bounce inline-flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap shrink-0 transition-all {{ $esModVentas ? 'bg-[#00c1de] text-white font-bold shadow-xs shadow-cyan-500/20' : 'text-slate-600 hover:text-[#0e1b2e] hover:bg-cyan-50/60' }}">
                 <span class="material-symbols-outlined text-[16px]">point_of_sale</span>
                 <span>Ventas y Pedidos</span>
             </a>
 
             <!-- 2. Catálogo e Inventario -->
             <a href="{{ route('panel.productos.index') }}"
-               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap transition-all {{ $esModCatalogo ? 'bg-[#00c1de] text-white font-bold shadow-xs' : 'text-slate-600 hover:text-[#0e1b2e] hover:bg-cyan-50/60' }}">
+               class="btn-bounce inline-flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap shrink-0 transition-all {{ $esModCatalogo ? 'bg-[#00c1de] text-white font-bold shadow-xs shadow-cyan-500/20' : 'text-slate-600 hover:text-[#0e1b2e] hover:bg-cyan-50/60' }}">
                 <span class="material-symbols-outlined text-[16px]">inventory_2</span>
                 <span>Catálogo e Inventario</span>
             </a>
@@ -37,7 +37,7 @@
             <!-- 3. Contabilidad y Reportes (Solo Consultor) -->
             @if($esConsultor)
                 <a href="{{ route('contabilidad.index') }}"
-                   class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap transition-all {{ $esModContable ? 'bg-[#00c1de] text-white font-bold shadow-xs' : 'text-slate-600 hover:text-[#0e1b2e] hover:bg-cyan-50/60' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap shrink-0 transition-all {{ $esModContable ? 'bg-[#00c1de] text-white font-bold shadow-xs shadow-cyan-500/20' : 'text-slate-600 hover:text-[#0e1b2e] hover:bg-cyan-50/60' }}">
                     <span class="material-symbols-outlined text-[16px]">monitoring</span>
                     <span>Contabilidad y Reportes</span>
                 </a>
@@ -45,7 +45,7 @@
 
             <!-- 4. Clientes y Usuarios -->
             <a href="{{ route('panel.clientes.index') }}"
-               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap transition-all {{ $esModClientes ? 'bg-[#00c1de] text-white font-bold shadow-xs' : 'text-slate-600 hover:text-[#0e1b2e] hover:bg-cyan-50/60' }}">
+               class="btn-bounce inline-flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap shrink-0 transition-all {{ $esModClientes ? 'bg-[#00c1de] text-white font-bold shadow-xs shadow-cyan-500/20' : 'text-slate-600 hover:text-[#0e1b2e] hover:bg-cyan-50/60' }}">
                 <span class="material-symbols-outlined text-[16px]">group</span>
                 <span>{{ $esConsultor ? 'Clientes y Usuarios' : 'Clientes' }}</span>
             </a>
@@ -53,61 +53,61 @@
 
         <!-- Nivel 2: Sub-pestañas Contextuales del Módulo Activo -->
         @if($esModVentas)
-            <div class="flex items-center justify-between gap-2 overflow-x-auto py-2 border-t border-slate-100/90 no-scrollbar text-xs">
+            <div class="flex items-center justify-between gap-2 overflow-x-auto px-1.5 py-2 border-t border-slate-100/90 no-scrollbar text-xs animate-subnav-enter">
                 <div class="flex items-center gap-1.5">
                     <a href="{{ route('panel.ventas.index') }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.ventas*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                       class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.ventas*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                         <span class="material-symbols-outlined text-[15px]">receipt_long</span>
                         <span>Ventas</span>
                     </a>
                     <a href="{{ route('panel.pedidos.index') }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.pedidos*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                       class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.pedidos*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                         <span class="material-symbols-outlined text-[15px]">shopping_bag</span>
                         <span>Pedidos del Catálogo</span>
                     </a>
                     <a href="{{ route('panel.pagos.index') }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.pagos*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                       class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.pagos*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                         <span class="material-symbols-outlined text-[15px]">payments</span>
                         <span>Créditos y Pagos</span>
                     </a>
                 </div>
                 <a href="{{ route('panel.ventas.create') }}"
-                   class="hidden sm:inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#0e1b2e] text-white text-[11px] font-bold hover:bg-slate-800 transition-colors shrink-0">
+                   class="btn-bounce hidden sm:inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#0e1b2e] text-white text-[11px] font-bold hover:bg-slate-800 transition-all shrink-0 shadow-xs">
                     <span class="material-symbols-outlined text-[14px]">add</span>
                     <span>Registrar Venta</span>
                 </a>
             </div>
         @elseif($esModCatalogo)
-            <div class="flex items-center justify-between gap-2 overflow-x-auto py-2 border-t border-slate-100/90 no-scrollbar text-xs">
+            <div class="flex items-center justify-between gap-2 overflow-x-auto px-1.5 py-2 border-t border-slate-100/90 no-scrollbar text-xs animate-subnav-enter">
                 <div class="flex items-center gap-1.5">
                     <a href="{{ route('panel.productos.index') }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.productos*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                       class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.productos*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                         <span class="material-symbols-outlined text-[15px]">package_2</span>
                         <span>Productos</span>
                     </a>
                     <a href="{{ route('panel.inventario.index') }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.inventario.index', 'panel.inventario.ajustar') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                       class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.inventario.index', 'panel.inventario.ajustar') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                         <span class="material-symbols-outlined text-[15px]">warehouse</span>
                         <span>Existencias</span>
                     </a>
                     <a href="{{ route('panel.inventario.movimientos') }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.inventario.movimientos') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                       class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.inventario.movimientos') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                         <span class="material-symbols-outlined text-[15px]">swap_vert</span>
                         <span>Kárdex Físico</span>
                     </a>
                     <a href="{{ route('panel.compras.index') }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.compras*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                       class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.compras*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                         <span class="material-symbols-outlined text-[15px]">local_shipping</span>
                         <span>Compras</span>
                     </a>
                     @if($esConsultor)
                         <a href="{{ route('panel.categorias.index') }}"
-                           class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.categorias*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                           class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.categorias*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                             <span class="material-symbols-outlined text-[15px]">category</span>
                             <span>Categorías</span>
                         </a>
                         <a href="{{ route('panel.proveedores.index') }}"
-                           class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.proveedores*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                           class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.proveedores*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                             <span class="material-symbols-outlined text-[15px]">storefront</span>
                             <span>Proveedores</span>
                         </a>
@@ -115,63 +115,63 @@
                 </div>
             </div>
         @elseif($esModContable && $esConsultor)
-            <div class="flex items-center gap-1.5 overflow-x-auto py-2 border-t border-slate-100/90 no-scrollbar text-xs">
+            <div class="flex items-center gap-1.5 overflow-x-auto px-1.5 py-2 border-t border-slate-100/90 no-scrollbar text-xs animate-subnav-enter">
                 <a href="{{ route('contabilidad.index') }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('contabilidad.index') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('contabilidad.index') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                     <span class="material-symbols-outlined text-[15px]">monitoring</span>
                     <span>Resumen Contable</span>
                 </a>
                 <a href="{{ route('panel.reportes.index') }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.reportes*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.reportes*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                     <span class="material-symbols-outlined text-[15px]">analytics</span>
                     <span>Reportes</span>
                 </a>
                 <a href="{{ route('contabilidad.balance-apertura') }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('contabilidad.balance-apertura*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('contabilidad.balance-apertura*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                     <span class="material-symbols-outlined text-[15px]">flag</span>
                     <span>Balance de Apertura</span>
                 </a>
                 <a href="{{ route('contabilidad.libro-diario') }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('contabilidad.libro-diario*', 'contabilidad.asientos*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('contabilidad.libro-diario*', 'contabilidad.asientos*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                     <span class="material-symbols-outlined text-[15px]">menu_book</span>
                     <span>Libro Diario</span>
                 </a>
                 <a href="{{ route('contabilidad.libro-mayor') }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('contabilidad.libro-mayor*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('contabilidad.libro-mayor*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                     <span class="material-symbols-outlined text-[15px]">import_contacts</span>
                     <span>Libro Mayor</span>
                 </a>
                 <a href="{{ route('contabilidad.sumas-saldos') }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('contabilidad.sumas-saldos*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('contabilidad.sumas-saldos*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                     <span class="material-symbols-outlined text-[15px]">balance</span>
                     <span>Sumas y Saldos</span>
                 </a>
                 <a href="{{ route('contabilidad.estados-financieros') }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('contabilidad.estados-financieros*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('contabilidad.estados-financieros*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                     <span class="material-symbols-outlined text-[15px]">query_stats</span>
                     <span>Estados Financieros</span>
                 </a>
                 <a href="{{ route('contabilidad.kardex-valorado') }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('contabilidad.kardex-valorado*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('contabilidad.kardex-valorado*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                     <span class="material-symbols-outlined text-[15px]">receipt_long</span>
                     <span>Kardex Valorado</span>
                 </a>
                 <a href="{{ route('contabilidad.plan-cuentas') }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('contabilidad.plan-cuentas*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('contabilidad.plan-cuentas*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                     <span class="material-symbols-outlined text-[15px]">account_tree</span>
                     <span>Plan de Cuentas</span>
                 </a>
             </div>
         @elseif($esModClientes)
-            <div class="flex items-center gap-1.5 overflow-x-auto py-2 border-t border-slate-100/90 no-scrollbar text-xs">
+            <div class="flex items-center gap-1.5 overflow-x-auto px-1.5 py-2 border-t border-slate-100/90 no-scrollbar text-xs animate-subnav-enter">
                 <a href="{{ route('panel.clientes.index') }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.clientes*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                   class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.clientes*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                     <span class="material-symbols-outlined text-[15px]">group</span>
                     <span>Cartera de Clientes</span>
                 </a>
                 @if($esConsultor)
                     <a href="{{ route('panel.usuarios.index') }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all {{ request()->routeIs('panel.usuarios*') ? 'bg-cyan-50 text-[#00a3bd] font-bold ring-1 ring-[#00c1de]/30' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
+                       class="btn-bounce inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shrink-0 transition-all {{ request()->routeIs('panel.usuarios*') ? 'bg-cyan-50 text-[#0092aa] font-bold border border-[#00c1de]/50 shadow-xs' : 'text-slate-500 hover:text-[#0e1b2e] hover:bg-slate-50' }}">
                         <span class="material-symbols-outlined text-[15px]">manage_accounts</span>
                         <span>Usuarios y Colaboradores</span>
                     </a>

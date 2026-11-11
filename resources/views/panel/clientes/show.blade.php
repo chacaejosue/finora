@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Finora - Detalle de Cliente | Panel del Consultor</title>
+    <title>Finora | Detalle de Cliente | Panel del Consultor</title>
     <link rel="icon" type="image/png" href="{{ asset('images/branding/finora-icono.png') }}"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Outfit:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full font-sans bg-finora-surface text-finora-navy antialiased selection:bg-finora-cyan selection:text-finora-navy flex flex-col min-h-screen">
@@ -16,9 +16,6 @@
     <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 backdrop-blur-md bg-white/90">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <button id="openPanelDrawerBtn" type="button" class="p-2 rounded-xl text-slate-600 hover:text-finora-navy hover:bg-slate-100 transition-colors cursor-pointer" title="Navegación de módulos">
-                    <span class="material-symbols-outlined text-[24px]">menu</span>
-                </button>
                 <a class="inline-flex items-center gap-3.5 group" href="{{ route('panel.index') }}">
                     <div class="relative w-10 h-10 flex items-center justify-center shrink-0">
                         <img src="{{ asset('images/branding/finora-isotipo.png') }}" alt="Finora" class="h-9 w-auto object-contain group-hover:scale-105 transition-transform"/>
@@ -43,13 +40,26 @@
 
         <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
                     <h1 class="font-heading text-2xl font-extrabold text-finora-navy">
                         {{ $cliente->persona->nombre }} {{ $cliente->persona->apellido }}
                     </h1>
                     <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $cliente->activo ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-700' }}">
                         {{ $cliente->activo ? 'Activo' : 'Inactivo' }}
                     </span>
+                    @if ($cliente->estado_crediticio === 'MOROSO')
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+                            Moroso ({{ $cliente->cuotas_vencidas_count }} cuotas vencidas)
+                        </span>
+                    @elseif ($cliente->estado_crediticio === 'CON_DEUDA')
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                            Crédito en curso
+                        </span>
+                    @else
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Historial al día
+                        </span>
+                    @endif
                 </div>
                 <p class="text-xs text-finora-subtle mt-1">
                     Registrado el {{ $cliente->created_at->format('d/m/Y H:i') }}

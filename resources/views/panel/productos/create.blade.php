@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Finora - Crear Producto | Panel del Consultor</title>
+    <title>Finora | Crear Producto | Panel del Consultor</title>
 
     <link rel="icon" type="image/png" href="{{ asset('images/branding/finora-icono.png') }}"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Outfit:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet"/>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -19,9 +19,6 @@
     <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 backdrop-blur-md bg-white/90">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <button id="openPanelDrawerBtn" type="button" class="p-2 rounded-xl text-slate-600 hover:text-finora-navy hover:bg-slate-100 transition-colors cursor-pointer" title="Navegación de módulos">
-                    <span class="material-symbols-outlined text-[24px]">menu</span>
-                </button>
                 <a class="inline-flex items-center gap-3.5 group" href="{{ route('panel.productos.index') }}">
                     <div class="relative w-10 h-10 flex items-center justify-center shrink-0">
                         <img src="{{ asset('images/branding/finora-isotipo.png') }}" alt="Finora" class="h-9 w-auto object-contain group-hover:scale-105 transition-transform"/>
@@ -115,23 +112,104 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <!-- Precio de venta actual -->
-                <div>
-                    <label for="precio_venta_actual" class="block text-xs font-bold text-finora-navy mb-1.5">Precio de Venta Actual (Bs) *</label>
-                    <input type="number" step="0.01" min="0" id="precio_venta_actual" name="precio_venta_actual" value="{{ old('precio_venta_actual') }}" required placeholder="120.00" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
+            <!-- Precio Catálogo, Nivel de Consultora y Costo a Pagar -->
+            <div class="rounded-2xl border border-blue-100 bg-blue-50/40 p-5 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-100/70 pb-3">
+                    <div>
+                        <h3 class="font-heading font-bold text-sm text-finora-navy flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-base text-finora-blue">calculate</span>
+                            Calculadora de Nivel Natura y Costo Consultora
+                        </h3>
+                        <p class="text-[11px] text-finora-subtle">Ingresa el precio oficial que aparece en la revista y elige tu nivel para calcular automáticamente cuánto le pagas a Natura y tu ganancia.</p>
+                    </div>
+                    <div id="badge-ganancia-live" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold shrink-0">
+                        <span class="material-symbols-outlined text-sm">trending_up</span>
+                        <span id="texto-ganancia-live">Ganancia: Bs 0.00 (0%)</span>
+                    </div>
                 </div>
 
-                <!-- Stock Inicial (Opcional) -->
-                <div>
-                    <label for="stock_inicial" class="block text-xs font-bold text-finora-navy mb-1.5">Stock Inicial (Unidades que ya tienes)</label>
-                    <input type="number" min="0" id="stock_inicial" name="stock_inicial" value="{{ old('stock_inicial', 0) }}" placeholder="0" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Precio Revista / Catálogo Oficial (PVP) -->
+                    <div>
+                        <label for="precio_venta_actual" class="block text-xs font-bold text-finora-navy mb-1.5">Precio Oficial en Revista (Bs) *</label>
+                        <input type="number" step="0.01" min="0" id="precio_venta_actual" name="precio_venta_actual" value="{{ old('precio_venta_actual') }}" required placeholder="Ej. 610.00" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:ring-2 focus:ring-finora-blue outline-none font-bold text-finora-blue">
+                        <p class="text-[10px] text-slate-500 mt-1">Precio oficial al público según catálogo Natura.</p>
+                    </div>
+
+                    <!-- Costo Unitario que Paga la Consultora (Con descuento de nivel) -->
+                    <div>
+                        <label for="costo_inicial" class="block text-xs font-bold text-finora-navy mb-1.5">Tu Costo Natura a Pagar (Bs)</label>
+                        <input type="number" step="0.01" min="0" id="costo_inicial" name="costo_inicial" value="{{ old('costo_inicial', 0) }}" placeholder="Ej. 427.00" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:ring-2 focus:ring-finora-blue outline-none font-semibold">
+                        <p class="text-[10px] text-slate-500 mt-1">Lo que te factura Natura con tu descuento de nivel.</p>
+                    </div>
+
+                    <!-- Stock Inicial (Opcional) -->
+                    <div>
+                        <label for="stock_inicial" class="block text-xs font-bold text-finora-navy mb-1.5">Stock Inicial (Unidades en mano)</label>
+                        <input type="number" min="0" id="stock_inicial" name="stock_inicial" value="{{ old('stock_inicial', 0) }}" placeholder="0" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:ring-2 focus:ring-finora-blue outline-none">
+                        <p class="text-[10px] text-slate-500 mt-1">Existencias físicas para entrega inmediata.</p>
+                    </div>
                 </div>
 
-                <!-- Costo Unitario Inicial (Opcional) -->
-                <div>
-                    <label for="costo_inicial" class="block text-xs font-bold text-finora-navy mb-1.5">Costo Unitario Inicial (Bs, Opcional)</label>
-                    <input type="number" step="0.01" min="0" id="costo_inicial" name="costo_inicial" value="{{ old('costo_inicial', 0) }}" placeholder="0.00" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
+                <!-- Botones de descuento por nivel oficial de consultora -->
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                    <span class="text-[11px] font-bold text-slate-600 mr-1">Calcular con tu nivel Natura:</span>
+                    <button type="button" class="btn-nivel px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-finora-blue hover:text-white hover:border-finora-blue text-xs font-bold text-slate-700 transition-colors cursor-pointer" data-descuento="25" title="25% de ganancia directa">-25% (Bronce)</button>
+                    <button type="button" class="btn-nivel px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-finora-blue hover:text-white hover:border-finora-blue text-xs font-bold text-slate-700 transition-colors cursor-pointer" data-descuento="30" title="30% de ganancia directa">-30% (Plata)</button>
+                    <button type="button" class="btn-nivel px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-finora-blue hover:text-white hover:border-finora-blue text-xs font-bold text-slate-700 transition-colors cursor-pointer" data-descuento="32" title="32% de ganancia directa">-32% (Oro)</button>
+                    <button type="button" class="btn-nivel px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-finora-blue hover:text-white hover:border-finora-blue text-xs font-bold text-slate-700 transition-colors cursor-pointer" data-descuento="35" title="35% de ganancia directa">-35% (Diamante)</button>
+                    <button type="button" class="btn-nivel px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-finora-blue hover:text-white hover:border-finora-blue text-xs font-bold text-slate-700 transition-colors cursor-pointer" data-descuento="37" title="37% de ganancia directa">-37% (Diamante Azul)</button>
+                </div>
+            </div>
+
+            <!-- Sección de Oferta / Rebaja Promocional (Estilo Marketplace) -->
+            <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/80 pb-3">
+                    <label class="inline-flex items-center cursor-pointer select-none">
+                        <input type="checkbox" id="en_oferta" name="en_oferta" value="1" {{ old('en_oferta') ? 'checked' : '' }} class="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500">
+                        <span class="ml-2.5 font-heading font-bold text-sm text-amber-950 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-base text-amber-600">local_fire_department</span>
+                            Poner este producto en Oferta / Rebaja
+                        </span>
+                    </label>
+                    <div id="badge-oferta-live" class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 text-xs font-bold shrink-0">
+                        <span class="material-symbols-outlined text-sm">sell</span>
+                        <span id="texto-oferta-live">Ahorro: Bs 0.00 (0% OFF)</span>
+                    </div>
+                </div>
+
+                <div id="panel-oferta-campos" class="{{ old('en_oferta') ? '' : 'hidden' }} space-y-3">
+                    <p class="text-[11px] text-amber-900/80">
+                        Al activar la oferta, en la tienda y catálogo público se mostrará el <strong>precio original tachado</strong> y el precio rebajado visible con su etiqueta de descuento.
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="precio_oferta" class="block text-xs font-bold text-amber-950 mb-1.5">Precio de Oferta / Rebajado (Bs)</label>
+                            <input type="number" step="0.01" min="0" id="precio_oferta" name="precio_oferta" value="{{ old('precio_oferta') }}" placeholder="Ej. 80.00" class="w-full bg-white border border-amber-300 rounded-xl px-3.5 py-2.5 text-xs text-amber-950 focus:ring-2 focus:ring-amber-500 outline-none font-bold text-amber-700">
+                            <p class="text-[10px] text-amber-800 mt-1">Debe ser menor al precio regular de venta (<span id="ref-precio-regular" class="font-bold">Bs 0.00</span>).</p>
+                        </div>
+
+                        <div>
+                            <span class="block text-xs font-bold text-amber-950 mb-1.5">Descuento rápido (% OFF):</span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="button" class="btn-descuento px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-600 hover:text-white hover:border-amber-600 text-xs font-bold text-amber-900 transition-colors cursor-pointer" data-descuento="10">-10%</button>
+                                <button type="button" class="btn-descuento px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-600 hover:text-white hover:border-amber-600 text-xs font-bold text-amber-900 transition-colors cursor-pointer" data-descuento="15">-15%</button>
+                                <button type="button" class="btn-descuento px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-600 hover:text-white hover:border-amber-600 text-xs font-bold text-amber-900 transition-colors cursor-pointer" data-descuento="20">-20%</button>
+                                <button type="button" class="btn-descuento px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-600 hover:text-white hover:border-amber-600 text-xs font-bold text-amber-900 transition-colors cursor-pointer" data-descuento="25">-25%</button>
+                                <button type="button" class="btn-descuento px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-600 hover:text-white hover:border-amber-600 text-xs font-bold text-amber-900 transition-colors cursor-pointer" data-descuento="30">-30%</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="resumen-visual-oferta" class="hidden p-3 bg-white/90 rounded-xl border border-amber-200 text-xs flex items-center justify-between">
+                        <span class="text-slate-600 font-medium">Vista previa en la tienda:</span>
+                        <div class="flex items-center gap-2">
+                            <span id="preview-precio-tachado" class="text-xs text-slate-400 line-through">Bs 0.00</span>
+                            <span id="preview-precio-oferta" class="text-sm font-black text-amber-600">Bs 0.00</span>
+                            <span id="preview-badge-descuento" class="px-2 py-0.5 rounded-md bg-amber-500 text-white font-bold text-[10px]">-0%</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -187,6 +265,123 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Calculadora de nivel oficial Natura y ganancia
+            const inputPrecio = document.getElementById('precio_venta_actual');
+            const inputCosto = document.getElementById('costo_inicial');
+            const textoGanancia = document.getElementById('texto-ganancia-live');
+            const btnsNivel = document.querySelectorAll('.btn-nivel');
+
+            function actualizarBadgeGanancia() {
+                const precio = parseFloat(inputPrecio?.value) || 0;
+                const costo = parseFloat(inputCosto?.value) || 0;
+                if (precio > 0 && costo > 0) {
+                    const ganancia = precio - costo;
+                    const pctDesc = Math.round(((precio - costo) / precio) * 100);
+                    textoGanancia.textContent = `Tu Ganancia: Bs ${ganancia.toFixed(2)} (${pctDesc}% desc. Natura)`;
+                } else if (precio > 0 && costo === 0) {
+                    textoGanancia.textContent = `Precio Revista: Bs ${precio.toFixed(2)}`;
+                } else {
+                    textoGanancia.textContent = 'Ganancia: Bs 0.00 (0%)';
+                }
+            }
+
+            btnsNivel.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pctDescuento = parseFloat(btn.getAttribute('data-descuento')) || 0;
+                    const precioRevista = parseFloat(inputPrecio?.value) || 0;
+                    if (precioRevista > 0) {
+                        const costoCalculado = precioRevista * (1 - pctDescuento / 100);
+                        inputCosto.value = costoCalculado.toFixed(2);
+                        actualizarBadgeGanancia();
+                    } else {
+                        inputPrecio?.focus();
+                    }
+                });
+            });
+
+            inputCosto?.addEventListener('input', actualizarBadgeGanancia);
+            inputPrecio?.addEventListener('input', () => {
+                actualizarBadgeGanancia();
+                actualizarOfertaLive();
+            });
+            actualizarBadgeGanancia();
+
+            // Lógica de Oferta / Rebaja (Estilo Marketplace)
+            const checkOferta = document.getElementById('en_oferta');
+            const panelOferta = document.getElementById('panel-oferta-campos');
+            const inputPrecioOferta = document.getElementById('precio_oferta');
+            const badgeOfertaLive = document.getElementById('badge-oferta-live');
+            const textoOfertaLive = document.getElementById('texto-oferta-live');
+            const refPrecioRegular = document.getElementById('ref-precio-regular');
+            const resumenOferta = document.getElementById('resumen-visual-oferta');
+            const previewTachado = document.getElementById('preview-precio-tachado');
+            const previewOferta = document.getElementById('preview-precio-oferta');
+            const previewBadge = document.getElementById('preview-badge-descuento');
+            const btnsDescuento = document.querySelectorAll('.btn-descuento');
+
+            function actualizarOfertaLive() {
+                const precioRegular = parseFloat(inputPrecio?.value) || 0;
+                const precioOferta = parseFloat(inputPrecioOferta?.value) || 0;
+                const isOferta = checkOferta?.checked;
+
+                if (refPrecioRegular) {
+                    refPrecioRegular.textContent = `Bs ${precioRegular.toFixed(2)}`;
+                }
+
+                if (!isOferta) {
+                    panelOferta?.classList.add('hidden');
+                    badgeOfertaLive?.classList.add('hidden');
+                    resumenOferta?.classList.add('hidden');
+                    return;
+                }
+
+                panelOferta?.classList.remove('hidden');
+
+                if (precioRegular > 0 && precioOferta > 0 && precioOferta < precioRegular) {
+                    const ahorro = precioRegular - precioOferta;
+                    const pctDescuento = Math.round((ahorro / precioRegular) * 100);
+
+                    badgeOfertaLive?.classList.remove('hidden');
+                    textoOfertaLive.textContent = `Ahorro: Bs ${ahorro.toFixed(2)} (${pctDescuento}% OFF)`;
+
+                    resumenOferta?.classList.remove('hidden');
+                    previewTachado.textContent = `Bs ${precioRegular.toFixed(2)}`;
+                    previewOferta.textContent = `Bs ${precioOferta.toFixed(2)}`;
+                    previewBadge.textContent = `-${pctDescuento}%`;
+                } else {
+                    badgeOfertaLive?.classList.add('hidden');
+                    resumenOferta?.classList.add('hidden');
+                }
+            }
+
+            checkOferta?.addEventListener('change', () => {
+                actualizarOfertaLive();
+                if (checkOferta.checked && (!inputPrecioOferta.value || parseFloat(inputPrecioOferta.value) === 0)) {
+                    inputPrecioOferta.focus();
+                }
+            });
+
+            inputPrecioOferta?.addEventListener('input', actualizarOfertaLive);
+
+            btnsDescuento.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pct = parseFloat(btn.getAttribute('data-descuento')) || 0;
+                    const precioRegular = parseFloat(inputPrecio?.value) || 0;
+                    if (precioRegular > 0) {
+                        const calculado = precioRegular * (1 - pct / 100);
+                        inputPrecioOferta.value = calculado.toFixed(2);
+                        if (!checkOferta.checked) {
+                            checkOferta.checked = true;
+                        }
+                        actualizarOfertaLive();
+                    } else {
+                        inputPrecio?.focus();
+                    }
+                });
+            });
+
+            actualizarOfertaLive();
+
             const form = document.querySelector('form');
             const alertBox = document.getElementById('form-validation-alert');
             const list = document.getElementById('missing-fields-list');

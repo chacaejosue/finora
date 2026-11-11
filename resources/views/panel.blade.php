@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Finora - Panel Principal</title>
+    <title>Finora | Panel Principal</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/branding/finora-icono.png') }}"/>
@@ -14,8 +14,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 
     <!-- Iconos Material Symbols Outlined -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet"/>
 
+    <meta name="csrf-token" content="{{ csrf_token() }}"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full font-sans bg-finora-surface text-finora-navy antialiased selection:bg-[#00c1de] selection:text-white flex flex-col min-h-screen">
@@ -25,9 +26,6 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-2">
             <!-- Marca Finora -->
             <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-                <button id="openPanelDrawerBtn" type="button" class="p-2 rounded-full text-slate-600 hover:text-[#0e1b2e] hover:bg-slate-100 transition-colors cursor-pointer shrink-0" title="Navegación de módulos" aria-label="Abrir menú de módulos" aria-controls="panelDrawer" aria-expanded="false">
-                    <span class="material-symbols-outlined text-[22px]">menu</span>
-                </button>
                 <a class="inline-flex items-center gap-2.5 sm:gap-3 group min-w-0" href="{{ route('panel.index') }}">
                     <div class="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
                         <img
@@ -47,36 +45,45 @@
 
             <!-- Acciones de usuario -->
             <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-                <a href="{{ route('landing') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold text-slate-600 hover:text-[#00c1de] bg-slate-50 hover:bg-cyan-50/60 border border-slate-200/70 transition-all" title="Ir al catálogo público">
+                <a href="{{ route('landing') }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold text-slate-600 hover:text-[#00c1de] bg-slate-50 hover:bg-cyan-50/60 border border-slate-200/70 transition-colors" title="Abrir tienda en otra pestaña">
                     <span class="material-symbols-outlined text-[16px] text-[#00c1de]">storefront</span>
                     <span class="hidden sm:inline">Ver Tienda</span>
+                    <span class="material-symbols-outlined text-[12px] text-slate-400">open_in_new</span>
                 </a>
 
-                <div class="hidden md:flex items-center gap-2.5 pl-2 border-l border-slate-100">
-                    <div class="text-right">
-                        <p class="text-xs font-bold text-[#0e1b2e] leading-tight">
-                            {{ $usuario->persona->nombre }} {{ $usuario->persona->apellido }}
-                        </p>
-                        <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-50 text-[#00a3bd]">
-                            {{ $usuario->rol }}
-                        </span>
-                    </div>
-                    <div class="w-9 h-9 rounded-full bg-cyan-50 border border-cyan-100 flex items-center justify-center text-[#00a3bd] font-heading font-bold text-xs">
+                <!-- Perfil desplegable al tocar el avatar -->
+                <div class="relative" id="userProfileDropdownContainer">
+                    <button id="userProfileBtn" type="button" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-cyan-50 hover:bg-cyan-100 border border-cyan-200/80 flex items-center justify-center text-[#00a3bd] font-heading font-extrabold text-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00c1de]" title="Perfil de usuario" aria-expanded="false" aria-haspopup="true">
                         {{ mb_strtoupper(mb_substr($usuario->persona->nombre, 0, 1) . mb_substr($usuario->persona->apellido, 0, 1)) }}
+                    </button>
+
+                    <!-- Menú emergente de usuario -->
+                    <div id="userProfileDropdown" class="hidden absolute right-0 mt-2 w-56 rounded-2xl bg-white shadow-xl border border-slate-100 py-2 z-50 transform origin-top-right transition-all">
+                        <div class="px-4 py-3 border-b border-slate-100">
+                            <p class="text-xs font-bold text-slate-900 leading-tight">
+                                {{ $usuario->persona->nombre }} {{ $usuario->persona->apellido }}
+                            </p>
+                            @if ($usuario->email)
+                                <p class="text-[11px] text-slate-400 truncate mt-0.5">{{ $usuario->email }}</p>
+                            @endif
+                            <div class="mt-2">
+                                <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-50 text-[#00a3bd] border border-cyan-100">
+                                    {{ $usuario->rol }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="px-2 pt-2">
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer text-left">
+                                    <span class="material-symbols-outlined text-[16px]">logout</span>
+                                    <span>Cerrar sesión</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button
-                        type="submit"
-                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold text-slate-600 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 border border-slate-200/70 hover:border-rose-200 transition-all cursor-pointer"
-                        title="Cerrar sesión"
-                    >
-                        <span class="material-symbols-outlined text-[16px]">logout</span>
-                        <span class="hidden sm:inline">Salir</span>
-                    </button>
-                </form>
             </div>
         </div>
     </header>
@@ -110,12 +117,12 @@
                 <!-- Acciones Rápidas en Píldoras -->
                 <div class="flex flex-wrap items-center gap-3 shrink-0">
                     <a href="{{ route('panel.ventas.create') }}"
-                       class="inline-flex items-center gap-2 bg-[#00c1de] hover:bg-[#00a3bd] text-white font-bold px-6 py-3.5 rounded-full shadow-md hover:shadow-lg transition-all text-xs sm:text-sm">
+                       class="btn-bounce inline-flex items-center gap-2 bg-[#00c1de] hover:bg-[#00a3bd] text-white font-bold px-6 py-3.5 rounded-full shadow-md hover:shadow-lg transition-all text-xs sm:text-sm">
                         <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
                         <span>Nueva Venta</span>
                     </a>
                     <a href="{{ route('panel.productos.create') }}"
-                       class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-[#0e1b2e] font-bold px-5 py-3.5 rounded-full border border-slate-200/80 shadow-2xs transition-all text-xs sm:text-sm">
+                       class="btn-bounce inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-[#0e1b2e] font-bold px-5 py-3.5 rounded-full border border-slate-200/80 shadow-2xs transition-all text-xs sm:text-sm">
                         <span class="material-symbols-outlined text-[18px] text-[#00c1de]">add_box</span>
                         <span>Nuevo Producto</span>
                     </a>
@@ -123,421 +130,166 @@
             </div>
         </section>
 
-        <!-- Encabezado de los 4 Módulos Agrupados -->
-        <section class="space-y-5">
-            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
-                <div>
-                    <span class="text-[#00c1de] font-bold text-xs tracking-wider uppercase block mb-1">Espacio de Trabajo</span>
-                    <h2 class="text-xl sm:text-2xl font-extrabold text-[#0e1b2e] tracking-tight">Módulos del Sistema</h2>
+        <!-- Tarjetas de Métricas Clave (KPIs de Negocio para Consultora) -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <!-- Cobros Pendientes del Mes -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-soft card-hover-lift group">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Cuentas por Cobrar</span>
+                    <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
+                        <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+                    </div>
                 </div>
-                <p class="text-xs text-slate-400 font-medium">
-                    Selecciona un módulo principal o entra directo a cualquiera de sus pestañas
-                </p>
+                <div class="mt-4">
+                    <div class="text-2xl font-black text-finora-navy font-heading">
+                        @money($cobrosPendientesMes ?? 0)
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm text-amber-500">schedule</span>
+                        <span>Cobros pendientes del mes</span>
+                    </p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <a href="{{ route('panel.pagos.index') }}" class="font-bold text-finora-blue hover:underline">
+                        Ver cartera de pagos &rarr;
+                    </a>
+                </div>
             </div>
 
-            <!-- Grid de los 4 Módulos Unificados -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                <!-- MÓDULO 1: VENTAS Y PEDIDOS -->
-                <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-100 shadow-soft hover:border-[#00c1de]/40 transition-all flex flex-col justify-between gap-6 group">
-                    <div class="space-y-4">
-                        <div class="flex items-start justify-between gap-4">
-                            <div class="w-12 h-12 rounded-2xl bg-cyan-50 text-[#00c1de] flex items-center justify-center shrink-0 group-hover:bg-[#00c1de] group-hover:text-white transition-colors">
-                                <span class="material-symbols-outlined text-2xl">point_of_sale</span>
-                            </div>
-                            <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-slate-50 text-slate-500 border border-slate-100">
-                                Módulo 1 &bull; Comercial
-                            </span>
-                        </div>
-
-                        <div>
-                            <h3 class="text-lg sm:text-xl font-extrabold text-[#0e1b2e] tracking-tight">
-                                Ventas y Pedidos
-                            </h3>
-                            <p class="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
-                                Registra ventas al contado o a crédito, atiende reservas recibidas desde el catálogo web y registra abonos o cobros pendientes.
-                            </p>
-                        </div>
-
-                        <!-- Sub-módulos integrados como píldoras -->
-                        <div class="flex flex-wrap gap-2 pt-1">
-                            <a href="{{ route('panel.ventas.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-cyan-50/80 text-[#00a3bd] hover:bg-[#00c1de] hover:text-white transition-colors">
-                                <span class="material-symbols-outlined text-[15px]">receipt_long</span>
-                                <span>Ventas</span>
-                            </a>
-                            <a href="{{ route('panel.pedidos.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                <span class="material-symbols-outlined text-[15px]">shopping_bag</span>
-                                <span>Pedidos Web</span>
-                            </a>
-                            <a href="{{ route('panel.pagos.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                <span class="material-symbols-outlined text-[15px]">payments</span>
-                                <span>Créditos y Pagos</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-                        <a href="{{ route('panel.ventas.index') }}" class="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#0e1b2e] group-hover:text-[#00c1de] transition-colors">
-                            <span>Abrir Ventas y Pedidos</span>
-                            <span class="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                        </a>
-                        <a href="{{ route('panel.ventas.create') }}" class="text-xs font-bold text-[#00a3bd] hover:underline">
-                            + Registrar venta
-                        </a>
+            <!-- Ganancia Estimada del Mes -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-soft card-hover-lift group">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Ganancia del Mes</span>
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
+                        <span class="material-symbols-outlined text-[20px]">trending_up</span>
                     </div>
                 </div>
-
-                <!-- MÓDULO 2: CATÁLOGO E INVENTARIO -->
-                <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-100 shadow-soft hover:border-[#00c1de]/40 transition-all flex flex-col justify-between gap-6 group">
-                    <div class="space-y-4">
-                        <div class="flex items-start justify-between gap-4">
-                            <div class="w-12 h-12 rounded-2xl bg-cyan-50 text-[#00c1de] flex items-center justify-center shrink-0 group-hover:bg-[#00c1de] group-hover:text-white transition-colors">
-                                <span class="material-symbols-outlined text-2xl">inventory_2</span>
-                            </div>
-                            <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-slate-50 text-slate-500 border border-slate-100">
-                                Módulo 2 &bull; Almacén
-                            </span>
-                        </div>
-
-                        <div>
-                            <h3 class="text-lg sm:text-xl font-extrabold text-[#0e1b2e] tracking-tight">
-                                Catálogo e Inventario
-                            </h3>
-                            <p class="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
-                                Administra tus productos, precios y stock inicial, revisa existencias en tiempo real, registra compras a Natura o proveedores y organiza categorías.
-                            </p>
-                        </div>
-
-                        <!-- Sub-módulos integrados como píldoras -->
-                        <div class="flex flex-wrap gap-2 pt-1">
-                            <a href="{{ route('panel.productos.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-cyan-50/80 text-[#00a3bd] hover:bg-[#00c1de] hover:text-white transition-colors">
-                                <span class="material-symbols-outlined text-[15px]">package_2</span>
-                                <span>Productos</span>
-                            </a>
-                            <a href="{{ route('panel.inventario.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                <span class="material-symbols-outlined text-[15px]">warehouse</span>
-                                <span>Inventario</span>
-                            </a>
-                            <a href="{{ route('panel.compras.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                <span class="material-symbols-outlined text-[15px]">local_shipping</span>
-                                <span>Compras</span>
-                            </a>
-                            @if ($usuario->rol === 'CONSULTOR')
-                                <a href="{{ route('panel.categorias.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                    <span class="material-symbols-outlined text-[15px]">category</span>
-                                    <span>Categorías</span>
-                                </a>
-                                <a href="{{ route('panel.proveedores.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                    <span class="material-symbols-outlined text-[15px]">storefront</span>
-                                    <span>Proveedores</span>
-                                </a>
-                            @endif
-                        </div>
+                <div class="mt-4">
+                    <div class="text-2xl font-black text-emerald-600 font-heading">
+                        @money($gananciaEstimadaMes ?? 0)
                     </div>
+                    <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm text-emerald-500">insights</span>
+                        <span>Margen neto ventas confirmadas</span>
+                    </p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <a href="{{ route('contabilidad.estados-financieros') }}" class="font-bold text-finora-blue hover:underline">
+                        Ver Estado de Resultados &rarr;
+                    </a>
+                </div>
+            </div>
 
-                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-                        <a href="{{ route('panel.productos.index') }}" class="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#0e1b2e] group-hover:text-[#00c1de] transition-colors">
-                            <span>Abrir Catálogo e Inventario</span>
-                            <span class="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                        </a>
-                        <a href="{{ route('panel.productos.create') }}" class="text-xs font-bold text-[#00a3bd] hover:underline">
-                            + Agregar producto
-                        </a>
+            <!-- Clientes Morosos / Cuotas Vencidas -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-soft card-hover-lift group">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Alerta de Morosidad</span>
+                    <div class="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
+                        <span class="material-symbols-outlined text-[20px]">error_outline</span>
                     </div>
                 </div>
-
-                <!-- MÓDULO 3: CONTABILIDAD Y REPORTES (Solo Consultor) -->
-                @if ($usuario->rol === 'CONSULTOR')
-                    <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-100 shadow-soft hover:border-[#00c1de]/40 transition-all flex flex-col justify-between gap-6 group">
-                        <div class="space-y-4">
-                            <div class="flex items-start justify-between gap-4">
-                                <div class="w-12 h-12 rounded-2xl bg-cyan-50 text-[#00c1de] flex items-center justify-center shrink-0 group-hover:bg-[#00c1de] group-hover:text-white transition-colors">
-                                    <span class="material-symbols-outlined text-2xl">monitoring</span>
-                                </div>
-                                <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-cyan-50 text-[#00a3bd]">
-                                    Módulo 3 &bull; Finanzas y Ley 843
-                                </span>
-                            </div>
-
-                            <div>
-                                <h3 class="text-lg sm:text-xl font-extrabold text-[#0e1b2e] tracking-tight">
-                                    Contabilidad y Reportes
-                                </h3>
-                                <p class="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
-                                    Todo tu control financiero unificado: reportes comerciales, Balance de Apertura, Libro Diario, Mayor, Estados Financieros y Kardex Valorado CPP.
-                                </p>
-                            </div>
-
-                            <!-- Sub-módulos integrados como píldoras -->
-                            <div class="flex flex-wrap gap-2 pt-1">
-                                <a href="{{ route('contabilidad.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-cyan-50/80 text-[#00a3bd] hover:bg-[#00c1de] hover:text-white transition-colors">
-                                    <span class="material-symbols-outlined text-[15px]">monitoring</span>
-                                    <span>Resumen Contable</span>
-                                </a>
-                                <a href="{{ route('panel.reportes.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                    <span class="material-symbols-outlined text-[15px]">analytics</span>
-                                    <span>Reportes</span>
-                                </a>
-                                <a href="{{ route('contabilidad.libro-diario') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                    <span class="material-symbols-outlined text-[15px]">menu_book</span>
-                                    <span>Libro Diario</span>
-                                </a>
-                                <a href="{{ route('contabilidad.estados-financieros') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                    <span class="material-symbols-outlined text-[15px]">query_stats</span>
-                                    <span>Estados Financieros</span>
-                                </a>
-                                <a href="{{ route('contabilidad.kardex-valorado') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                    <span class="material-symbols-outlined text-[15px]">receipt_long</span>
-                                    <span>Kardex CPP</span>
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-                            <a href="{{ route('contabilidad.index') }}" class="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#0e1b2e] group-hover:text-[#00c1de] transition-colors">
-                                <span>Abrir Contabilidad y Reportes</span>
-                                <span class="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                            </a>
-                            <a href="{{ route('panel.reportes.index') }}" class="text-xs font-bold text-[#00a3bd] hover:underline">
-                                Ver indicadores
-                            </a>
-                        </div>
+                <div class="mt-4">
+                    <div class="text-2xl font-black {{ ($cuotasVencidasCount ?? 0) > 0 ? 'text-red-600' : 'text-finora-navy' }} font-heading">
+                        {{ $cuotasVencidasCount ?? 0 }} {{ ($cuotasVencidasCount ?? 0) === 1 ? 'venta' : 'ventas' }}
                     </div>
-                @endif
+                    <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm text-red-500">timer_off</span>
+                        <span>Con cuotas vencidas impagas</span>
+                    </p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <a href="{{ route('panel.clientes.index') }}" class="font-bold text-finora-blue hover:underline">
+                        Cobranza a morosos &rarr;
+                    </a>
+                </div>
+            </div>
 
-                <!-- MÓDULO 4: CLIENTES Y USUARIOS -->
-                <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-100 shadow-soft hover:border-[#00c1de]/40 transition-all flex flex-col justify-between gap-6 group">
-                    <div class="space-y-4">
-                        <div class="flex items-start justify-between gap-4">
-                            <div class="w-12 h-12 rounded-2xl bg-cyan-50 text-[#00c1de] flex items-center justify-center shrink-0 group-hover:bg-[#00c1de] group-hover:text-white transition-colors">
-                                <span class="material-symbols-outlined text-2xl">group</span>
-                            </div>
-                            <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-slate-50 text-slate-500 border border-slate-100">
-                                Módulo {{ $usuario->rol === 'CONSULTOR' ? '4' : '3' }} &bull; Personas
-                            </span>
-                        </div>
-
-                        <div>
-                            <h3 class="text-lg sm:text-xl font-extrabold text-[#0e1b2e] tracking-tight">
-                                {{ $usuario->rol === 'CONSULTOR' ? 'Clientes y Usuarios' : 'Cartera de Clientes' }}
-                            </h3>
-                            <p class="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
-                                @if ($usuario->rol === 'CONSULTOR')
-                                    Gestiona el directorio de clientes, historial de compras y saldos, además de las cuentas de colaboradores que te ayudan en el negocio.
-                                @else
-                                    Consulta y registra los datos de contacto de los clientes para asociar sus pedidos, compras y pagos.
-                                @endif
-                            </p>
-                        </div>
-
-                        <!-- Sub-módulos integrados como píldoras -->
-                        <div class="flex flex-wrap gap-2 pt-1">
-                            <a href="{{ route('panel.clientes.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-cyan-50/80 text-[#00a3bd] hover:bg-[#00c1de] hover:text-white transition-colors">
-                                <span class="material-symbols-outlined text-[15px]">group</span>
-                                <span>Cartera de Clientes</span>
-                            </a>
-                            @if ($usuario->rol === 'CONSULTOR')
-                                <a href="{{ route('panel.usuarios.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-[#00a3bd] border border-slate-200/60 transition-colors">
-                                    <span class="material-symbols-outlined text-[15px]">manage_accounts</span>
-                                    <span>Usuarios y Colaboradores</span>
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-                        <a href="{{ route('panel.clientes.index') }}" class="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#0e1b2e] group-hover:text-[#00c1de] transition-colors">
-                            <span>Abrir {{ $usuario->rol === 'CONSULTOR' ? 'Clientes y Usuarios' : 'Clientes' }}</span>
-                            <span class="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                        </a>
-                        <a href="{{ route('panel.clientes.create') }}" class="text-xs font-bold text-[#00a3bd] hover:underline">
-                            + Nuevo cliente
-                        </a>
+            <!-- Stock Crítico -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-soft card-hover-lift group">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Stock Crítico</span>
+                    <div class="w-10 h-10 rounded-2xl bg-cyan-50 text-finora-blue flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
+                        <span class="material-symbols-outlined text-[20px]">inventory</span>
                     </div>
                 </div>
-
+                <div class="mt-4">
+                    <div class="text-2xl font-black {{ ($stockCriticoCount ?? 0) > 0 ? 'text-amber-600' : 'text-finora-navy' }} font-heading">
+                        {{ $stockCriticoCount ?? 0 }} {{ ($stockCriticoCount ?? 0) === 1 ? 'producto' : 'productos' }}
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm text-cyan-600">warning</span>
+                        <span>Existencias &le; 3 unidades</span>
+                    </p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <a href="{{ route('panel.inventario.index') }}" class="font-bold text-finora-blue hover:underline">
+                        Reponer para Ciclo Natura &rarr;
+                    </a>
+                </div>
             </div>
         </section>
 
-        @if ($usuario->rol === 'CONSULTOR')
-        @php
-            $tasaInicial = $tasaInicial ?? ['base' => 'USD', 'destino' => 'BOB', 'tasa' => 6.9600, 'fecha' => date('Y-m-d')];
-            $monedasDisponibles = $monedasDisponibles ?? [
-                'USD' => 'Dólar Estadounidense',
-                'BOB' => 'Boliviano',
-                'EUR' => 'Euro',
-                'BRL' => 'Real Brasileño',
-                'ARS' => 'Peso Argentino',
-                'PEN' => 'Sol Peruano',
-                'CLP' => 'Peso Chileno',
-            ];
-        @endphp
-        <!-- Conversor de Divisas Minimalista (Estilo Banner Landing) -->
-        <section class="banner-gradient rounded-3xl p-6 sm:p-8 border border-cyan-100/80 shadow-soft" id="conversor-card">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div class="space-y-1.5 max-w-md">
-                    <div class="inline-flex items-center gap-1.5 text-[#00a3bd] text-xs font-bold">
-                        <span class="material-symbols-outlined text-base">currency_exchange</span>
-                        <span>Herramienta Financiera</span>
+        <!-- Últimas Ventas y Operaciones Recientes -->
+        @if (isset($ultimasVentas) && $ultimasVentas->isNotEmpty())
+            <section class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-100 shadow-soft space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-heading font-extrabold text-lg text-finora-navy">Últimas Ventas Registradas</h3>
+                        <p class="text-xs text-slate-500">Acceso rápido a las transacciones más recientes.</p>
                     </div>
-                    <h3 class="font-heading font-extrabold text-lg text-[#0e1b2e]">Conversor de Divisas en Tiempo Real</h3>
-                    <p class="text-xs text-slate-600">
-                        Calcula importes rápidamente entre Bolivianos (BOB), Dólares (USD) y otras divisas.
-                    </p>
-                    <p class="text-[11px] text-slate-500 pt-1">
-                        1 <span class="font-bold" id="label-base">{{ $tasaInicial['base'] }}</span> =
-                        <span class="font-bold text-[#0e1b2e]" id="tasa-referencia-texto">{{ number_format($tasaInicial['tasa'], 4) }}</span>
-                        <span class="font-bold" id="label-destino">{{ $tasaInicial['destino'] }}</span>
-                        &bull; <span id="fecha-referencia-texto">{{ $tasaInicial['fecha'] }}</span>
-                    </p>
+                    <a href="{{ route('panel.ventas.index') }}" class="text-xs font-bold text-finora-blue hover:underline">
+                        Ver todas las ventas &rarr;
+                    </a>
                 </div>
 
-                <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-white/90 backdrop-blur-xs p-4 rounded-2xl border border-white shadow-2xs">
-                    <!-- Monto -->
-                    <div class="sm:col-span-3">
-                        <label for="monto-origen" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Importe</label>
-                        <input
-                            type="number"
-                            id="monto-origen"
-                            value="100"
-                            min="0"
-                            step="any"
-                            class="w-full bg-[#f7fafd] border border-slate-200 rounded-full px-3.5 py-2 text-xs font-bold text-[#0e1b2e] focus:bg-white outline-none"
-                        />
-                    </div>
-
-                    <!-- Origen -->
-                    <div class="sm:col-span-3">
-                        <label for="moneda-origen" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">De</label>
-                        <select
-                            id="moneda-origen"
-                            class="w-full bg-[#f7fafd] border border-slate-200 rounded-full px-3 py-2 text-xs font-semibold text-[#0e1b2e] focus:bg-white outline-none cursor-pointer"
-                        >
-                            @foreach ($monedasDisponibles as $codigo => $nombre)
-                                <option value="{{ $codigo }}" {{ $codigo === 'USD' ? 'selected' : '' }}>
-                                    {{ $codigo }} - {{ $nombre }}
-                                </option>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs divide-y divide-slate-100">
+                        <thead class="bg-slate-50 text-slate-500 font-bold uppercase">
+                            <tr>
+                                <th class="py-2.5 px-3"># Venta</th>
+                                <th class="py-2.5 px-3">Cliente</th>
+                                <th class="py-2.5 px-3">Fecha</th>
+                                <th class="py-2.5 px-3">Modalidad</th>
+                                <th class="py-2.5 px-3 text-right">Total</th>
+                                <th class="py-2.5 px-3 text-center">Estado</th>
+                                <th class="py-2.5 px-3 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach ($ultimasVentas as $uv)
+                                <tr>
+                                    <td class="py-3 px-3 font-bold text-finora-navy">#{{ $uv->id }}</td>
+                                    <td class="py-3 px-3 font-medium text-slate-700">
+                                        {{ $uv->cliente->persona->nombre }} {{ $uv->cliente->persona->apellido }}
+                                    </td>
+                                    <td class="py-3 px-3 text-slate-500">{{ $uv->fecha ? $uv->fecha->format('d/m/Y') : '-' }}</td>
+                                    <td class="py-3 px-3">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $uv->forma_pago === 'CREDITO' ? 'bg-purple-50 text-purple-700' : 'bg-slate-100 text-slate-600' }}">
+                                            {{ $uv->forma_pago }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-3 text-right font-extrabold text-finora-navy">@money($uv->total)</td>
+                                    <td class="py-3 px-3 text-center">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $uv->estado === 'CONFIRMADA' ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-600' }}">
+                                            {{ $uv->estado }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-3 text-right">
+                                        <a href="{{ route('panel.ventas.show', $uv) }}" class="inline-flex items-center gap-1 text-xs font-bold text-finora-blue hover:underline">
+                                            Ver ficha &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
                             @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Invertir -->
-                    <div class="sm:col-span-1 flex justify-center sm:pt-4">
-                        <button
-                            type="button"
-                            id="btn-invertir-moneda"
-                            class="w-8 h-8 rounded-full bg-cyan-50 hover:bg-[#00c1de] text-[#00a3bd] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-                            title="Invertir divisas"
-                        >
-                            <span class="material-symbols-outlined text-base">swap_horiz</span>
-                        </button>
-                    </div>
-
-                    <!-- Destino -->
-                    <div class="sm:col-span-3">
-                        <label for="moneda-destino" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">A</label>
-                        <select
-                            id="moneda-destino"
-                            class="w-full bg-[#f7fafd] border border-slate-200 rounded-full px-3 py-2 text-xs font-semibold text-[#0e1b2e] focus:bg-white outline-none cursor-pointer"
-                        >
-                            @foreach ($monedasDisponibles as $codigo => $nombre)
-                                <option value="{{ $codigo }}" {{ $codigo === 'BOB' ? 'selected' : '' }}>
-                                    {{ $codigo }} - {{ $nombre }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Resultado -->
-                    <div class="sm:col-span-2 text-right sm:pl-2">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Resultado</span>
-                        <span class="font-heading text-base font-extrabold text-[#00a3bd] break-all" id="monto-convertido-valor">
-                            {{ number_format(100 * $tasaInicial['tasa'], 2) }}
-                        </span>
-                        <span class="text-[10px] font-bold text-slate-500 block" id="codigo-destino-badge">BOB</span>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-        </section>
+            </section>
         @endif
 
     </main>
 
-    @if ($usuario->rol === 'CONSULTOR')
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const inputMonto = document.getElementById('monto-origen');
-            const selectOrigen = document.getElementById('moneda-origen');
-            const selectDestino = document.getElementById('moneda-destino');
-            const btnInvertir = document.getElementById('btn-invertir-moneda');
-
-            const valorConvertido = document.getElementById('monto-convertido-valor');
-            const badgeDestino = document.getElementById('codigo-destino-badge');
-            const labelBase = document.getElementById('label-base');
-            const labelDestino = document.getElementById('label-destino');
-            const textoTasa = document.getElementById('tasa-referencia-texto');
-            const textoFecha = document.getElementById('fecha-referencia-texto');
-
-            let tasaActual = {{ (float) $tasaInicial['tasa'] }};
-
-            function recalcularMontoLocal() {
-                const monto = parseFloat(inputMonto.value) || 0;
-                const total = monto * tasaActual;
-                valorConvertido.textContent = total.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            }
-
-            async function actualizarTasaDesdeServidor() {
-                const base = selectOrigen.value;
-                const destino = selectDestino.value;
-                const monto = parseFloat(inputMonto.value) || 0;
-
-                badgeDestino.textContent = destino;
-                labelBase.textContent = base;
-                labelDestino.textContent = destino;
-                valorConvertido.classList.add('opacity-50');
-
-                try {
-                    const url = new URL("{{ route('tipo-cambio') }}", window.location.origin);
-                    url.searchParams.set('base', base);
-                    url.searchParams.set('destino', destino);
-                    url.searchParams.set('monto', monto);
-
-                    const response = await fetch(url.toString(), {
-                        headers: { 'Accept': 'application/json' }
-                    });
-
-                    if (!response.ok) throw new Error('Error al consultar tasa');
-                    const data = await response.json();
-
-                    tasaActual = parseFloat(data.tasa) || 1;
-                    textoTasa.textContent = tasaActual.toFixed(4);
-                    textoFecha.textContent = data.fecha || '';
-                    recalcularMontoLocal();
-                } catch (e) {
-                    console.error('No se pudo obtener la tasa de cambio:', e);
-                } finally {
-                    valorConvertido.classList.remove('opacity-50');
-                }
-            }
-
-            inputMonto.addEventListener('input', recalcularMontoLocal);
-            selectOrigen.addEventListener('change', actualizarTasaDesdeServidor);
-            selectDestino.addEventListener('change', actualizarTasaDesdeServidor);
-
-            btnInvertir.addEventListener('click', () => {
-                const temp = selectOrigen.value;
-                selectOrigen.value = selectDestino.value;
-                selectDestino.value = temp;
-                actualizarTasaDesdeServidor();
-            });
-        });
-    </script>
-    @endif
-
-    @include('partials.panel-footer')
+@include('partials.panel-footer')
 
 </body>
 </html>

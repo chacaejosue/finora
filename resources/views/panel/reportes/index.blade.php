@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Finora - Reportes</title>
+    <title>Finora | Reportes</title>
     <link rel="icon" type="image/png" href="{{ asset('images/branding/finora-icono.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -14,9 +14,8 @@
                 <p class="text-xs font-bold uppercase tracking-wider text-finora-blue">Panel comercial</p>
                 <h1 class="text-2xl font-extrabold">Reportes</h1>
             </div>
-            <a href="{{ route('panel.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
-                <span class="material-symbols-outlined text-base">arrow_back</span> Volver al panel
-            </a>
+            <div class="flex items-center gap-3">
+            </div>
         </div>
     </header>
     @include('partials.panel-nav')
@@ -33,19 +32,51 @@
             <a href="{{ route('panel.reportes.exportar', ['desde' => $desde, 'hasta' => $hasta]) }}" class="rounded-xl border border-slate-200 px-4 py-2.5 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Exportar CSV</a>
         </form>
 
-        <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            @foreach ([
-                ['label' => 'Ventas confirmadas', 'value' => \App\Support\Money::format($totalVentas), 'icon' => 'point_of_sale', 'iconClass' => 'text-blue-600 dark:text-blue-300'],
-                ['label' => 'Cobrado', 'value' => \App\Support\Money::format($totalCobrado), 'icon' => 'payments', 'iconClass' => 'text-emerald-600 dark:text-emerald-300'],
-                ['label' => 'Pedidos pendientes', 'value' => $pedidosPendientes, 'icon' => 'shopping_cart', 'iconClass' => 'text-purple-600 dark:text-purple-300'],
-                ['label' => 'Clientes con saldo', 'value' => $clientesConSaldo, 'icon' => 'account_balance', 'iconClass' => 'text-amber-600 dark:text-amber-300'],
-            ] as $card)
-                <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <span class="material-symbols-outlined {{ $card['iconClass'] }}">{{ $card['icon'] }}</span>
-                    <p class="mt-4 text-xs font-bold text-slate-500 dark:text-slate-400">{{ $card['label'] }}</p>
-                    <p class="mt-1 text-2xl font-extrabold text-finora-navy dark:text-white">{{ $card['value'] }}</p>
-                </article>
-            @endforeach
+        <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <article class="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm dark:border-blue-900/50 dark:bg-slate-900">
+                <span class="material-symbols-outlined text-blue-600 dark:text-blue-300">point_of_sale</span>
+                <p class="mt-4 text-xs font-bold text-slate-500 dark:text-slate-400">Ventas confirmadas (Ingresos)</p>
+                <p class="mt-1 text-2xl font-extrabold text-finora-navy dark:text-white">@money($totalVentas)</p>
+                <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Costo mercadería: @money($costoVentas)</p>
+            </article>
+
+            <article class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-5 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900">
+                <div class="flex items-center justify-between">
+                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-300">trending_up</span>
+                    <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">+{{ $margenRentabilidad }}% margen</span>
+                </div>
+                <p class="mt-4 text-xs font-bold text-emerald-700 dark:text-emerald-400">Ganancia real estimada (Utilidad)</p>
+                <p class="mt-1 text-2xl font-extrabold text-emerald-700 dark:text-emerald-300">@money($gananciaReal)</p>
+                <p class="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">Ingresos menos costo de compras</p>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-300">payments</span>
+                <p class="mt-4 text-xs font-bold text-slate-500 dark:text-slate-400">Total cobrado</p>
+                <p class="mt-1 text-2xl font-extrabold text-finora-navy dark:text-white">@money($totalCobrado)</p>
+                <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Recaudación en caja y cuentas</p>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <span class="material-symbols-outlined text-amber-600 dark:text-amber-300">account_balance</span>
+                <p class="mt-4 text-xs font-bold text-slate-500 dark:text-slate-400">Clientes con saldo pendiente</p>
+                <p class="mt-1 text-2xl font-extrabold text-amber-600 dark:text-amber-400">{{ $clientesConSaldo }}</p>
+                <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Cuentas por cobrar activas</p>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <span class="material-symbols-outlined text-purple-600 dark:text-purple-300">shopping_cart</span>
+                <p class="mt-4 text-xs font-bold text-slate-500 dark:text-slate-400">Pedidos pendientes</p>
+                <p class="mt-1 text-2xl font-extrabold text-finora-navy dark:text-white">{{ $pedidosPendientes }}</p>
+                <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Por entregar o abastecer</p>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <span class="material-symbols-outlined text-indigo-600 dark:text-indigo-300">receipt_long</span>
+                <p class="mt-4 text-xs font-bold text-slate-500 dark:text-slate-400">Transacciones comerciales</p>
+                <p class="mt-1 text-2xl font-extrabold text-finora-navy dark:text-white">{{ $ventas->count() }}</p>
+                <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{{ $ventasContado }} al contado · {{ $ventasCredito }} a crédito</p>
+            </article>
         </section>
 
         <div class="grid gap-6 lg:grid-cols-2">
@@ -53,7 +84,15 @@
                 <div class="flex items-center justify-between gap-3"><h2 class="font-extrabold">Productos más vendidos</h2><span class="text-xs text-slate-500 dark:text-slate-400">{{ $ventasContado }} contado · {{ $ventasCredito }} crédito</span></div>
                 <div class="mt-4 divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse ($productosMasVendidos as $producto)
-                        <div class="flex items-center justify-between gap-3 py-3 text-sm"><span class="truncate">{{ $producto->nombre }}</span><span class="shrink-0 font-bold">{{ $producto->unidades }} u. · @money($producto->importe)</span></div>
+                        <div class="flex items-center justify-between gap-3 py-3 text-sm">
+                            <span class="truncate">{{ $producto->nombre }}</span>
+                            <div class="shrink-0 text-right">
+                                <span class="font-bold block">{{ $producto->unidades }} u. · @money($producto->importe)</span>
+                                @if (($producto->ganancia ?? 0) > 0)
+                                    <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Ganancia: +@money($producto->ganancia)</span>
+                                @endif
+                            </div>
+                        </div>
                     @empty
                         <p class="py-4 text-sm text-slate-500 dark:text-slate-400">No hay ventas confirmadas en este periodo.</p>
                     @endforelse

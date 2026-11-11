@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Finora - Detalle de Pedido #{{ $pedido->id }} | Panel del Consultor</title>
+    <title>Finora | Detalle de Pedido #{{ $pedido->id }} | Panel del Consultor</title>
     <link rel="icon" type="image/png" href="{{ asset('images/branding/finora-icono.png') }}"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Outfit:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full font-sans bg-finora-surface text-finora-navy antialiased selection:bg-finora-cyan selection:text-finora-navy flex flex-col min-h-screen">
@@ -16,9 +16,6 @@
     <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 backdrop-blur-md bg-white/90">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <button id="openPanelDrawerBtn" type="button" class="p-2 rounded-xl text-slate-600 hover:text-finora-navy hover:bg-slate-100 transition-colors cursor-pointer" title="Navegación de módulos">
-                    <span class="material-symbols-outlined text-[24px]">menu</span>
-                </button>
                 <a class="inline-flex items-center gap-3.5 group" href="{{ route('panel.index') }}">
                     <div class="relative w-10 h-10 flex items-center justify-center shrink-0">
                         <img src="{{ asset('images/branding/finora-isotipo.png') }}" alt="Finora" class="h-9 w-auto object-contain group-hover:scale-105 transition-transform"/>
@@ -85,50 +82,56 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                 @if ($pedido->estado === 'PENDIENTE')
+                @if ($pedido->estado === 'PENDIENTE')
                     <form action="{{ route('panel.pedidos.reservar', $pedido) }}" method="POST">
                         @csrf
-                        <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1">
-                            <span class="material-symbols-outlined text-sm">inventory_2</span>
-                             Verificar y reservar stock
+                        <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1.5 shadow-xs">
+                            <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+                            <span>Verificar y reservar stock</span>
                         </button>
                     </form>
                 @endif
 
-                 @if (in_array($pedido->estado, ['RESERVADO', 'LISTO_ENTREGA']) && ! $pedido->venta)
-                     <a href="{{ route('panel.ventas.create', ['pedido_id' => $pedido->id]) }}" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">point_of_sale</span>
-                         Generar venta desde pedido
+                @if ($pedido->estado !== 'CANCELADO' && ! $pedido->venta)
+                    <a href="{{ route('panel.ventas.create', ['pedido_id' => $pedido->id]) }}" class="px-4 py-2 bg-[#00c1de] hover:bg-[#00a3bd] text-white text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5 shadow-xs">
+                        <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
+                        <span>Facturar / Generar Venta desde Pedido</span>
                     </a>
                 @endif
 
                 @if ($pedido->venta)
-                    <a href="{{ route('panel.ventas.show', $pedido->venta) }}" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-finora-navy text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">receipt_long</span>
-                        Ver Venta #{{ $pedido->venta->id }}
-                    </a>
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+                        <span class="material-symbols-outlined text-[18px] text-emerald-600">receipt_long</span>
+                        <span>Venta #{{ $pedido->venta->id }} ({{ $pedido->venta->estado }})</span>
+                        <a href="{{ route('panel.ventas.show', $pedido->venta) }}" class="underline font-bold hover:text-emerald-950 ml-1">Ver venta</a>
+                    </div>
                 @endif
 
-                 @if ($pedido->estado === 'LISTO_ENTREGA')
-                     <form action="{{ route('panel.pedidos.entregar', $pedido) }}" method="POST" class="flex max-w-full flex-wrap items-end gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-800 dark:bg-emerald-950/50">
-                         @csrf
-                         @method('PATCH')
-                         <label class="text-xs font-bold text-emerald-900 dark:text-emerald-200">Recibido por
-                             <input type="text" name="recibido_por" required placeholder="Nombre de quien recibe" class="mt-1 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-finora-blue dark:border-emerald-700 dark:bg-slate-900 dark:text-white">
-                         </label>
-                         <label class="text-xs font-bold text-emerald-900 dark:text-emerald-200">Observación <span class="font-normal text-emerald-700 dark:text-emerald-300">(opcional)</span>
-                             <input type="text" name="observaciones_entrega" placeholder="Nota de entrega" class="mt-1 w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-finora-blue dark:border-emerald-700 dark:bg-slate-900 dark:text-white">
-                         </label>
-                        <button type="submit" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl inline-flex items-center gap-1">
-                            <span class="material-symbols-outlined text-sm">check_circle</span>
-                            Registrar entrega
+                @if ($pedido->estado === 'LISTO_ENTREGA')
+                    <form action="{{ route('panel.pedidos.entregar', $pedido) }}" method="POST" class="flex max-w-full flex-wrap items-end gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 p-2.5 dark:border-emerald-800 dark:bg-emerald-950/50">
+                        @csrf
+                        @method('PATCH')
+                        <label class="text-xs font-bold text-emerald-900 dark:text-emerald-200">Recibido por
+                            <input type="text" name="recibido_por" required value="{{ $pedido->cliente->persona->nombre }} {{ $pedido->cliente->persona->apellido }}" placeholder="Nombre de quien recibe" class="mt-1 w-44 rounded-xl border border-emerald-200 bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-finora-blue dark:border-emerald-700 dark:bg-slate-900 dark:text-white">
+                        </label>
+                        <label class="text-xs font-bold text-emerald-900 dark:text-emerald-200">Observación <span class="font-normal text-emerald-700 dark:text-emerald-300">(opcional)</span>
+                            <input type="text" name="observaciones_entrega" placeholder="Nota de entrega" class="mt-1 w-44 rounded-xl border border-emerald-200 bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-finora-blue dark:border-emerald-700 dark:bg-slate-900 dark:text-white">
+                        </label>
+                        <button type="submit" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl inline-flex items-center gap-1 shadow-xs cursor-pointer">
+                            <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                            <span>Registrar entrega</span>
                         </button>
                     </form>
+                @elseif ($pedido->estado === 'COMPLETADO')
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
+                        <span class="material-symbols-outlined text-[18px] text-emerald-600">task_alt</span>
+                        <span>Entregado a: <strong>{{ $pedido->recibido_por ?: 'Cliente' }}</strong> {{ $pedido->fecha_entrega ? 'el '.$pedido->fecha_entrega->format('d/m/Y H:i') : '' }}</span>
+                    </div>
                 @endif
             </div>
         </div>
 
-         <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 shadow-sm space-y-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 shadow-sm space-y-4">
             <h3 class="font-heading font-bold text-sm text-finora-navy">Items del Pedido</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs divide-y divide-slate-100">

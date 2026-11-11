@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Finora - Detalle de Compra #{{ $compra->id }} | Panel del Consultor</title>
+    <title>Finora | Detalle de Compra #{{ $compra->id }} | Panel del Consultor</title>
     <link rel="icon" type="image/png" href="{{ asset('images/branding/finora-icono.png') }}"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Outfit:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full font-sans bg-finora-surface text-finora-navy antialiased selection:bg-finora-cyan selection:text-finora-navy flex flex-col min-h-screen">
@@ -16,9 +16,6 @@
     <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 backdrop-blur-md bg-white/90">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <button id="openPanelDrawerBtn" type="button" class="p-2 rounded-xl text-slate-600 hover:text-finora-navy hover:bg-slate-100 transition-colors cursor-pointer" title="Navegación de módulos">
-                    <span class="material-symbols-outlined text-[24px]">menu</span>
-                </button>
                 <a class="inline-flex items-center gap-3.5 group" href="{{ route('panel.index') }}">
                     <div class="relative w-10 h-10 flex items-center justify-center shrink-0">
                         <img src="{{ asset('images/branding/finora-isotipo.png') }}" alt="Finora" class="h-9 w-auto object-contain group-hover:scale-105 transition-transform"/>
@@ -77,6 +74,9 @@
                     <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $badgeStyle }}">
                         {{ $compra->estado }}
                     </span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $compra->forma_pago === 'CREDITO' ? 'bg-purple-50 border-purple-200 text-purple-800' : 'bg-blue-50 border-blue-200 text-blue-800' }}">
+                        {{ $compra->forma_pago === 'CREDITO' ? 'Crédito Proveedor' : 'Al Contado (' . ($compra->metodo_pago ?: 'Efectivo') . ')' }}
+                    </span>
                 </div>
                 <p class="text-xs text-finora-subtle mt-1">
                     Proveedor: <strong class="text-finora-navy">{{ $compra->proveedor->nombre }}</strong> &bull; Solicitada el {{ $compra->fecha_solicitud ? $compra->fecha_solicitud->format('d/m/Y H:i') : '-' }}
@@ -90,8 +90,8 @@
                             @csrf
                             @method('PATCH')
                             <input type="hidden" name="estado" value="SOLICITADA">
-                            <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors">
-                                Marcar como SOLICITADA
+                            <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer">
+                                Marcar como Solicitada
                             </button>
                         </form>
                     @endif
@@ -101,31 +101,21 @@
                             @csrf
                             @method('PATCH')
                             <input type="hidden" name="estado" value="EN_CAMINO">
-                            <button type="submit" class="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold rounded-xl transition-colors">
-                                Marcar como EN_CAMINO
+                            <button type="submit" class="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer">
+                                Marcar como En Camino
                             </button>
                         </form>
                     @endif
 
                     @if (in_array($compra->estado, ['BORRADOR', 'SOLICITADA', 'EN_CAMINO']))
-                        <form action="{{ route('panel.compras.estado', $compra) }}" method="POST" onsubmit="return confirm('¿Confirmas la recepción de esta compra? Esto aumentará el inventario de los productos.');">
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="estado" value="RECIBIDA">
-                            <button type="submit" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1">
-                                <span class="material-symbols-outlined text-sm">inventory</span>
-                                Registrar RECEPCIÓN (Ingresar al Inventario)
-                            </button>
-                        </form>
+                        <button type="button" id="btnOpenRecepcionModal" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1 shadow-sm cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">inventory</span>
+                            Confirmar Recepción e Ingresar a Inventario
+                        </button>
 
-                        <form action="{{ route('panel.compras.estado', $compra) }}" method="POST" onsubmit="return confirm('¿Deseas cancelar esta orden de compra?');">
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="estado" value="CANCELADA">
-                            <button type="submit" class="px-3 py-2 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-700 text-xs font-bold rounded-xl transition-colors">
-                                Cancelar
-                            </button>
-                        </form>
+                        <button type="button" id="btnOpenCancelarModal" class="px-3 py-2 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-700 text-xs font-bold rounded-xl transition-colors cursor-pointer">
+                            Cancelar Compra
+                        </button>
                     @endif
                 </div>
             @endif
@@ -172,5 +162,125 @@
             @endif
         </div>
     </main>
+
+    @if (in_array($compra->estado, ['BORRADOR', 'SOLICITADA', 'EN_CAMINO']))
+        <!-- Modal Recepción con Resumen de Ingreso a Inventario -->
+        <div id="modalConfirmarRecepcion" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-[22px]">inventory</span>
+                        </div>
+                        <div>
+                            <h3 class="font-heading font-extrabold text-base text-slate-900">Confirmar Ingreso a Inventario</h3>
+                            <p class="text-xs text-slate-400">Recepción de Orden #{{ $compra->id }} - {{ $compra->proveedor->nombre }}</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btnCloseModal text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-4 space-y-2 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-500">Proveedor:</span>
+                        <strong class="text-slate-800">{{ $compra->proveedor->nombre }}</strong>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-500">Forma de Pago / Financiamiento:</span>
+                        <span class="font-bold text-slate-700">
+                            {{ $compra->forma_pago === 'CREDITO' ? 'Crédito Proveedor (Factura a Plazo)' : 'Al Contado (' . ($compra->metodo_pago ?: 'Efectivo') . ')' }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-200/80">
+                        <span class="font-bold text-slate-700">Total Factura:</span>
+                        <span class="font-heading font-black text-slate-900 text-sm">Bs {{ number_format($compra->total, 2) }}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                    <span class="font-bold text-slate-700 uppercase tracking-wider text-[11px] block">Productos que ingresarán al almacén</span>
+                    <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                        @foreach ($compra->detalles as $det)
+                            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50">
+                                <div class="truncate mr-2">
+                                    <span class="font-bold text-slate-800 block truncate">{{ $det->producto->nombre }}</span>
+                                    <span class="text-[10px] text-slate-400">Costo Unit.: Bs {{ number_format($det->costo_unitario, 2) }}</span>
+                                </div>
+                                <span class="font-heading font-extrabold text-emerald-600 shrink-0">+{{ $det->cantidad }} un.</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" class="btnCloseModal px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">
+                        Cancelar
+                    </button>
+                    <form action="{{ route('panel.compras.estado', $compra) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="estado" value="RECIBIDA">
+                        <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-colors cursor-pointer inline-flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                            <span>Sí, Confirmar Recepción</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Cancelar Compra -->
+        <div id="modalCancelarCompra" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+                <div class="flex items-center gap-3 text-red-600">
+                    <div class="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[22px]">cancel</span>
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-extrabold text-sm text-slate-900">¿Cancelar Orden de Compra?</h3>
+                        <p class="text-xs text-slate-400">Esta orden pasará a estado CANCELADA y no ingresará al inventario.</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" class="btnCloseModal px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">
+                        Volver
+                    </button>
+                    <form action="{{ route('panel.compras.estado', $compra) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="estado" value="CANCELADA">
+                        <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer">
+                            Sí, Cancelar Orden
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const btnOpenRecepcion = document.getElementById('btnOpenRecepcionModal');
+                const modalRecepcion = document.getElementById('modalConfirmarRecepcion');
+                const btnOpenCancelar = document.getElementById('btnOpenCancelarModal');
+                const modalCancelar = document.getElementById('modalCancelarCompra');
+
+                if (btnOpenRecepcion && modalRecepcion) {
+                    btnOpenRecepcion.addEventListener('click', () => modalRecepcion.classList.remove('hidden'));
+                }
+                if (btnOpenCancelar && modalCancelar) {
+                    btnOpenCancelar.addEventListener('click', () => modalCancelar.classList.remove('hidden'));
+                }
+
+                document.querySelectorAll('.btnCloseModal').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (modalRecepcion) modalRecepcion.classList.add('hidden');
+                        if (modalCancelar) modalCancelar.classList.add('hidden');
+                    });
+                });
+            });
+        </script>
+    @endif
 </body>
 </html>
