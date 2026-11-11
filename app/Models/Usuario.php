@@ -65,7 +65,27 @@ class Usuario extends Authenticatable
 
     public function getSaludoAttribute(): string
     {
-        return $this->genero === 'FEMENINO' ? 'Bienvenida' : 'Bienvenido';
+        if ($this->genero === 'FEMENINO') {
+            return 'Bienvenida';
+        }
+        if ($this->genero === 'MASCULINO') {
+            return 'Bienvenido';
+        }
+        if (str_starts_with(mb_strtolower((string) $this->nombre), 'consultora')) {
+            return 'Bienvenida';
+        }
+        return 'Bienvenido';
+    }
+
+    public function getRolNombreAttribute(): string
+    {
+        if ($this->rol === 'CONSULTOR') {
+            return $this->genero === 'FEMENINO' ? 'Consultora' : 'Consultor';
+        }
+        if ($this->rol === 'COLABORADOR') {
+            return $this->genero === 'FEMENINO' ? 'Colaboradora' : 'Colaborador';
+        }
+        return $this->rol;
     }
 
     public function getTieneAccesoAttribute(): bool
@@ -95,5 +115,46 @@ class Usuario extends Authenticatable
     public function getUsuarioAttribute(): ?self
     {
         return ! empty($this->password) ? $this : null;
+    }
+
+    public function getSaldoDeudorAttribute(): float
+    {
+        if ($this->relationLoaded('ventas')) {
+            return (float) $this->ventas
+                ->where('forma_pago', 'CREDITO')
+                ->whereIn('estado', ['CONFIRMADA', 'BORRADOR'])
+                ->sum(fn ($v) => $v->saldo_pendiente);
+        }
+
+        return (float) $this->ventas()
+            ->where('forma_pago', 'CREDITO')
+            ->whereIn('estado', ['CONFIRMADA', 'BORRADOR'])
+            ->with(['detalles', 'pagos'])
+            ->get()
+            ->sum(fn ($v) => $v->saldo_pendiente);
+    }
+
+    public function getCuotasVencidasCountAttribute(): int
+    {
+        return (int) Cuota::whereHas('venta', function ($q) {
+            $q->where('cliente_id', $this->id)
+                ->whereIn('estado', ['CONFIRMADA', 'BORRADOR']);
+        })
+            ->where('estado', '!=', 'PAGADA')
+            ->where('fecha_vencimiento', '<', now()->toDateString())
+            ->whereRaw('monto > monto_pagado')
+            ->count();
+    }
+
+    public function getEstadoCrediticioAttribute(): string
+    {
+        if ($this->cuotas_vencidas_count > 0) {
+            return 'MOROSO';
+        }
+        if ($this->saldo_deudor > 0.01) {
+            return 'CON_DEUDA';
+        }
+
+        return 'AL_DIA';
     }
 }

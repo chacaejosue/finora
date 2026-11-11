@@ -14,7 +14,11 @@ class ClienteController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Usuario::clientes();
+        $query = Usuario::clientes()->with(['ventas' => function ($q) {
+            $q->where('forma_pago', 'CREDITO')
+                ->whereIn('estado', ['CONFIRMADA', 'BORRADOR'])
+                ->with(['detalles', 'pagos']);
+        }]);
 
         if ($request->filled('search')) {
             $search = $request->input('search');

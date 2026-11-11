@@ -35,8 +35,8 @@
                     <ul class="space-y-1.5 text-xs text-slate-500">
                         <li><a class="hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#inicio' : route('landing') }}">Inicio</a></li>
                         <li><a class="hover:text-finora-cyan transition-colors" href="{{ route('categorias') }}">Categorías</a></li>
-                        <li><a class="hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#ofertas' : route('ofertas') }}">Ofertas de ciclo</a></li>
-                        <li><a class="hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#contacto' : route('landing') . '#contacto' }}">Contacto y Revista</a></li>
+                        <li><a class="hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#ofertas' : route('landing') . '/#ofertas' }}">Ofertas de ciclo</a></li>
+                        <li><a class="hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#contacto' : route('landing') . '/#contacto' }}">Contacto y Revista</a></li>
                     </ul>
                 </div>
 

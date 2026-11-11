@@ -98,17 +98,33 @@
                 <p class="text-slate-500 text-xs sm:text-base mt-1.5 max-w-xl leading-relaxed">
                     Perfumes, cremas, maquillaje y cuidado personal 100% originales Natura. Asesoramiento directo y pedidos por WhatsApp.
                 </p>
-                @if ($categoriaSeleccionada)
-                    <div class="mt-3 inline-flex items-center gap-2 rounded-full bg-cyan-50 border border-cyan-200 px-3 py-1 text-xs font-bold text-cyan-800">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#00c1de] animate-pulse"></span>
-                        <span>Categoría seleccionada: {{ $categoriaSeleccionada->nombre }}</span>
-                    </div>
-                @elseif ($soloOfertas)
-                    <div class="mt-3 inline-flex items-center gap-2 rounded-full bg-rose-50 border border-rose-200 px-3 py-1 text-xs font-bold text-rose-800">
-                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                        <span>Filtro activo: Productos en Oferta</span>
-                    </div>
-                @endif
+                <div id="activeFilterBanner" class="{{ (!$categoriaSeleccionada && !$soloOfertas && empty($soloStock)) ? 'hidden' : '' }} mt-3">
+                    @if ($categoriaSeleccionada)
+                        <div class="inline-flex items-center gap-2 rounded-full bg-cyan-50 border border-cyan-200 px-3.5 py-1 text-xs font-bold text-cyan-800 shadow-2xs">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#00c1de] animate-pulse"></span>
+                            <span>Categoría seleccionada: {{ $categoriaSeleccionada->nombre }}</span>
+                            <a href="{{ route('categorias') }}" class="ml-2 inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer" title="Ver todo el catálogo">
+                                <span>✕ Limpiar filtro</span>
+                            </a>
+                        </div>
+                    @elseif ($soloOfertas)
+                        <div class="inline-flex items-center gap-2 rounded-full bg-rose-50 border border-rose-200 px-3.5 py-1 text-xs font-bold text-rose-800 shadow-2xs">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                            <span>Filtro activo: Productos en Oferta</span>
+                            <a href="{{ route('categorias') }}" class="ml-2 inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer" title="Ver todo el catálogo">
+                                <span>✕ Limpiar filtro</span>
+                            </a>
+                        </div>
+                    @elseif (!empty($soloStock))
+                        <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-200 px-3.5 py-1 text-xs font-bold text-emerald-800 shadow-2xs">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Filtro activo: Stock Físico</span>
+                            <a href="{{ route('categorias') }}" class="ml-2 inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer" title="Ver todo el catálogo">
+                                <span>✕ Limpiar filtro</span>
+                            </a>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <!-- Acceso directo a promociones de ciclo -->
@@ -126,7 +142,7 @@
         <!-- Barra de filtros moderna tipo App/Luxury Store -->
         <div class="sticky top-20 z-30 bg-[#f7fafd]/95 backdrop-blur-md pt-2 pb-3 mb-6 sm:mb-8 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-slate-200/50">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2.5">
-                <!-- Buscador rápido integrado -->
+                <!-- Buscador rápido integrado con botón limpiar -->
                 <div class="relative flex-1 max-w-md">
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,12 +151,28 @@
                     </span>
                     <input id="catalogSearch" type="search" autocomplete="off"
                            value="{{ request('buscar') }}"
-                           placeholder="Filtrar por nombre, línea o beneficio..."
-                           class="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-white border border-slate-200/90 rounded-full focus:outline-none focus:ring-2 focus:ring-[#00c1de] focus:border-transparent text-slate-800 placeholder-slate-400 shadow-xs transition-all">
+                           placeholder="Buscar por código de revista (ej. 59848), nombre o línea..."
+                           class="w-full pl-10 pr-9 py-2 text-xs sm:text-sm bg-white border border-slate-200/90 rounded-full focus:outline-none focus:ring-2 focus:ring-[#00c1de] focus:border-transparent text-slate-800 placeholder-slate-400 shadow-xs transition-all">
+                    <button id="clearSearchBtn" type="button" onclick="window.finoraClearSearch?.()"
+                            class="{{ request('buscar') ? '' : 'hidden' }} absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-rose-500 cursor-pointer"
+                            title="Limpiar búsqueda">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
 
-                <!-- Contador de productos interactivo -->
+                <!-- Contador de productos y botón Limpiar Filtros -->
                 <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                    <a id="clearFiltersBtn" href="{{ route('categorias') }}" onclick="if (!window.finoraIsServerFiltered) { event.preventDefault(); window.finoraResetCatalogFilter?.(); }"
+                       class="{{ $isServerFiltered ? '' : 'hidden' }} inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-500 border border-rose-200/80 px-3.5 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer"
+                       title="Restablecer todos los filtros y búsqueda">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        <span>Limpiar filtros</span>
+                    </a>
+
                     <span id="resultsCount" class="text-xs font-bold text-slate-500 whitespace-nowrap bg-white px-3.5 py-1.5 rounded-full border border-slate-200/70 shadow-2xs">
                         {{ count($productos) }} productos
                     </span>
@@ -150,13 +182,13 @@
             <!-- Fila de categorías: Mismo tamaño vertical exacto (h-9), iconos y contadores uniformes -->
             <div class="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth py-1 sm:flex-wrap" id="categoryFilters" role="tablist" aria-label="Filtrar catálogo">
                 <!-- Todas -->
-                <button type="button" data-category="all" role="tab" aria-selected="{{ (!$soloOfertas && !$categoriaSeleccionada) ? 'true' : 'false' }}"
-                        class="category-filter filter-pill h-9 shrink-0 inline-flex items-center gap-1.5 px-3.5 sm:px-4 rounded-full text-xs font-semibold {{ (!$soloOfertas && !$categoriaSeleccionada) ? 'is-active' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50' }} cursor-pointer shadow-xs transition-all">
+                <button type="button" data-category="all" role="tab" aria-selected="{{ (!$soloOfertas && !$categoriaSeleccionada && empty($soloStock)) ? 'true' : 'false' }}"
+                        class="category-filter filter-pill h-9 shrink-0 inline-flex items-center gap-1.5 px-3.5 sm:px-4 rounded-full text-xs font-semibold {{ (!$soloOfertas && !$categoriaSeleccionada && empty($soloStock)) ? 'is-active' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50' }} cursor-pointer shadow-xs transition-all">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                     <span>Todos</span>
-                    <span class="text-[10px] opacity-75 font-bold">({{ count($productos) }})</span>
+                    <span class="text-[10px] opacity-75 font-bold">({{ $totalProductos ?? count($productos) }})</span>
                 </button>
 
                 <!-- Ofertas -->
@@ -167,6 +199,16 @@
                     </svg>
                     <span>En Oferta</span>
                     <span class="text-[10px] opacity-75 font-bold">({{ $totalOfertas }})</span>
+                </button>
+
+                <!-- Entrega Inmediata (Stock Físico) -->
+                <button type="button" data-category="en-stock" role="tab" aria-selected="{{ !empty($soloStock) ? 'true' : 'false' }}"
+                        class="category-filter filter-pill h-9 shrink-0 inline-flex items-center gap-1.5 px-3.5 sm:px-4 rounded-full text-xs font-semibold {{ !empty($soloStock) ? 'is-active-stock' : 'bg-white text-emerald-700 border border-emerald-200/90 hover:bg-emerald-50' }} cursor-pointer shadow-xs transition-all">
+                    <svg class="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Entrega Inmediata</span>
+                    <span class="text-[10px] opacity-75 font-bold">({{ $totalEnStock ?? 0 }})</span>
                 </button>
 
                 <!-- Categorías dinámicas -->
@@ -195,10 +237,12 @@
                     $finalPrice = $producto->precio_final;
                     $regularPrice = $producto->precio_venta_actual;
                     $lineName = $producto->marca_linea ?: ($producto->categoria?->nombre ?: 'Natura');
+                    $hasStock = $producto->stock_disponible > 0;
                 @endphp
                 <article data-product-category="{{ \Illuminate\Support\Str::slug($producto->categoria->nombre) }}"
                          data-is-offer="{{ $isOffer ? 'true' : 'false' }}"
-                         class="catalog-product product-item bg-white rounded-3xl p-4 shadow-sm hover:shadow-card transition-all duration-300 border border-slate-100/90 flex flex-col justify-between group">
+                         data-in-stock="{{ $hasStock ? 'true' : 'false' }}"
+                         class="catalog-product product-item bg-white rounded-3xl p-4 shadow-sm card-hover-lift border border-slate-100/90 flex flex-col justify-between group cursor-pointer">
                     
                     <div>
                         <!-- Contenedor de Imagen con Insignia de Oferta y Botón de Me Gusta -->
@@ -213,6 +257,17 @@
                             @else
                                 <span class="absolute top-2.5 left-2.5 z-10 px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-[#0e1b2e] text-[10px] font-bold uppercase tracking-wider shadow-xs">
                                     {{ $producto->categoria->nombre }}
+                                </span>
+                            @endif
+
+                            @if ($hasStock)
+                                <span class="absolute bottom-2.5 left-2.5 z-10 px-2 py-0.5 rounded-full bg-emerald-600/95 backdrop-blur-xs text-white text-[10px] font-bold shadow-xs flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                    <span>Entrega Inmediata</span>
+                                </span>
+                            @else
+                                <span class="absolute bottom-2.5 left-2.5 z-10 px-2 py-0.5 rounded-full bg-slate-800/80 backdrop-blur-xs text-white text-[10px] font-medium shadow-xs">
+                                    A pedido
                                 </span>
                             @endif
 
@@ -397,6 +452,9 @@
 
     <script>
         window.finoraCatalogProducts = @json($catalogProductsJson);
+        window.finoraIsServerFiltered = {{ $isServerFiltered ? 'true' : 'false' }};
+        window.finoraCatalogoUrl = "{{ route('categorias') }}";
+        window.finoraOfertasUrl = "{{ route('ofertas') }}";
 
         document.addEventListener('DOMContentLoaded', () => {
             // Mostrar/ocultar botón volver arriba de forma suave

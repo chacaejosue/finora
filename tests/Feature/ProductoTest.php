@@ -756,4 +756,69 @@ class ProductoTest extends TestCase
         $response->assertSee('99');
         $response->assertSee('me gusta');
     }
+
+    /**
+     * Prueba la creación y actualización de producto con oferta estilo Marketplace (precio rebajado).
+     */
+    public function test_crear_y_editar_producto_con_oferta_estilo_marketplace(): void
+    {
+        $consultor = $this->crearConsultor();
+        [$proveedor, $categoria] = $this->crearProveedorYCategoria();
+
+        // 1. Crear producto con oferta activa
+        $responseCreate = $this->actingAs($consultor)->post(route('panel.productos.store'), [
+            'codigo' => 'OFERTA-001',
+            'nombre' => 'Perfume en Oferta Especial',
+            'proveedor_id' => $proveedor->id,
+            'categoria_id' => $categoria->id,
+            'precio_venta_actual' => 100.00,
+            'en_oferta' => '1',
+            'precio_oferta' => 80.00,
+            'publicado' => '1',
+            'activo' => '1',
+        ]);
+
+        $responseCreate->assertRedirect(route('panel.productos.index'));
+
+        $producto = Producto::where('codigo', 'OFERTA-001')->firstOrFail();
+        $this->assertTrue($producto->en_oferta);
+        $this->assertEquals(80.00, (float) $producto->precio_oferta);
+        $this->assertTrue($producto->es_oferta);
+        $this->assertEquals(80.00, $producto->precio_final);
+        $this->assertEquals(20, $producto->descuento_porcentaje);
+
+        // 2. Editar producto para quitar la oferta
+        $responseUpdate = $this->actingAs($consultor)->put(route('panel.productos.update', $producto), [
+            'codigo' => 'OFERTA-001',
+            'nombre' => 'Perfume en Oferta Especial',
+            'proveedor_id' => $proveedor->id,
+            'categoria_id' => $categoria->id,
+            'precio_venta_actual' => 100.00,
+            'en_oferta' => '0',
+            'precio_oferta' => '',
+            'publicado' => '1',
+            'activo' => '1',
+        ]);
+
+        $responseUpdate->assertRedirect(route('panel.productos.index'));
+        $producto->refresh();
+        $this->assertFalse($producto->en_oferta);
+        $this->assertNull($producto->precio_oferta);
+        $this->assertFalse($producto->es_oferta);
+        $this->assertEquals(100.00, $producto->precio_final);
+    }
+
+    /**
+     * Prueba que la landing muestra Empty State cuando no hay productos en la base de datos.
+     */
+    public function test_landing_muestra_empty_state_sin_romper_cuando_db_esta_vacia(): void
+    {
+        // Aseguramos que no haya productos publicados
+        Producto::query()->delete();
+
+        $response = $this->get(route('landing'));
+        $response->assertOk();
+        $response->assertSee('Catálogo en Actualización de Ciclo');
+        $response->assertDontSee('Perfume Aurora'); // Ya no hay mock hardcodeado
+    }
 }

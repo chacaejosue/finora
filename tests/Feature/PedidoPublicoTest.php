@@ -106,4 +106,68 @@ class PedidoPublicoTest extends TestCase
             'carrito' => [['producto_id' => $producto->id, 'cantidad' => 1]],
         ])->assertSessionHasErrors(['nombre', 'apellido', 'telefono']);
     }
+
+    public function test_un_consultor_puede_simular_o_enviar_un_pedido_desde_el_carrito_publico(): void
+    {
+        $consultor = Usuario::create([
+            'nombre' => 'Consultora',
+            'apellido' => 'Principal',
+            'email' => 'consultora@natura.com',
+            'telefono' => '71112233',
+            'rol' => 'CONSULTOR',
+            'password' => bcrypt('password'),
+            'activo' => true,
+        ]);
+
+        $proveedor = Proveedor::create(['nombre' => 'Natura Test 2', 'activo' => true]);
+        $categoria = Categoria::create(['nombre' => 'Perfumería', 'activo' => true]);
+        $producto = Producto::create([
+            'proveedor_id' => $proveedor->id,
+            'categoria_id' => $categoria->id,
+            'codigo' => 'WEB-SIM-1',
+            'nombre' => 'Perfume Test',
+            'precio_venta_actual' => 150,
+            'publicado' => true,
+            'activo' => true,
+        ]);
+
+        $response = $this->actingAs($consultor)->post(route('carrito.pedido'), [
+            'nombre' => 'Cliente Simulado',
+            'apellido' => 'Prueba',
+            'telefono' => '78889900',
+            'email' => 'cliente.simulado@test.com',
+            'preferencia_pago' => 'CONTADO',
+            'carrito' => [
+                ['producto_id' => $producto->id, 'cantidad' => 1],
+            ],
+        ]);
+
+        $response->assertOk()->assertSee('Solicitud registrada');
+        $this->assertDatabaseHas('pedidos', [
+            'estado' => 'PENDIENTE',
+        ]);
+        $this->assertDatabaseHas('usuarios', [
+            'nombre' => 'CLIENTE SIMULADO',
+            'rol' => 'CLIENTE',
+        ]);
+    }
+
+    public function test_endpoint_ultimos_pedidos_requiere_rol_operativo_y_devuelve_json(): void
+    {
+        $this->getJson(route('panel.pedidos.ultimos'))->assertUnauthorized();
+
+        $consultor = Usuario::create([
+            'nombre' => 'Admin',
+            'apellido' => 'Finora',
+            'email' => 'admin@finora.test',
+            'telefono' => '71112244',
+            'rol' => 'CONSULTOR',
+            'password' => bcrypt('password'),
+            'activo' => true,
+        ]);
+
+        $response = $this->actingAs($consultor)->getJson(route('panel.pedidos.ultimos'));
+        $response->assertOk()
+            ->assertJsonStructure(['ultimo_id', 'pedidos']);
+    }
 }

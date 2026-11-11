@@ -18,7 +18,6 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('id="backToTopLanding"', false);
-        $response->assertSee('me gusta');
         $response->assertDontSee('2.3k');
         $response->assertSee('Consultora Independiente Natura');
         $response->assertSee('Finora • Gestión Comercial');

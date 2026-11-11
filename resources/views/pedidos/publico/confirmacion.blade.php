@@ -59,23 +59,26 @@
     @include('partials.header')
 
     <main class="mx-auto flex max-w-2xl px-4 pb-20 pt-10 sm:pt-14 sm:px-6">
-        <section class="w-full rounded-3xl border border-slate-100/90 bg-white p-7 text-center shadow-soft sm:p-10">
-            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 border border-emerald-100 shadow-sm">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
-                </svg>
+        <section class="w-full rounded-3xl border border-slate-100/90 bg-white p-7 text-center shadow-soft sm:p-10 space-y-6">
+            <div>
+                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 border border-emerald-100 shadow-sm">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+                    </svg>
+                </div>
+                <span class="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-xs font-bold uppercase tracking-wider text-emerald-600">
+                    Solicitud registrada con éxito
+                </span>
+                <h1 class="mt-2 text-2xl sm:text-3xl font-extrabold text-[#0e1b2e] tracking-tight">
+                    Pedido #{{ $pedido->id }}
+                </h1>
+                <p class="mt-2 text-xs sm:text-sm leading-relaxed text-slate-500 max-w-md mx-auto">
+                    Hemos recibido tu solicitud. Tu consultora verificará las existencias y coordinará contigo la entrega y modalidad de pago por WhatsApp.
+                </p>
             </div>
-            <span class="mt-5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-xs font-bold uppercase tracking-wider text-emerald-600">
-                Solicitud registrada con éxito
-            </span>
-            <h1 class="mt-2 text-2xl sm:text-3xl font-extrabold text-[#0e1b2e] tracking-tight">
-                Pedido #{{ $pedido->id }}
-            </h1>
-            <p class="mt-2 text-xs sm:text-sm leading-relaxed text-slate-500 max-w-md mx-auto">
-                Hemos recibido tu solicitud. Tu consultora independiente verificará el stock y coordinará contigo la entrega y método de pago por WhatsApp.
-            </p>
 
-            <div class="mt-6 rounded-2xl bg-slate-50/80 border border-slate-100 p-4 text-left">
+            {{-- Detalle de productos --}}
+            <div class="rounded-2xl bg-slate-50/80 border border-slate-100 p-4 text-left">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Detalle de productos</h3>
                 @foreach ($pedido->detalles as $detalle)
                     <div class="flex justify-between items-center gap-3 border-b border-slate-200/60 py-2.5 text-xs sm:text-sm last:border-0">
@@ -84,29 +87,34 @@
                     </div>
                 @endforeach
                 <div class="mt-3 flex justify-between items-center border-t border-slate-200 pt-3 font-extrabold text-[#0e1b2e]">
-                    <span>Total estimado</span>
+                    <span>Total del pedido</span>
                     <span class="text-base text-[#00c1de]">@money($pedido->total)</span>
                 </div>
             </div>
 
+            {{-- Opción por WhatsApp --}}
             @if ($whatsappUrl)
-                <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer"
-                    class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-600 px-6 py-3.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all cursor-pointer">
-                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.995.545 1.761.791 2.796.791 3.182 0 5.768-2.587 5.768-5.766.001-3.182-2.585-5.778-5.768-5.778zm0-2c4.28 0 7.768 3.488 7.768 7.778 0 4.281-3.487 7.766-7.768 7.766-1.328 0-2.597-.336-3.716-.941l-4.315 1.131 1.152-4.212c-.7-1.189-1.089-2.56-1.089-3.744 0-4.29 3.488-7.778 7.768-7.778z"/>
-                    </svg>
-                    <span>Continuar y coordinar por WhatsApp</span>
-                </a>
+                <div class="pt-2">
+                    <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-600 px-6 py-3.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all cursor-pointer">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.995.545 1.761.791 2.796.791 3.182 0 5.768-2.587 5.768-5.766.001-3.182-2.585-5.778-5.768-5.778zm0-2c4.28 0 7.768 3.488 7.768 7.778 0 4.281-3.487 7.766-7.768 7.766-1.328 0-2.597-.336-3.716-.941l-4.315 1.131 1.152-4.212c-.7-1.189-1.089-2.56-1.089-3.744 0-4.29 3.488-7.778 7.768-7.778z"/>
+                        </svg>
+                        <span>Continuar y coordinar por WhatsApp</span>
+                    </a>
+                </div>
             @else
-                <p class="mt-6 rounded-2xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
-                    El pedido fue registrado correctamente. El teléfono del consultor se asignará a la brevedad.
+                <p class="rounded-2xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
+                    El pedido fue registrado correctamente. Tu consultora se comunicará contigo a la brevedad.
                 </p>
             @endif
 
-            <a href="{{ route('categorias') }}" class="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#00c1de] transition-colors">
-                <span>←</span>
-                <span>Volver al catálogo comercial</span>
-            </a>
+            <div>
+                <a href="{{ route('categorias') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#00c1de] transition-colors">
+                    <span>←</span>
+                    <span>Volver al catálogo comercial</span>
+                </a>
+            </div>
         </section>
     </main>
 
@@ -114,6 +122,7 @@
     @include('partials.footer')
 
     <script>
+        // Limpiar carrito local
         window.localStorage.removeItem('finora-carrito');
         window.dispatchEvent(new Event('storage'));
     </script>

@@ -70,6 +70,27 @@ class CompraEInventarioTest extends TestCase
         $this->assertDatabaseHas('detalle_compras', ['producto_id' => $this->producto->id, 'costo_unitario' => 300.00]);
     }
 
+    public function test_crear_compra_con_costo_unitario_en_bolivianos(): void
+    {
+        $response = $this->actingAs($this->consultor)->post(route('panel.compras.store'), [
+            'proveedor_id' => $this->proveedor->id,
+            'detalles' => [
+                [
+                    'producto_id' => $this->producto->id,
+                    'cantidad' => 5,
+                    'costo_unitario' => 150.00,
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('detalle_compras', [
+            'producto_id' => $this->producto->id,
+            'cantidad' => 5,
+            'costo_unitario' => 150.00,
+        ]);
+    }
+
     public function test_recepcion_de_compra_ingresa_inventario(): void
     {
         $compra = Compra::create([

@@ -82,6 +82,10 @@ class Venta extends Model
 
     public function getTotalPagadoAttribute(): float
     {
+        if ($this->relationLoaded('pagos')) {
+            return (float) $this->pagos->where('estado', 'REGISTRADO')->sum('monto');
+        }
+
         return (float) $this->pagos()->where('estado', 'REGISTRADO')->sum('monto');
     }
 

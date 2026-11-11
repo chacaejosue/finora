@@ -17,6 +17,7 @@ class Compra extends Model
         'fecha_solicitud',
         'fecha_recepcion',
         'forma_pago',
+        'metodo_pago',
         'estado',
         'observaciones',
     ];

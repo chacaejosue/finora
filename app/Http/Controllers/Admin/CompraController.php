@@ -21,7 +21,7 @@ class CompraController extends Controller
 
     public function index(Request $request)
     {
-        $query = Compra::with(['proveedor', 'registradoPor']);
+        $query = Compra::with(['proveedor', 'registradoPor', 'detalles']);
 
         if ($request->filled('estado')) {
             $query->where('estado', $request->input('estado'));
@@ -42,7 +42,12 @@ class CompraController extends Controller
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
         $productos = Producto::where('activo', true)->orderBy('nombre')->get();
 
-        return view('panel.compras.create', compact('proveedores', 'productos'));
+        $cuentaCaja = \App\Models\CuentaContable::where('codigo', '1.1.1.01')->first();
+        $cuentaBancos = \App\Models\CuentaContable::where('codigo', '1.1.1.02')->first();
+        $saldoCaja = $cuentaCaja ? (float) $cuentaCaja->saldo_actual : 0.0;
+        $saldoBancos = $cuentaBancos ? (float) $cuentaBancos->saldo_actual : 0.0;
+
+        return view('panel.compras.create', compact('proveedores', 'productos', 'saldoCaja', 'saldoBancos'));
     }
 
     public function store(CompraRequest $request)
@@ -54,6 +59,8 @@ class CompraController extends Controller
                 'proveedor_id' => $validated['proveedor_id'],
                 'registrado_por_usuario_id' => $request->user()->id,
                 'fecha_solicitud' => now(),
+                'forma_pago' => $validated['forma_pago'] ?? 'CONTADO',
+                'metodo_pago' => $validated['metodo_pago'] ?? null,
                 'estado' => 'BORRADOR',
                 'observaciones' => $validated['observaciones'] ?? null,
             ]);
@@ -61,13 +68,15 @@ class CompraController extends Controller
             foreach ($validated['detalles'] as $item) {
                 $productoId = $item['producto_id'] ?? null;
 
+                $costo = isset($item['costo_unitario']) && $item['costo_unitario'] !== null && $item['costo_unitario'] !== ''
+                    ? (float) $item['costo_unitario']
+                    : $this->convertirDolaresABolivianos($item['costo_unitario_usd'] ?? 0);
+
                 if (! $productoId && ! empty($item['nuevo_producto_nombre'])) {
                     $categoriaId = Categoria::first()?->id ?? 1;
                     $codigo = ! empty($item['nuevo_producto_codigo'])
                         ? mb_strtoupper(trim($item['nuevo_producto_codigo']), 'UTF-8')
                         : 'TEMP-'.strtoupper(Str::random(6));
-
-                    $costo = $this->convertirDolaresABolivianos($item['costo_unitario_usd']);
 
                     $nuevoProducto = Producto::create([
                         'proveedor_id' => $validated['proveedor_id'],
@@ -87,7 +96,7 @@ class CompraController extends Controller
                     'compra_id' => $compra->id,
                     'producto_id' => $productoId,
                     'cantidad' => $item['cantidad'],
-                    'costo_unitario' => $this->convertirDolaresABolivianos($item['costo_unitario_usd']),
+                    'costo_unitario' => $costo,
                 ]);
             }
 

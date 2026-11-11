@@ -66,7 +66,7 @@ class PedidoPublicoController extends Controller
                     'producto_id' => $producto->id,
                     'cantidad' => $item['cantidad'],
                     'cantidad_reservada' => 0,
-                    'precio_acordado' => $producto->precio_venta_actual,
+                    'precio_acordado' => $producto->precio_final,
                     'estado' => 'PENDIENTE',
                 ]);
             }

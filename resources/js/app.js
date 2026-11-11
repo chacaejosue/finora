@@ -1,4 +1,352 @@
 import './landing.js';
+import './realtime-orders.js';
+
+// Soporte para transiciones suaves nativas entre páginas (Cross-Document View Transitions)
+if (!document.querySelector('meta[name="view-transition"]')) {
+    const vtMeta = document.createElement('meta');
+    vtMeta.name = 'view-transition';
+    vtMeta.content = 'same-origin';
+    document.head.appendChild(vtMeta);
+}
+
+// =========================================================================
+// Precarga predictiva universal (Landing, Categorías con filtros, Ofertas y Panel)
+// =========================================================================
+const prefetchCache = new Map();
+const nativePrefetchedUrls = new Set();
+let currentNavAbortController = null;
+
+function prefetchRoute(href) {
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+    try {
+        const targetUrl = new URL(href, window.location.origin);
+        if (targetUrl.origin !== window.location.origin) return;
+        if (targetUrl.pathname === window.location.pathname && targetUrl.search === window.location.search) return;
+
+        const urlString = targetUrl.href;
+
+        // 1. Precarga en memoria (prefetchCache) para intercambio SPA instantáneo en toda la aplicación
+        if (!prefetchCache.has(urlString)) {
+            fetch(urlString, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.ok ? res.text() : null)
+            .then(html => {
+                if (html) {
+                    prefetchCache.set(urlString, html);
+                    if (prefetchCache.size > 40) {
+                        const oldest = prefetchCache.keys().next().value;
+                        prefetchCache.delete(oldest);
+                    }
+                }
+            })
+            .catch(() => {});
+        }
+
+        // 2. Precarga nativa del navegador mediante <link rel="prefetch">
+        if (!nativePrefetchedUrls.has(urlString)) {
+            nativePrefetchedUrls.add(urlString);
+
+            const prefetchLink = document.createElement('link');
+            prefetchLink.rel = 'prefetch';
+            prefetchLink.href = urlString;
+            prefetchLink.as = 'document';
+            document.head.appendChild(prefetchLink);
+        }
+    } catch {}
+}
+
+// Activar reglas de especulación si el navegador lo soporta (Chrome / Edge)
+try {
+    if (HTMLScriptElement.supports && HTMLScriptElement.supports('speculationrules')) {
+        const specScript = document.createElement('script');
+        specScript.type = 'speculationrules';
+        specScript.textContent = JSON.stringify({
+            prefetch: [
+                {
+                    source: 'list',
+                    urls: ['/categorias', '/ofertas', '/carrito'],
+                    eagerness: 'moderate'
+                }
+            ]
+        });
+        document.head.appendChild(specScript);
+    }
+} catch {}
+
+// Escuchar eventos de cursor y touch para precargar predictivamente
+document.addEventListener('pointerenter', (e) => {
+    const link = e.target.closest('a[href]');
+    if (link) {
+        if (link.target === '_blank' || link.hasAttribute('download')) return;
+        prefetchRoute(link.getAttribute('href'));
+        return;
+    }
+
+    // Botones de cambio rápido de categoría y filtros
+    const switchBtn = e.target.closest('[data-switch-category]');
+    if (switchBtn) {
+        const cat = switchBtn.getAttribute('data-switch-category');
+        if (cat) {
+            prefetchRoute('/categorias?categoria=' + encodeURIComponent(cat));
+        }
+        return;
+    }
+
+    const catFilterBtn = e.target.closest('.category-filter[data-category]');
+    if (catFilterBtn && window.finoraIsServerFiltered) {
+        const cat = catFilterBtn.dataset.category;
+        if (cat === 'all') prefetchRoute('/categorias');
+        else if (cat === 'ofertas') prefetchRoute('/ofertas');
+        else if (cat === 'en-stock') prefetchRoute('/categorias?en_stock=1');
+        else if (cat) prefetchRoute('/categorias?categoria=' + encodeURIComponent(cat));
+    }
+}, { passive: true, capture: true });
+
+document.addEventListener('touchstart', (e) => {
+    const link = e.target.closest('a[href]');
+    if (link && link.target !== '_blank' && !link.hasAttribute('download')) {
+        prefetchRoute(link.getAttribute('href'));
+    }
+}, { passive: true });
+
+// Determinar zona estructural de la ruta para garantizar compatibilidad de layouts
+function getFinoraRouteZone(pathname) {
+    if (pathname.startsWith('/panel') || pathname.startsWith('/contabilidad')) {
+        return 'panel';
+    }
+    if (pathname === '/login' || pathname === '/logout') {
+        return 'auth';
+    }
+    if (pathname.startsWith('/mi-cuenta')) {
+        return 'client';
+    }
+    // Tienda pública (landing /, /categorias, /ofertas, /carrito, confirmacion de pedido)
+    return 'store';
+}
+
+// Navegación fluida e instantánea universal (Panel, Landing, Categorías, Filtros y Ofertas)
+async function executeSpaNavigation(targetUrl, replaceHistory = false) {
+    if (currentNavAbortController) {
+        currentNavAbortController.abort();
+    }
+    currentNavAbortController = new AbortController();
+    const signal = currentNavAbortController.signal;
+
+    try {
+        const currentZone = getFinoraRouteZone(window.location.pathname);
+        const targetZone = getFinoraRouteZone(targetUrl.pathname);
+
+        // Si se cambia entre zonas estructurales distintas o se está en auth/cliente, navegar nativamente
+        if (currentZone !== targetZone || currentZone === 'auth' || currentZone === 'client') {
+            window.location.href = targetUrl.href;
+            return;
+        }
+
+        let html = prefetchCache.get(targetUrl.href);
+
+        if (!html) {
+            const response = await fetch(targetUrl.href, {
+                signal,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            if (!response.ok) {
+                window.location.href = targetUrl.href;
+                return;
+            }
+
+            html = await response.text();
+            prefetchCache.set(targetUrl.href, html);
+        }
+
+        const parser = new DOMParser();
+        const newDoc = parser.parseFromString(html, 'text/html');
+
+        const currentMain = document.querySelector('main');
+        const newMain = newDoc.querySelector('main');
+
+        if (!currentMain || !newMain) {
+            window.location.href = targetUrl.href;
+            return;
+        }
+
+        const isCurrentPanel = (currentZone === 'panel');
+
+        const performSwap = () => {
+            document.title = newDoc.title;
+
+            // 1. Sincronizar encabezados y menús según el entorno
+            if (isCurrentPanel) {
+                const currentNav = document.getElementById('panelNavbarContainer');
+                const newNav = newDoc.getElementById('panelNavbarContainer');
+                const currentDrawer = document.getElementById('panelDrawer');
+                const newDrawer = newDoc.getElementById('panelDrawer');
+
+                if (currentNav && newNav) currentNav.innerHTML = newNav.innerHTML;
+                if (currentDrawer && newDrawer) currentDrawer.innerHTML = newDrawer.innerHTML;
+            } else {
+                const currentHeader = document.getElementById('mainHeader');
+                const newHeader = newDoc.getElementById('mainHeader');
+                if (currentHeader && newHeader) {
+                    currentHeader.innerHTML = newHeader.innerHTML;
+                }
+
+                const currentFooter = document.querySelector('footer');
+                const newFooter = newDoc.querySelector('footer');
+                if (currentFooter && newFooter) {
+                    currentFooter.innerHTML = newFooter.innerHTML;
+                }
+            }
+
+            // 2. Intercambio atómico del contenedor principal (<main>)
+            currentMain.replaceWith(newMain);
+
+            // 3. Manejo de posición de scroll
+            if (targetUrl.hash) {
+                const hashId = targetUrl.hash.replace('#', '');
+                const targetEl = document.getElementById(hashId);
+                if (targetEl) {
+                    setTimeout(() => targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+                } else {
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+                }
+            } else {
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            }
+
+            // 4. Interceptar y ejecutar scripts de la nueva vista
+            const origAddEventListener = document.addEventListener;
+            const pageInitCallbacks = [];
+            document.addEventListener = function(type, listener, options) {
+                if (type === 'DOMContentLoaded') {
+                    pageInitCallbacks.push(listener);
+                } else {
+                    origAddEventListener.call(document, type, listener, options);
+                }
+            };
+
+            // Scripts dentro de <main>
+            newMain.querySelectorAll('script').forEach((oldScript) => {
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                newScript.textContent = oldScript.textContent;
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+
+            // Scripts fuera de main (ej: variables inline window.finoraCatalogProducts en categorias.blade.php o scripts de landing)
+            newDoc.body.querySelectorAll('script').forEach((oldScript) => {
+                if (oldScript.src && (oldScript.src.includes('/build/') || oldScript.src.includes('tailwindcss') || oldScript.src.includes('fonts.googleapis'))) return;
+                if (newMain.contains(oldScript)) return;
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                newScript.textContent = oldScript.textContent;
+                document.body.appendChild(newScript);
+                newScript.remove();
+            });
+
+            document.addEventListener = origAddEventListener;
+
+            pageInitCallbacks.forEach(cb => {
+                try { cb(); } catch (err) { console.error('Error inicializando vista:', err); }
+            });
+
+            // 5. Reinicializar módulos de la interfaz pública
+            if (!isCurrentPanel) {
+                window.finoraInitHeader?.();
+                window.finoraInitLanding?.();
+                window.finoraInitCatalogFilters?.();
+                window.finoraInitLikes?.();
+            }
+
+            window.dispatchEvent(new CustomEvent('finora:navigated', { detail: { url: targetUrl.href } }));
+        };
+
+        if (document.startViewTransition) {
+            document.startViewTransition(() => {
+                performSwap();
+            });
+        } else {
+            performSwap();
+        }
+
+        if (replaceHistory) {
+            window.history.replaceState({}, '', targetUrl.href);
+        } else {
+            window.history.pushState({}, '', targetUrl.href);
+        }
+    } catch (err) {
+        if (err.name !== 'AbortError') {
+            console.warn('Fallo en transición rápida, navegando nativo:', err);
+            window.location.href = targetUrl.href;
+        }
+    }
+}
+
+window.finoraNavigateSpa = function(url) {
+    try {
+        const targetUrl = new URL(url, window.location.origin);
+        return executeSpaNavigation(targetUrl, false);
+    } catch {
+        window.location.href = url;
+    }
+};
+
+function initUniversalSpaNavigation() {
+    document.addEventListener('click', async (e) => {
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+        if (link.target === '_blank' || link.hasAttribute('download')) return;
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+
+        let targetUrl;
+        try {
+            targetUrl = new URL(href, window.location.origin);
+        } catch {
+            return;
+        }
+
+        if (targetUrl.origin !== window.location.origin) return;
+
+        const currentZone = getFinoraRouteZone(window.location.pathname);
+        const targetZone = getFinoraRouteZone(targetUrl.pathname);
+
+        // Rutas que requieren recarga completa (auth/login, logout, o cruce entre zonas de layout distintas)
+        if (currentZone !== targetZone || currentZone === 'auth' || currentZone === 'client') {
+            return;
+        }
+
+        // Si la URL es la misma (pathname + query), ignorar o hacer scroll si tiene ancla
+        if (targetUrl.pathname === window.location.pathname && targetUrl.search === window.location.search) {
+            if (targetUrl.hash) {
+                const targetEl = document.querySelector(targetUrl.hash);
+                if (targetEl) {
+                    e.preventDefault();
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    history.pushState(null, '', targetUrl.hash);
+                }
+            }
+            return;
+        }
+
+        e.preventDefault();
+        await executeSpaNavigation(targetUrl, false);
+    });
+
+    window.addEventListener('popstate', async () => {
+        try {
+            const targetUrl = new URL(window.location.href);
+            await executeSpaNavigation(targetUrl, true);
+        } catch {
+            window.location.reload();
+        }
+    });
+}
+
+initUniversalSpaNavigation();
 
 const themeStorageKey = 'finora-theme-v2';
 const storedTheme = window.localStorage.getItem(themeStorageKey);
@@ -12,6 +360,11 @@ applyTheme(storedTheme === 'dark' ? 'dark' : 'light');
 document.documentElement.classList.add('theme-ready');
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Evitar cualquier duplicación del botón de cambio de tema (luna/sol)
+    if (document.querySelector('.finora-theme-toggle')) {
+        return;
+    }
+
     const themeToggle = document.createElement('button');
     const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
 
@@ -32,6 +385,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     let floatingButtons = document.getElementById('floating-buttons');
+
+    // Menú desplegable de perfil de usuario en el panel
+    document.addEventListener('click', (e) => {
+        const btn = document.getElementById('userProfileBtn');
+        const dropdown = document.getElementById('userProfileDropdown');
+        if (!btn || !dropdown) return;
+
+        if (btn.contains(e.target)) {
+            const isHidden = dropdown.classList.contains('hidden');
+            dropdown.classList.toggle('hidden', !isHidden);
+            btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+        } else if (!dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const dropdown = document.getElementById('userProfileDropdown');
+            const btn = document.getElementById('userProfileBtn');
+            if (dropdown && !dropdown.classList.contains('hidden')) {
+                dropdown.classList.add('hidden');
+                btn?.setAttribute('aria-expanded', 'false');
+            }
+        }
+    });
 
     if (!floatingButtons && window.location.pathname.startsWith('/panel')) {
         floatingButtons = document.createElement('div');
@@ -161,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             button.innerHTML = originalContent;
             delete button.dataset.isAdding;
-        }, 900);
+        }, 1350);
     };
 
     window.finoraShowToast = (message = '¡Producto añadido a tu pedido!', productName = '') => {
@@ -174,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const toast = document.createElement('div');
-        toast.className = 'pointer-events-auto flex items-center gap-3 bg-[#0e1b2e]/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-xl border border-sky-400/25 transform transition-all duration-300 translate-y-3 opacity-0';
+        toast.className = 'pointer-events-auto flex items-center gap-3 bg-[#0e1b2e]/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-xl border border-sky-400/25 transform transition-all duration-500 ease-out translate-y-4 opacity-0';
         toast.innerHTML = `
             <div class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/></svg>
@@ -189,14 +569,14 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         toastContainer.appendChild(toast);
         requestAnimationFrame(() => {
-            toast.classList.remove('translate-y-3', 'opacity-0');
+            toast.classList.remove('translate-y-4', 'opacity-0');
             toast.classList.add('translate-y-0', 'opacity-100');
         });
         setTimeout(() => {
             toast.classList.remove('translate-y-0', 'opacity-100');
-            toast.classList.add('translate-y-3', 'opacity-0');
-            setTimeout(() => toast.remove(), 300);
-        }, 3200);
+            toast.classList.add('translate-y-4', 'opacity-0');
+            setTimeout(() => toast.remove(), 400);
+        }, 3500);
     };
 
     window.finoraAddProduct = (button) => {
@@ -217,22 +597,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const prodName = card?.dataset?.nombre || card?.querySelector('h2, h3')?.textContent?.trim() || '';
         window.finoraShowToast('¡Añadido a tu pedido!', prodName);
 
+        // Precarga anticipada inmediata de la vista del carrito para que al hacer clic sea instantánea
+        prefetchRoute('/carrito');
+
         if (card) {
             const flyOrb = document.createElement('span');
             flyOrb.className = 'finora-cart-orb fixed z-[100] pointer-events-none';
             const start = card.getBoundingClientRect();
-            const cart = document.querySelector('[aria-label="Ver carrito"]');
+            const cart = document.querySelector('[aria-label="Ver carrito"]') || document.getElementById('publicCartBadge')?.parentElement;
             const end = cart?.getBoundingClientRect();
             if (end) {
                 flyOrb.style.left = `${start.left + start.width / 2 - 12}px`;
                 flyOrb.style.top = `${start.top + start.height / 2 - 12}px`;
                 document.body.appendChild(flyOrb);
+
+                // Forzar reflujo de estilo para que el navegador inicie la transición suave desde la posición inicial
+                void flyOrb.offsetWidth;
+
                 requestAnimationFrame(() => {
                     flyOrb.style.left = `${end.left + end.width / 2 - 12}px`;
                     flyOrb.style.top = `${end.top + end.height / 2 - 12}px`;
                     flyOrb.classList.add('finora-cart-orb-flying');
                 });
-                setTimeout(() => flyOrb.remove(), 750);
+                setTimeout(() => {
+                    flyOrb.remove();
+                    // Pulso suave en el badge del carrito al llegar el orbe
+                    document.querySelectorAll('#publicCartBadge').forEach(b => {
+                        b.classList.add('scale-125');
+                        setTimeout(() => b.classList.remove('scale-125'), 220);
+                    });
+                }, 850);
             }
         }
     };
@@ -351,19 +745,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Interacción y filtro reactivo para la vista de categorías y ofertas
-    const search = document.getElementById('catalogSearch');
-    const filters = document.querySelectorAll('.category-filter');
-    const products = document.querySelectorAll('.catalog-product');
-    const count = document.getElementById('resultsCount');
-    const empty = document.getElementById('emptyCatalog');
-    const emptyMessage = document.getElementById('emptyCatalogMessage');
-    const allCatalogProducts = window.finoraCatalogProducts || [];
+    function initFinoraCatalogFilters() {
+        const search = document.getElementById('catalogSearch');
+        const filters = document.querySelectorAll('.category-filter');
+        const products = document.querySelectorAll('.catalog-product');
+        const count = document.getElementById('resultsCount');
+        const empty = document.getElementById('emptyCatalog');
+        const emptyMessage = document.getElementById('emptyCatalogMessage');
+        const allCatalogProducts = window.finoraCatalogProducts || [];
 
-    if (filters.length > 0) {
+        if (filters.length === 0) return;
+
+        const navigateTo = (url) => {
+            if (window.finoraNavigateSpa) {
+                window.finoraNavigateSpa(url);
+            } else {
+                window.location.href = url;
+            }
+        };
+
         const urlParams = new URLSearchParams(window.location.search);
         let activeCategory = urlParams.get('categoria');
         if (!activeCategory) {
-            activeCategory = (urlParams.get('ofertas') === '1' || window.location.pathname.includes('/ofertas')) ? 'ofertas' : 'all';
+            if (urlParams.get('ofertas') === '1' || window.location.pathname.includes('/ofertas')) {
+                activeCategory = 'ofertas';
+            } else if (urlParams.get('en_stock') === '1' || urlParams.get('filtro') === 'stock') {
+                activeCategory = 'en-stock';
+            } else {
+                activeCategory = 'all';
+            }
         }
 
         if (![...filters].some(filter => filter.dataset.category === activeCategory)) {
@@ -374,17 +784,21 @@ document.addEventListener('DOMContentLoaded', () => {
             filters.forEach(filter => {
                 const selected = filter.dataset.category === activeCategory;
                 filter.setAttribute('aria-selected', String(selected));
-                filter.classList.remove('is-active', 'is-active-oferta');
+                filter.classList.remove('is-active', 'is-active-oferta', 'is-active-stock', 'bg-emerald-600', 'text-white', 'border-emerald-600');
                 if (selected) {
                     if (filter.dataset.category === 'ofertas') {
                         filter.classList.add('is-active-oferta');
+                    } else if (filter.dataset.category === 'en-stock') {
+                        filter.classList.add('bg-emerald-600', 'text-white', 'border-emerald-600');
                     } else {
                         filter.classList.add('is-active');
                     }
-                    filter.classList.remove('bg-white', 'text-slate-700', 'text-rose-600', 'border-slate-200', 'border-rose-200/80');
+                    filter.classList.remove('bg-white', 'text-slate-700', 'text-rose-600', 'text-emerald-700', 'border-slate-200', 'border-rose-200/80', 'border-emerald-200/90');
                 } else {
                     if (filter.dataset.category === 'ofertas') {
                         filter.classList.add('bg-white', 'text-rose-600', 'border', 'border-rose-200/80');
+                    } else if (filter.dataset.category === 'en-stock') {
+                        filter.classList.add('bg-white', 'text-emerald-700', 'border', 'border-emerald-200/90');
                     } else {
                         filter.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-200');
                     }
@@ -397,9 +811,14 @@ document.addEventListener('DOMContentLoaded', () => {
             let visible = 0;
             products.forEach(product => {
                 const isOffer = product.dataset.isOffer === 'true';
+                const inStock = product.dataset.inStock === 'true';
                 const matchesCategory = activeCategory === 'all'
                     ? true
-                    : (activeCategory === 'ofertas' ? isOffer : product.dataset.productCategory === activeCategory);
+                    : (activeCategory === 'ofertas'
+                        ? isOffer
+                        : (activeCategory === 'en-stock'
+                            ? inStock
+                            : product.dataset.productCategory === activeCategory));
                 const matchesSearch = !term || product.textContent.toLocaleLowerCase('es').includes(term);
                 const show = matchesCategory && matchesSearch;
                 product.style.display = show ? '' : 'none';
@@ -444,18 +863,63 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (suggestionBox) {
                 suggestionBox.classList.add('hidden');
             }
+
+            // Controlar visibilidad del botón Limpiar Filtros y Limpiar Búsqueda
+            const clearBtn = document.getElementById('clearFiltersBtn');
+            const clearSearch = document.getElementById('clearSearchBtn');
+            const hasActiveFilter = Boolean((term && term.length > 0) || (activeCategory !== 'all'));
+            if (clearBtn) {
+                clearBtn.classList.toggle('hidden', !hasActiveFilter);
+            }
+            if (clearSearch) {
+                clearSearch.classList.toggle('hidden', !(term && term.length > 0));
+            }
         }
 
-        window.finoraResetCatalogFilter = function() {
+        window.finoraClearSearch = function() {
             if (search) search.value = '';
-            const allBtn = document.querySelector('.category-filter[data-category="all"]');
-            if (allBtn) allBtn.click();
+            const headerSearch = document.getElementById('headerSearchInput');
+            if (headerSearch) headerSearch.value = '';
+            const mobileHeaderSearch = document.getElementById('mobileHeaderSearchInput');
+            if (mobileHeaderSearch) mobileHeaderSearch.value = '';
+            refreshCatalog();
+            search?.focus();
+        };
+
+        window.finoraResetCatalogFilter = function() {
+            if (window.finoraIsServerFiltered) {
+                navigateTo(window.finoraCatalogoUrl || '/categorias');
+                return;
+            }
+
+            if (search) search.value = '';
+            const headerSearch = document.getElementById('headerSearchInput');
+            if (headerSearch) headerSearch.value = '';
+            const mobileHeaderSearch = document.getElementById('mobileHeaderSearchInput');
+            if (mobileHeaderSearch) mobileHeaderSearch.value = '';
+
+            const activeFilterBanner = document.getElementById('activeFilterBanner');
+            if (activeFilterBanner) {
+                activeFilterBanner.classList.add('hidden');
+            }
+
+            if (window.history.replaceState) {
+                window.history.replaceState(null, '', window.location.pathname);
+            }
+
+            activeCategory = 'all';
+            setActiveFilterStyles();
+            refreshCatalog();
         };
 
         document.querySelectorAll('.quick-category-switch').forEach(btn => {
             btn.addEventListener('click', () => {
                 const cat = btn.getAttribute('data-switch-category');
                 if (cat) {
+                    if (window.finoraIsServerFiltered) {
+                        navigateTo((window.finoraCatalogoUrl || '/categorias') + '?categoria=' + encodeURIComponent(cat));
+                        return;
+                    }
                     const matching = document.querySelector(`.category-filter[data-category="${cat}"]`);
                     if (matching) matching.click();
                 }
@@ -464,7 +928,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         filters.forEach(button => {
             button.addEventListener('click', () => {
-                activeCategory = button.dataset.category;
+                const targetCat = button.dataset.category;
+
+                // Si la página se cargó con filtro del servidor y no tiene todos los productos en el DOM,
+                // navegar a la URL adecuada para que el backend entregue los productos correspondientes.
+                if (window.finoraIsServerFiltered) {
+                    if (targetCat === 'all') {
+                        navigateTo(window.finoraCatalogoUrl || '/categorias');
+                        return;
+                    }
+                    if (targetCat === 'ofertas' && !window.location.pathname.includes('/ofertas')) {
+                        navigateTo(window.finoraOfertasUrl || '/ofertas');
+                        return;
+                    }
+                    if (targetCat === 'en-stock') {
+                        navigateTo((window.finoraCatalogoUrl || '/categorias') + '?en_stock=1');
+                        return;
+                    }
+                    if (targetCat !== 'ofertas' && targetCat !== 'en-stock') {
+                        const currentCatParam = new URLSearchParams(window.location.search).get('categoria');
+                        if (currentCatParam !== targetCat) {
+                            navigateTo((window.finoraCatalogoUrl || '/categorias') + '?categoria=' + encodeURIComponent(targetCat));
+                            return;
+                        }
+                    }
+                }
+
+                activeCategory = targetCat;
                 setActiveFilterStyles();
                 refreshCatalog();
             });
@@ -512,6 +1002,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setActiveFilterStyles();
         refreshCatalog();
     }
+
+    window.finoraInitCatalogFilters = initFinoraCatalogFilters;
+    initFinoraCatalogFilters();
 
     // Auto-dismiss y botón de cierre para mensajes flash de alerta
     const alerts = document.querySelectorAll('div[role="alert"]');

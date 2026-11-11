@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Finora - Registrar Venta | Panel del Consultor</title>
+    <title>Finora | Registrar Venta | Panel del Consultor</title>
     <link rel="icon" type="image/png" href="{{ asset('images/branding/finora-icono.png') }}"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Outfit:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full font-sans bg-finora-surface text-finora-navy antialiased selection:bg-finora-cyan selection:text-finora-navy flex flex-col min-h-screen">
@@ -16,9 +16,6 @@
     <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 backdrop-blur-md bg-white/90">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <button id="openPanelDrawerBtn" type="button" class="p-2 rounded-xl text-slate-600 hover:text-finora-navy hover:bg-slate-100 transition-colors cursor-pointer" title="Navegación de módulos">
-                    <span class="material-symbols-outlined text-[24px]">menu</span>
-                </button>
                 <a class="inline-flex items-center gap-3.5 group" href="{{ route('panel.index') }}">
                     <div class="relative w-10 h-10 flex items-center justify-center shrink-0">
                         <img src="{{ asset('images/branding/finora-isotipo.png') }}" alt="Finora" class="h-9 w-auto object-contain group-hover:scale-105 transition-transform"/>
@@ -58,24 +55,85 @@
                 @csrf
 
                 @if ($pedido)
+                    @php
+                        $preferenciaPago = 'CONTADO';
+                        if (str_contains(strtoupper($pedido->observaciones ?? ''), 'CREDITO')) {
+                            $preferenciaPago = 'CREDITO';
+                        }
+                    @endphp
                     <input type="hidden" name="pedido_id" value="{{ $pedido->id }}">
                     <input type="hidden" name="cliente_id" value="{{ $pedido->cliente_id }}">
-                     <div class="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-700 p-4 rounded-xl flex items-center justify-between text-xs text-blue-900 dark:text-blue-100">
-                        <div>
-                            <span class="font-bold block">Asociada a Pedido #{{ $pedido->id }}</span>
-                            <span>Cliente: {{ $pedido->cliente->persona->nombre }} {{ $pedido->cliente->persona->apellido }}</span>
+                    <div class="bg-cyan-50 dark:bg-cyan-950/50 border border-cyan-200 dark:border-cyan-800 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-cyan-900 dark:text-cyan-100 shadow-xs">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-[#00c1de] text-white flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
+                            </div>
+                            <div>
+                                <span class="font-extrabold text-sm text-finora-navy dark:text-white block">Facturando Pedido #{{ $pedido->id }}</span>
+                                <span class="text-slate-600 dark:text-slate-300">Cliente: <strong>{{ $pedido->cliente->persona->nombre }} {{ $pedido->cliente->persona->apellido }}</strong> &bull; {{ $pedido->detalles->sum('cantidad') }} ítems &bull; Total: <strong>Bs {{ number_format($pedido->total, 2, ',', '.') }}</strong></span>
+                            </div>
                         </div>
+                        <a href="{{ route('panel.pedidos.show', $pedido) }}" class="inline-flex items-center gap-1 text-xs font-bold text-[#00c1de] hover:underline shrink-0">
+                            <span class="material-symbols-outlined text-sm">visibility</span>
+                            Ver ficha de pedido
+                        </a>
                     </div>
                 @else
-                    <div>
-                        <label for="cliente_id" class="block text-xs font-bold text-finora-navy mb-1">Cliente *</label>
-                        <select id="cliente_id" name="cliente_id" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
-                            <option value="">-- Seleccionar Cliente --</option>
-                            @foreach ($clientes as $cli)
-                                <option value="{{ $cli->id }}" {{ old('cliente_id') == $cli->id ? 'selected' : '' }}>{{ $cli->persona->nombre }} {{ $cli->persona->apellido }}</option>
-                            @endforeach
-                        </select>
-                        @error('cliente_id') <span class="text-red-600 text-[11px] mt-1 block">{{ $message }}</span> @enderror
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-bold text-finora-navy">Cliente *</label>
+                            <button type="button" id="btn-toggle-nuevo-cliente" class="text-xs font-bold text-finora-blue hover:underline inline-flex items-center gap-1 cursor-pointer">
+                                <span class="material-symbols-outlined text-sm" id="icono-toggle-cliente">person_add</span>
+                                <span id="texto-toggle-cliente">+ Registrar Cliente Nuevo (WhatsApp / Rápido)</span>
+                            </button>
+                        </div>
+
+                        <!-- Selector de cliente existente -->
+                        <div id="contenedor-cliente-existente">
+                            <select id="cliente_id" name="cliente_id" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
+                                <option value="">-- Seleccionar Cliente --</option>
+                                @foreach ($clientes as $cli)
+                                    <option value="{{ $cli->id }}"
+                                        data-estado="{{ $cli->estado_crediticio }}"
+                                        data-deuda="{{ number_format($cli->saldo_deudor, 2) }}"
+                                        data-vencidas="{{ $cli->cuotas_vencidas_count }}"
+                                        {{ old('cliente_id') == $cli->id ? 'selected' : '' }}>
+                                        {{ $cli->persona->nombre }} {{ $cli->persona->apellido }}
+                                        @if ($cli->estado_crediticio === 'MOROSO')
+                                            [⚠️ MOROSO - {{ $cli->cuotas_vencidas_count }} cuotas vencidas]
+                                        @elseif ($cli->estado_crediticio === 'CON_DEUDA')
+                                            [Saldo: Bs {{ number_format($cli->saldo_deudor, 2) }}]
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div id="aviso-cliente-credito" class="hidden mt-2 p-3 rounded-xl border text-xs font-semibold flex items-center gap-2"></div>
+                            @error('cliente_id') <span class="text-red-600 text-[11px] mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Campos de cliente nuevo al vuelo -->
+                        <div id="contenedor-cliente-nuevo" class="hidden p-4 rounded-xl border border-blue-200 bg-blue-50/60 space-y-3">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-blue-900">
+                                <span class="material-symbols-outlined text-sm text-blue-600">contact_phone</span>
+                                <span>Datos del Cliente Nuevo (Se guardará automáticamente en el sistema)</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label for="nuevo_cliente_nombre" class="block text-[11px] font-bold text-slate-700 mb-1">Nombre *</label>
+                                    <input type="text" id="nuevo_cliente_nombre" name="nuevo_cliente_nombre" value="{{ old('nuevo_cliente_nombre') }}" placeholder="Ej. Carla" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-finora-navy focus:ring-2 focus:ring-finora-blue outline-none font-semibold">
+                                    @error('nuevo_cliente_nombre') <span class="text-red-600 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label for="nuevo_cliente_apellido" class="block text-[11px] font-bold text-slate-700 mb-1">Apellido (Opcional)</label>
+                                    <input type="text" id="nuevo_cliente_apellido" name="nuevo_cliente_apellido" value="{{ old('nuevo_cliente_apellido') }}" placeholder="Ej. Mendoza" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-finora-navy focus:ring-2 focus:ring-finora-blue outline-none">
+                                </div>
+                                <div>
+                                    <label for="nuevo_cliente_telefono" class="block text-[11px] font-bold text-slate-700 mb-1">Celular / WhatsApp *</label>
+                                    <input type="text" id="nuevo_cliente_telefono" name="nuevo_cliente_telefono" value="{{ old('nuevo_cliente_telefono') }}" placeholder="Ej. 71234567" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-finora-navy focus:ring-2 focus:ring-finora-blue outline-none font-semibold">
+                                    @error('nuevo_cliente_telefono') <span class="text-red-600 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 @endif
 
@@ -83,8 +141,8 @@
                     <div>
                         <label for="forma_pago" class="block text-xs font-bold text-finora-navy mb-1">Forma de Pago *</label>
                         <select id="forma_pago" name="forma_pago" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
-                            <option value="CONTADO" {{ old('forma_pago') === 'CONTADO' ? 'selected' : '' }}>CONTADO (Pago inmediato)</option>
-                            <option value="CREDITO" {{ old('forma_pago') === 'CREDITO' ? 'selected' : '' }}>CRÉDITO (Cuenta por cobrar)</option>
+                            <option value="CONTADO" {{ old('forma_pago', $preferenciaPago ?? 'CONTADO') === 'CONTADO' ? 'selected' : '' }}>CONTADO (Pago inmediato)</option>
+                            <option value="CREDITO" {{ old('forma_pago', $preferenciaPago ?? 'CONTADO') === 'CREDITO' ? 'selected' : '' }}>CRÉDITO (Cuenta por cobrar)</option>
                         </select>
                     </div>
                     <div id="cuotas-container" class="hidden">
@@ -98,9 +156,8 @@
                     </div>
                     <div id="metodo-pago-container">
                         <label for="metodo_pago" class="block text-xs font-bold text-finora-navy mb-1">Método de pago *</label>
-                        <select id="metodo_pago" name="metodo_pago" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
-                            <option value="">-- Seleccionar método --</option>
-                            <option value="EFECTIVO" {{ old('metodo_pago') === 'EFECTIVO' ? 'selected' : '' }}>Efectivo</option>
+                        <select id="metodo_pago" name="metodo_pago" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
+                            <option value="EFECTIVO" {{ old('metodo_pago', 'EFECTIVO') === 'EFECTIVO' ? 'selected' : '' }}>Efectivo</option>
                             <option value="TRANSFERENCIA" {{ old('metodo_pago') === 'TRANSFERENCIA' ? 'selected' : '' }}>Transferencia bancaria</option>
                             <option value="QR" {{ old('metodo_pago') === 'QR' ? 'selected' : '' }}>Pago QR</option>
                             <option value="TARJETA" {{ old('metodo_pago') === 'TARJETA' ? 'selected' : '' }}>Tarjeta</option>
@@ -108,8 +165,8 @@
                         </select>
                     </div>
                     <div>
-                        <label for="descuento" class="block text-xs font-bold text-finora-navy mb-1">Descuento Global ($)</label>
-                        <input type="number" step="0.01" min="0" id="descuento" name="descuento" value="{{ old('descuento', 0.00) }}" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
+                        <label for="descuento" class="block text-xs font-bold text-finora-navy mb-1">Descuento Global (Bs)</label>
+                        <input type="number" step="0.01" min="0" id="descuento" name="descuento" value="{{ old('descuento', '0.00') }}" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-finora-navy focus:bg-white focus:ring-2 focus:ring-finora-blue outline-none">
                     </div>
                 </div>
 
@@ -207,11 +264,24 @@
                 cuotasContainer?.classList.toggle('hidden', ! esCredito);
                 metodoPagoContainer?.classList.toggle('hidden', esCredito);
                 if (cuotasInput) {
-                    cuotasInput.required = esCredito;
+                    if (esCredito) {
+                        cuotasInput.setAttribute('required', 'required');
+                        cuotasInput.required = true;
+                    } else {
+                        cuotasInput.removeAttribute('required');
+                        cuotasInput.required = false;
+                    }
                 }
                 if (metodoPago) {
-                    metodoPago.required = ! esCredito;
-                    if (esCredito) metodoPago.value = '';
+                    if (!esCredito) {
+                        metodoPago.setAttribute('required', 'required');
+                        metodoPago.required = true;
+                        if (!metodoPago.value) metodoPago.value = 'EFECTIVO';
+                    } else {
+                        metodoPago.removeAttribute('required');
+                        metodoPago.required = false;
+                        metodoPago.value = '';
+                    }
                 }
             }
 
@@ -288,6 +358,83 @@
                 }
             @endif
 
+            // Alternar entre cliente existente y registro rápido de cliente
+            const btnToggleCliente = document.getElementById('btn-toggle-nuevo-cliente');
+            const contClienteExistente = document.getElementById('contenedor-cliente-existente');
+            const contClienteNuevo = document.getElementById('contenedor-cliente-nuevo');
+            const inputNuevoNombre = document.getElementById('nuevo_cliente_nombre');
+            const inputNuevoTelefono = document.getElementById('nuevo_cliente_telefono');
+            const iconoToggleCliente = document.getElementById('icono-toggle-cliente');
+            const textoToggleCliente = document.getElementById('texto-toggle-cliente');
+            let modoNuevoCliente = false;
+
+            if (btnToggleCliente && contClienteExistente && contClienteNuevo) {
+                btnToggleCliente.addEventListener('click', () => {
+                    modoNuevoCliente = !modoNuevoCliente;
+                    if (modoNuevoCliente) {
+                        contClienteExistente.classList.add('hidden');
+                        contClienteNuevo.classList.remove('hidden');
+                        if (selectCliente) {
+                            selectCliente.removeAttribute('required');
+                            selectCliente.value = '';
+                            if (avisoCredito) {
+                                avisoCredito.className = 'hidden';
+                                avisoCredito.innerHTML = '';
+                            }
+                        }
+                        if (inputNuevoNombre) inputNuevoNombre.setAttribute('required', 'required');
+                        if (inputNuevoTelefono) inputNuevoTelefono.setAttribute('required', 'required');
+                        if (iconoToggleCliente) iconoToggleCliente.textContent = 'list';
+                        if (textoToggleCliente) textoToggleCliente.textContent = '← Elegir de clientes existentes';
+                        inputNuevoNombre?.focus();
+                    } else {
+                        contClienteNuevo.classList.add('hidden');
+                        contClienteExistente.classList.remove('hidden');
+                        if (selectCliente) selectCliente.setAttribute('required', 'required');
+                        if (inputNuevoNombre) {
+                            inputNuevoNombre.removeAttribute('required');
+                            inputNuevoNombre.value = '';
+                        }
+                        if (inputNuevoTelefono) {
+                            inputNuevoTelefono.removeAttribute('required');
+                            inputNuevoTelefono.value = '';
+                        }
+                        if (iconoToggleCliente) iconoToggleCliente.textContent = 'person_add';
+                        if (textoToggleCliente) textoToggleCliente.textContent = '+ Registrar Cliente Nuevo (WhatsApp / Rápido)';
+                    }
+                });
+            }
+
+            // Alerta de crédito de cliente
+            const selectCliente = document.getElementById('cliente_id');
+            const avisoCredito = document.getElementById('aviso-cliente-credito');
+            if (selectCliente && avisoCredito) {
+                const actualizarAvisoCredito = () => {
+                    const selected = selectCliente.selectedOptions[0];
+                    if (!selected || !selected.value) {
+                        avisoCredito.className = 'hidden';
+                        avisoCredito.innerHTML = '';
+                        return;
+                    }
+                    const estado = selected.getAttribute('data-estado');
+                    const deuda = selected.getAttribute('data-deuda');
+                    const vencidas = parseInt(selected.getAttribute('data-vencidas') || '0', 10);
+
+                    if (estado === 'MOROSO') {
+                        avisoCredito.className = 'mt-2 p-3 rounded-xl border border-red-300 bg-red-50 text-red-800 text-xs font-semibold flex items-center gap-2';
+                        avisoCredito.innerHTML = `<span class="material-symbols-outlined text-red-600 text-base">warning</span> <span><strong>Atención:</strong> Este cliente tiene <strong>${vencidas} cuota(s) vencida(s)</strong> por cobrar (Deuda: Bs ${deuda}). Se recomienda cobrar al contado.</span>`;
+                    } else if (estado === 'CON_DEUDA') {
+                        avisoCredito.className = 'mt-2 p-3 rounded-xl border border-amber-300 bg-amber-50 text-amber-800 text-xs font-semibold flex items-center gap-2';
+                        avisoCredito.innerHTML = `<span class="material-symbols-outlined text-amber-600 text-base">info</span> <span>Este cliente mantiene un saldo pendiente de <strong>Bs ${deuda}</strong> en cuotas no vencidas.</span>`;
+                    } else {
+                        avisoCredito.className = 'mt-2 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-medium flex items-center gap-2';
+                        avisoCredito.innerHTML = `<span class="material-symbols-outlined text-emerald-600 text-base">check_circle</span> <span>Cliente con historial al día, sin deudas pendientes.</span>`;
+                    }
+                };
+                selectCliente.addEventListener('change', actualizarAvisoCredito);
+                actualizarAvisoCredito();
+            }
+
             // Validación interactiva de campos requeridos (2.9)
             if (form && alertBox && list) {
                 form.addEventListener('submit', (e) => {
@@ -295,6 +442,11 @@
                     const missing = [];
 
                     requiredInputs.forEach(input => {
+                        // Ignorar campos ocultos o que estén dentro de contenedores ocultos
+                        if (input.type === 'hidden' || input.offsetParent === null || input.closest('.hidden')) {
+                            return;
+                        }
+
                         const val = input.value ? input.value.trim() : '';
                         if (!val) {
                             const label = form.querySelector(`label[for="${input.id}"]`) || input.closest('div')?.querySelector('label');

@@ -394,9 +394,6 @@
             }
 
             function formatMoney(value) {
-                if (displayCurrency === 'USD') {
-                    return `USD ${(Number(value) / exchangeRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                }
                 return `Bs ${Number(value).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             }
 

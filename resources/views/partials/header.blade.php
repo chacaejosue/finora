@@ -94,8 +94,8 @@
                 </div>
             </div>
 
-            <a class="finora-nav-link text-slate-600 hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#ofertas' : route('landing') . '#ofertas' }}" data-nav-target="ofertas">Ofertas</a>
-            <a class="finora-nav-link text-slate-600 hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#contacto' : route('landing') . '#contacto' }}" data-nav-target="contacto">Contacto</a>
+            <a class="finora-nav-link text-slate-600 hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#ofertas' : route('landing') . '/#ofertas' }}" data-nav-target="ofertas">Ofertas</a>
+            <a class="finora-nav-link text-slate-600 hover:text-finora-cyan transition-colors" href="{{ request()->routeIs('landing') ? '#contacto' : route('landing') . '/#contacto' }}" data-nav-target="contacto">Contacto</a>
         </nav>
 
         <!-- Search and Header User Actions -->
@@ -107,7 +107,7 @@
                         <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                     </svg>
                 </span>
-                <input name="buscar" id="headerSearchInput" value="{{ request('buscar') }}" class="w-full pl-10 pr-4 py-2 text-xs lg:text-sm leading-normal bg-slate-50 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-finora-cyan focus:border-transparent text-slate-700 placeholder-slate-400" placeholder="Buscar productos..." type="search">
+                <input name="buscar" id="headerSearchInput" value="{{ request('buscar') }}" class="w-full pl-10 pr-4 py-2 text-xs lg:text-sm leading-normal bg-slate-50 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-finora-cyan focus:border-transparent text-slate-700 placeholder-slate-400" placeholder="Buscar por código de revista o nombre..." type="search">
             </form>
 
             <span class="theme-toggle-slot hidden" aria-hidden="true"></span>
@@ -154,7 +154,7 @@
                     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                 </svg>
             </span>
-            <input name="buscar" id="mobileHeaderSearchInput" value="{{ request('buscar') }}" class="w-full pl-10 pr-4 py-2 text-xs leading-normal bg-slate-50 border border-slate-200 rounded-full text-slate-700 placeholder-slate-400" placeholder="Buscar productos..." type="search">
+            <input name="buscar" id="mobileHeaderSearchInput" value="{{ request('buscar') }}" class="w-full pl-10 pr-4 py-2 text-xs leading-normal bg-slate-50 border border-slate-200 rounded-full text-slate-700 placeholder-slate-400" placeholder="Buscar por código de revista o nombre..." type="search">
         </form>
         <nav class="flex flex-col gap-2 text-sm font-medium text-slate-700">
             @if(request()->routeIs('landing'))
@@ -169,8 +169,8 @@
                 <a class="finora-mobile-nav-link py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors" href="{{ request()->routeIs('landing') ? '#categorias' : route('categorias') }}" data-nav-target="categorias">Categorías</a>
             @endif
 
-            <a class="finora-mobile-nav-link py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors" href="{{ request()->routeIs('landing') ? '#ofertas' : route('landing') . '#ofertas' }}" data-nav-target="ofertas">Ofertas</a>
-            <a class="finora-mobile-nav-link py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors" href="{{ request()->routeIs('landing') ? '#contacto' : route('landing') . '#contacto' }}" data-nav-target="contacto">Contacto</a>
+            <a class="finora-mobile-nav-link py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors" href="{{ request()->routeIs('landing') ? '#ofertas' : route('landing') . '/#ofertas' }}" data-nav-target="ofertas">Ofertas</a>
+            <a class="finora-mobile-nav-link py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors" href="{{ request()->routeIs('landing') ? '#contacto' : route('landing') . '/#contacto' }}" data-nav-target="contacto">Contacto</a>
             <div class="border-t border-slate-100 pt-2 mt-1">
                 @auth
                     <a href="{{ auth()->user()->rol === 'CLIENTE' ? route('mi-cuenta') : route('panel') }}" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-finora-cyan text-white text-xs font-bold shadow-sm">
@@ -262,18 +262,57 @@
                 }
             }
 
-            // Click directo en cualquier enlace con data-nav-target
-            document.querySelectorAll('[data-nav-target]').forEach(link => {
-                link.addEventListener('click', () => {
+            // Navegación suave garantizada para anclas internas (#ofertas, #contacto, #inicio, etc.)
+            document.querySelectorAll('[data-nav-target], a[href^="#"]').forEach(link => {
+                link.addEventListener('click', (e) => {
                     const target = link.getAttribute('data-nav-target');
-                    if (target) {
-                        setActiveNav(target);
-                    }
+                    const href = link.getAttribute('href');
+
                     if (mobileMenuDrawer && !mobileMenuDrawer.classList.contains('hidden')) {
                         mobileMenuDrawer.classList.add('hidden');
                     }
+
+                    // Determinar el identificador de destino del ancla
+                    const hashTarget = (href && href.startsWith('#')) ? href.substring(1) : ((href && href.includes('/#')) ? href.split('/#')[1] : null);
+
+                    if (hashTarget) {
+                        const targetEl = document.getElementById(hashTarget);
+                        if (targetEl) {
+                            e.preventDefault();
+                            setActiveNav(hashTarget);
+                            targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            if (window.history && window.history.pushState) {
+                                window.history.pushState(null, '', '#' + hashTarget);
+                            }
+                            return;
+                        }
+                    }
+
+                    if (target) {
+                        setActiveNav(target);
+                    }
                 });
             });
+
+            // Atender anclas al cargar la página o cuando cambia el hash (ej: viniendo desde /categorias a /#ofertas)
+            function handleHashScroll() {
+                if (window.location.hash) {
+                    const hashId = window.location.hash.replace('#', '');
+                    const targetEl = document.getElementById(hashId);
+                    if (targetEl) {
+                        setActiveNav(hashId);
+                        requestAnimationFrame(() => {
+                            setTimeout(() => {
+                                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 120);
+                        });
+                    }
+                }
+            }
+
+            handleHashScroll();
+            window.addEventListener('hashchange', handleHashScroll);
+            window.addEventListener('load', handleHashScroll);
 
             // ScrollSpy solo en la página principal (landing)
             @if(request()->routeIs('landing'))
@@ -307,6 +346,8 @@
             onScroll();
             @endif
         }
+
+        window.finoraInitHeader = initFinoraHeader;
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initFinoraHeader);

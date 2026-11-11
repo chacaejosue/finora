@@ -19,7 +19,7 @@ class VentaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Venta::with(['cliente', 'pedido', 'registradoPor']);
+        $query = Venta::with(['cliente', 'pedido', 'registradoPor', 'detalles', 'pagos']);
 
         if ($request->filled('estado')) {
             $query->where('estado', $request->input('estado'));
@@ -57,8 +57,24 @@ class VentaController extends Controller
         $validated = $request->validated();
 
         $venta = DB::transaction(function () use ($validated, $request) {
+            $clienteId = $validated['cliente_id'] ?? null;
+
+            if (! $clienteId && ! empty($validated['nuevo_cliente_nombre'])) {
+                $nuevoCliente = Usuario::create([
+                    'nombre' => mb_strtoupper(trim($validated['nuevo_cliente_nombre']), 'UTF-8'),
+                    'apellido' => ! empty($validated['nuevo_cliente_apellido']) ? mb_strtoupper(trim($validated['nuevo_cliente_apellido']), 'UTF-8') : null,
+                    'telefono' => $validated['nuevo_cliente_telefono'] ?? null,
+                    'rol' => 'CLIENTE',
+                    'password' => null,
+                    'activo' => true,
+                    'observaciones' => 'Registrado automáticamente desde venta directa / WhatsApp',
+                ]);
+
+                $clienteId = $nuevoCliente->id;
+            }
+
             $venta = Venta::create([
-                'cliente_id' => $validated['cliente_id'],
+                'cliente_id' => $clienteId,
                 'pedido_id' => $validated['pedido_id'] ?? null,
                 'registrado_por_usuario_id' => $request->user()->id,
                 'fecha' => now(),
@@ -100,6 +116,92 @@ class VentaController extends Controller
         return view('panel.ventas.show', compact('venta'));
     }
 
+    public function edit(Venta $venta)
+    {
+        if ($venta->estado !== 'BORRADOR') {
+            return redirect()->route('panel.ventas.show', $venta)
+                ->withErrors(['error' => 'Solo las ventas en estado BORRADOR pueden ser editadas.']);
+        }
+
+        $venta->load(['cliente', 'detalles.producto', 'pedido']);
+        $clientes = Usuario::clientes()->where('activo', true)->get();
+        $productos = Producto::where('activo', true)->get();
+
+        return view('panel.ventas.edit', compact('venta', 'clientes', 'productos'));
+    }
+
+    public function update(VentaRequest $request, Venta $venta)
+    {
+        if ($venta->estado !== 'BORRADOR') {
+            return redirect()->route('panel.ventas.show', $venta)
+                ->withErrors(['error' => 'Solo las ventas en estado BORRADOR pueden ser editadas.']);
+        }
+
+        $validated = $request->validated();
+
+        DB::transaction(function () use ($venta, $validated) {
+            $clienteId = $validated['cliente_id'] ?? null;
+
+            if (! $clienteId && ! empty($validated['nuevo_cliente_nombre'])) {
+                $nuevoCliente = Usuario::create([
+                    'nombre' => mb_strtoupper(trim($validated['nuevo_cliente_nombre']), 'UTF-8'),
+                    'apellido' => ! empty($validated['nuevo_cliente_apellido']) ? mb_strtoupper(trim($validated['nuevo_cliente_apellido']), 'UTF-8') : null,
+                    'telefono' => $validated['nuevo_cliente_telefono'] ?? null,
+                    'rol' => 'CLIENTE',
+                    'password' => null,
+                    'activo' => true,
+                    'observaciones' => 'Registrado automáticamente desde venta directa / WhatsApp',
+                ]);
+
+                $clienteId = $nuevoCliente->id;
+            }
+
+            $venta->update([
+                'cliente_id' => $clienteId,
+                'forma_pago' => $validated['forma_pago'],
+                'metodo_pago' => $validated['metodo_pago'] ?? null,
+                'numero_cuotas' => $validated['numero_cuotas'] ?? null,
+                'descuento' => $validated['descuento'] ?? 0,
+            ]);
+
+            $venta->detalles()->delete();
+
+            foreach ($validated['detalles'] as $item) {
+                $ultimoCosto = DB::table('detalle_compras')
+                    ->where('producto_id', $item['producto_id'])
+                    ->latest('id')
+                    ->value('costo_unitario') ?? 0;
+
+                DetalleVenta::create([
+                    'venta_id' => $venta->id,
+                    'producto_id' => $item['producto_id'],
+                    'cantidad' => $item['cantidad'],
+                    'precio_unitario' => $item['precio_unitario'],
+                    'costo_unitario' => $ultimoCosto,
+                ]);
+            }
+        });
+
+        return redirect()->route('panel.ventas.show', $venta)
+            ->with('exito', 'Venta en borrador actualizada exitosamente.');
+    }
+
+    public function destroy(Venta $venta)
+    {
+        if ($venta->estado !== 'BORRADOR') {
+            return redirect()->route('panel.ventas.show', $venta)
+                ->withErrors(['error' => 'Solo las ventas en estado BORRADOR pueden ser descartadas o eliminadas.']);
+        }
+
+        DB::transaction(function () use ($venta) {
+            $venta->detalles()->delete();
+            $venta->delete();
+        });
+
+        return redirect()->route('panel.ventas.index')
+            ->with('exito', 'Venta en borrador eliminada correctamente.');
+    }
+
     public function confirmar(Request $request, Venta $venta)
     {
         if ($venta->estado === 'CONFIRMADA') {
@@ -129,11 +231,15 @@ class VentaController extends Controller
                 }
 
                 $reservasOtrosPedidos = (int) $reservasQuery->sum('detalle_pedidos.cantidad_reservada');
-                $stockDisponible = $stockFisico - $reservasOtrosPedidos;
+                $stockDisponible = max(0, $stockFisico - $reservasOtrosPedidos);
 
                 if (! $producto || $stockDisponible < $detalle->cantidad) {
+                    $nombreProd = $producto ? $producto->nombre : "Producto #{$detalle->producto_id}";
+                    $disponible = max(0, $stockDisponible);
+                    $faltante = $detalle->cantidad - $disponible;
+
                     throw ValidationException::withMessages([
-                        'stock' => "No hay stock suficiente para confirmar la venta del producto #{$detalle->producto_id}.",
+                        'stock' => "Stock insuficiente para '{$nombreProd}'. Cantidad requerida: {$detalle->cantidad}, disponible en almacén: {$disponible}. Faltan {$faltante} unidad(es). Puedes registrar una reposición en Compras o adquirir las unidades en tu portal de Natura.",
                     ]);
                 }
             }
@@ -156,12 +262,14 @@ class VentaController extends Controller
                 }
             }
 
-            // Si proviene de un pedido, liberar las reservas y dejarlo listo para entrega.
+            // Si proviene de un pedido, liberar las reservas y mantener el estado apropiado.
             if ($venta->pedido) {
                 foreach ($venta->pedido->detalles as $detPed) {
                     $detPed->update(['cantidad_reservada' => 0, 'estado' => 'RESERVADO']);
                 }
-                $venta->pedido->update(['estado' => 'LISTO_ENTREGA']);
+                if ($venta->pedido->estado !== 'COMPLETADO') {
+                    $venta->pedido->update(['estado' => 'LISTO_ENTREGA']);
+                }
             }
 
             // Si es a crédito, generar directamente las cuotas vinculadas a la venta.
